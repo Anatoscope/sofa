@@ -16,13 +16,17 @@ namespace core
     /// Then it can be checked if it was modified with "wasModified" since its last "clean".
     /// @warning Note that "wasModified" does not check if the data is actually dirty, use 'isDirty' for that.
     /// @warning Note that "wasModified" does not check if the data has the same value as when the last clean.
-    /// @todo add mechanism to check if the data value changed since last clean (by using hash)
+    ///          to do so, activate the mechanism in 'trackData' with @param activateValueHash,
+    ///          then you can check if the value changed with 'hasChanged'.
+    /// @todo checking if a value changed requires a hash. Right now, the hash is done on the data value string
+    ///       that is generic but really inefficient. To do better, BaseData should have a 'getValueHash'
+    ///       and so every Data-able types should be hashable.
     struct SOFA_CORE_API DataTracker
     {
         /// select a Data to track to be able to check
         /// if it was dirtied since the previous clean.
         /// @see isTrackedDataDirty
-        void trackData( const objectmodel::BaseData& data );
+        void trackData( const objectmodel::BaseData& data, bool activateValueHash=false );
 
 
         /// Was the tracked Data modified since the last clean?
@@ -40,6 +44,14 @@ namespace core
         /// Was one of the tracked Data modified since the last clean or is dirty right now?
         bool isDirty() const;
 
+
+
+        /// Did the tracked Data value change since the last clean?
+        /// @warning data must be a tracked Data @see trackData with @param activateValueHash at true
+        bool hasChanged( const objectmodel::BaseData& data ) const;
+
+
+
         /// comparison point is cleaned for the specified tracked Data
         /// @warning data must be a tracked Data @see trackData
         void clean( const objectmodel::BaseData& data );
@@ -53,6 +65,10 @@ namespace core
         /// map a tracked Data to a DataTracker (storing its call-counter at each 'clean')
         typedef std::map<const objectmodel::BaseData*,int> DataTrackers;
         DataTrackers m_dataTrackers;
+
+        /// map a tracked Data to its last value hash
+        typedef std::map<const objectmodel::BaseData*,size_t> DataValueTrackers;
+        DataValueTrackers m_dataValueTrackers;
     };
 
 

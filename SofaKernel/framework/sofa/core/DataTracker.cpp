@@ -8,12 +8,13 @@ namespace core
 {
 
 
+static std::hash<std::string> s_stringHasher;
 
 
-
-void DataTracker::trackData( const objectmodel::BaseData& data )
+void DataTracker::trackData( const objectmodel::BaseData& data, bool activateValueHash )
 {
     m_dataTrackers[&data] = data.getCounter();
+    if( activateValueHash ) m_dataValueTrackers[&data] = s_stringHasher(data.getValueString());
 }
 
 bool DataTracker::wasModified( const objectmodel::BaseData& data ) const
@@ -40,16 +41,26 @@ bool DataTracker::isDirty() const
     return false;
 }
 
+bool DataTracker::hasChanged( const objectmodel::BaseData& data ) const
+{
+    return wasModified(data) && m_dataValueTrackers.at(&data) != s_stringHasher(data.getValueString());
+}
+
 
 void DataTracker::clean( const objectmodel::BaseData& data )
 {
     m_dataTrackers.at(&data) = data.getCounter();
+
+    if( m_dataValueTrackers.at(&data) ) m_dataValueTrackers[&data] = s_stringHasher(data.getValueString());
 }
 
 void DataTracker::clean()
 {
     for( DataTrackers::iterator it=m_dataTrackers.begin(),itend=m_dataTrackers.end() ; it!=itend ; ++it )
         it->second = it->first->getCounter();
+
+    for( DataValueTrackers::iterator it=m_dataValueTrackers.begin(),itend=m_dataValueTrackers.end() ; it!=itend ; ++it )
+        it->second = s_stringHasher(it->first->getValueString());
 }
 
 

@@ -53,7 +53,7 @@ public:
     Data< bool > input;
     Data< int > depend_on_input;
 
-    enum { UNDEFINED=0, CHANGED, NO_CHANGED };
+    enum { UNDEFINED=0, DIRTY, NO_DIRTY };
 
     TestObject()
         : Inherit1()
@@ -65,7 +65,7 @@ public:
         this->f_listening.setValue( true );
 
         // to track the Data  and be able to check if it changed
-        m_dataTracker.trackData(input);
+        m_dataTracker.trackData(input,true);
     }
 
     ~TestObject() {}
@@ -78,11 +78,11 @@ public:
         // that could only happen if 'input' was dirtied since last update
         if( m_dataTracker.isDirty( input ) )
         {
-            depend_on_input.setValue(CHANGED);
+            depend_on_input.setValue(DIRTY);
             m_dataTracker.clean( input );
         }
         else
-            depend_on_input.setValue(NO_CHANGED);
+            depend_on_input.setValue(NO_DIRTY);
     }
 
 
@@ -93,6 +93,11 @@ public:
         {
             updateData(); // check if Data changed since last step
         }
+    }
+
+    bool hasDataChanged() const
+    {
+        return m_dataTracker.hasChanged( input );
     }
 
 protected:
@@ -116,17 +121,25 @@ struct DataTracker_test: public ::testing::Test
     {
         // input did not change, it is not dirtied, so neither its associated DataTracker
         testObject.updateData();
-        ASSERT_TRUE(testObject.depend_on_input.getValue()==TestObject::NO_CHANGED);
+        ASSERT_TRUE(testObject.depend_on_input.getValue()==TestObject::NO_DIRTY);
 
         // modifying input sets it as dirty, so its associated DataTracker too
         testObject.input.setValue(true);
+        ASSERT_TRUE(testObject.hasDataChanged());
         testObject.updateData();
-        ASSERT_TRUE(testObject.depend_on_input.getValue()==TestObject::CHANGED);
+        ASSERT_TRUE(testObject.depend_on_input.getValue()==TestObject::DIRTY);
 
         testObject.input.setValue(false);
+        ASSERT_TRUE(testObject.hasDataChanged());
         testObject.input.cleanDirty();
         testObject.updateData();
-        ASSERT_TRUE(testObject.depend_on_input.getValue()==TestObject::CHANGED);
+        ASSERT_TRUE(testObject.depend_on_input.getValue()==TestObject::DIRTY);
+
+        // even if the same value is set, the dataTracker is dirty
+        testObject.input.setValue(false);
+        ASSERT_FALSE(testObject.hasDataChanged());
+        testObject.updateData();
+        ASSERT_TRUE(testObject.depend_on_input.getValue()==TestObject::DIRTY);
     }
 
 };
