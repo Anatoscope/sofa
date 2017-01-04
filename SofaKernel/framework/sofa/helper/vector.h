@@ -45,6 +45,199 @@
 #endif
 #endif
 
+
+
+
+/// adding string serialization to std::vector to make it compatible with Data
+
+namespace std
+{
+
+/// Output stream
+template<class T>
+std::ostream& operator<< ( std::ostream& os, const std::vector<T>& v )
+{
+    if( !v.empty() )
+    {
+        for( typename std::vector<T>::size_type i=0, iend=v.size()-1; i<iend; ++i )
+            os<<v[i]<<" ";
+        os<<v.back();
+    }
+    return os;
+}
+
+/// Input stream
+template<class T>
+std::istream& operator>> ( std::istream& in, std::vector<T>& v )
+{
+    T t=T();
+    v.clear();
+    while(in>>t)
+    {
+        v.push_back(t);
+    }
+    if( in.rdstate() & std::ios_base::eofbit ) { in.clear(); }
+    return in;
+}
+
+
+/// Input stream
+/// Specialization for reading vectors of int and unsigned int using "A-B" notation for all integers between A and B, optionnally specifying a step using "A-B-step" notation.
+template<>
+inline std::istream& operator>> ( std::istream& in, std::vector<int>& v )
+{
+    int t;
+    v.clear();
+    std::string s;
+    while(in>>s)
+    {
+        std::string::size_type hyphen = s.find_first_of('-',1);
+        if (hyphen == std::string::npos)
+        {
+            t = atoi(s.c_str());
+            v.push_back(t);
+        }
+        else
+        {
+            int t1,t2,tinc;
+            std::string s1(s,0,hyphen);
+            t1 = atoi(s1.c_str());
+            std::string::size_type hyphen2 = s.find_first_of('-',hyphen+2);
+            if (hyphen2 == std::string::npos)
+            {
+                std::string s2(s,hyphen+1);
+                t2 = atoi(s2.c_str());
+                tinc = (t1<t2) ? 1 : -1;
+            }
+            else
+            {
+                std::string s2(s,hyphen+1,hyphen2);
+                std::string s3(s,hyphen2+1);
+                t2 = atoi(s2.c_str());
+                tinc = atoi(s3.c_str());
+                if (tinc == 0)
+                {
+                    msg_error("vector") << "parsing \""<<s<<"\": increment is 0";
+                    tinc = (t1<t2) ? 1 : -1;
+                }
+                if ((t2-t1)*tinc < 0)
+                {
+                    // increment not of the same sign as t2-t1 : swap t1<->t2
+                    t = t1;
+                    t1 = t2;
+                    t2 = t;
+                }
+            }
+            if (tinc < 0)
+                for (t=t1; t>=t2; t+=tinc)
+                    v.push_back(t);
+            else
+                for (t=t1; t<=t2; t+=tinc)
+                    v.push_back(t);
+        }
+    }
+    if( in.rdstate() & std::ios_base::eofbit ) { in.clear(); }
+    return in;
+}
+
+/// Output stream
+/// Specialization for writing vectors of unsigned char
+template<>
+inline std::ostream& operator<< ( std::ostream& os, const std::vector<unsigned char>& v )
+{
+    if( !v.empty() )
+    {
+        for( typename std::vector<unsigned char>::size_type i=0, iend=v.size()-1; i<iend; ++i )
+            os<<(int)v[i]<<" ";
+        os<<(int)v.back();
+    }
+    return os;
+}
+
+/// Inpu stream
+/// Specialization for writing vectors of unsigned char
+template<>
+inline std::istream& operator>> ( std::istream& in, std::vector<unsigned char>& v )
+{
+    int t;
+    v.clear();
+    while(in>>t)
+    {
+        v.push_back((unsigned char)t);
+    }
+    if( in.rdstate() & std::ios_base::eofbit ) { in.clear(); }
+    return in;
+}
+
+/// Input stream
+/// Specialization for reading vectors of int and unsigned int using "A-B" notation for all integers between A and B
+template<>
+inline std::istream& operator>> ( std::istream& in, std::vector<unsigned int>& v )
+{
+    unsigned int t;
+    v.clear();
+    std::string s;
+    while(in>>s)
+    {
+        std::string::size_type hyphen = s.find_first_of('-',1);
+        if (hyphen == std::string::npos)
+        {
+            t = atoi(s.c_str());
+            v.push_back(t);
+        }
+        else
+        {
+            unsigned int t1,t2;
+            int tinc;
+            std::string s1(s,0,hyphen);
+            t1 = (unsigned int)atoi(s1.c_str());
+            std::string::size_type hyphen2 = s.find_first_of('-',hyphen+2);
+            if (hyphen2 == std::string::npos)
+            {
+                std::string s2(s,hyphen+1);
+                t2 = (unsigned int)atoi(s2.c_str());
+                tinc = (t1<t2) ? 1 : -1;
+            }
+            else
+            {
+                std::string s2(s,hyphen+1,hyphen2);
+                std::string s3(s,hyphen2+1);
+                t2 = (unsigned int)atoi(s2.c_str());
+                tinc = atoi(s3.c_str());
+                if (tinc == 0)
+                {
+                    msg_error("vector") << "parsing \""<<s<<"\": increment is 0";
+                    tinc = (t1<t2) ? 1 : -1;
+                }
+                if (((int)(t2-t1))*tinc < 0)
+                {
+                    // increment not of the same sign as t2-t1 : swap t1<->t2
+                    t = t1;
+                    t1 = t2;
+                    t2 = t;
+                }
+            }
+            if (tinc < 0)
+                for (t=t1; t>=t2; t=(unsigned int)((int)t+tinc))
+                    v.push_back(t);
+            else
+                for (t=t1; t<=t2; t=(unsigned int)((int)t+tinc))
+                    v.push_back(t);
+        }
+    }
+    if( in.rdstate() & std::ios_base::eofbit ) { in.clear(); }
+    return in;
+}
+
+
+} // namespace std
+
+
+
+///////////////////////////////
+
+
+
 namespace sofa
 {
 
@@ -140,40 +333,18 @@ public:
 #endif // SOFA_VECTOR_ACCESS_FAILURE
 
 
-    std::ostream& write(std::ostream& os) const
-    {
-        if( this->size()>0 )
-        {
-            for( size_type i=0; i<this->size()-1; ++i )
-                os<<(*this)[i]<<" ";
-            os<<(*this)[this->size()-1];
-        }
-        return os;
-    }
 
-    std::istream& read(std::istream& in)
-    {
-        T t=T();
-        this->clear();
-        while(in>>t)
-        {
-            this->push_back(t);
-        }
-        if( in.rdstate() & std::ios_base::eofbit ) { in.clear(); }
-        return in;
-    }
+///// Output stream
+//    inline friend std::ostream& operator<< ( std::ostream& os, const vector<T>& vec )
+//    {
+//        return vec.write(os);
+//    }
 
-/// Output stream
-    inline friend std::ostream& operator<< ( std::ostream& os, const vector<T>& vec )
-    {
-        return vec.write(os);
-    }
-
-/// Input stream
-    inline friend std::istream& operator>> ( std::istream& in, vector<T>& vec )
-    {
-        return vec.read(in);
-    }
+///// Input stream
+//    inline friend std::istream& operator>> ( std::istream& in, vector<T>& vec )
+//    {
+//        return vec.read(in);
+//    }
 
     /// Sets every element to 'value'
     void fill( const T& value )
@@ -189,153 +360,6 @@ public:
 };
 
 
-/// Input stream
-/// Specialization for reading vectors of int and unsigned int using "A-B" notation for all integers between A and B, optionnally specifying a step using "A-B-step" notation.
-template<>
-inline std::istream& vector<int >::read( std::istream& in )
-{
-    int t;
-    this->clear();
-    std::string s;
-    while(in>>s)
-    {
-        std::string::size_type hyphen = s.find_first_of('-',1);
-        if (hyphen == std::string::npos)
-        {
-            t = atoi(s.c_str());
-            this->push_back(t);
-        }
-        else
-        {
-            int t1,t2,tinc;
-            std::string s1(s,0,hyphen);
-            t1 = atoi(s1.c_str());
-            std::string::size_type hyphen2 = s.find_first_of('-',hyphen+2);
-            if (hyphen2 == std::string::npos)
-            {
-                std::string s2(s,hyphen+1);
-                t2 = atoi(s2.c_str());
-                tinc = (t1<t2) ? 1 : -1;
-            }
-            else
-            {
-                std::string s2(s,hyphen+1,hyphen2);
-                std::string s3(s,hyphen2+1);
-                t2 = atoi(s2.c_str());
-                tinc = atoi(s3.c_str());
-                if (tinc == 0)
-                {
-                    msg_error("vector") << "parsing \""<<s<<"\": increment is 0";
-                    tinc = (t1<t2) ? 1 : -1;
-                }
-                if ((t2-t1)*tinc < 0)
-                {
-                    // increment not of the same sign as t2-t1 : swap t1<->t2
-                    t = t1;
-                    t1 = t2;
-                    t2 = t;
-                }
-            }
-            if (tinc < 0)
-                for (t=t1; t>=t2; t+=tinc)
-                    this->push_back(t);
-            else
-                for (t=t1; t<=t2; t+=tinc)
-                    this->push_back(t);
-        }
-    }
-    if( in.rdstate() & std::ios_base::eofbit ) { in.clear(); }
-    return in;
-}
-
-/// Output stream
-/// Specialization for writing vectors of unsigned char
-template<>
-inline std::ostream& vector<unsigned char >::write(std::ostream& os) const
-{
-    if( this->size()>0 )
-    {
-        for( size_type i=0; i<this->size()-1; ++i )
-            os<<(int)(*this)[i]<<" ";
-        os<<(int)(*this)[this->size()-1];
-    }
-    return os;
-}
-
-/// Inpu stream
-/// Specialization for writing vectors of unsigned char
-template<>
-inline std::istream&  vector<unsigned char >::read(std::istream& in)
-{
-    int t;
-    this->clear();
-    while(in>>t)
-    {
-        this->push_back((unsigned char)t);
-    }
-    if( in.rdstate() & std::ios_base::eofbit ) { in.clear(); }
-    return in;
-}
-
-/// Input stream
-/// Specialization for reading vectors of int and unsigned int using "A-B" notation for all integers between A and B
-template<>
-inline std::istream& vector<unsigned int >::read( std::istream& in )
-{
-    unsigned int t;
-    this->clear();
-    std::string s;
-    while(in>>s)
-    {
-        std::string::size_type hyphen = s.find_first_of('-',1);
-        if (hyphen == std::string::npos)
-        {
-            t = atoi(s.c_str());
-            this->push_back(t);
-        }
-        else
-        {
-            unsigned int t1,t2;
-            int tinc;
-            std::string s1(s,0,hyphen);
-            t1 = (unsigned int)atoi(s1.c_str());
-            std::string::size_type hyphen2 = s.find_first_of('-',hyphen+2);
-            if (hyphen2 == std::string::npos)
-            {
-                std::string s2(s,hyphen+1);
-                t2 = (unsigned int)atoi(s2.c_str());
-                tinc = (t1<t2) ? 1 : -1;
-            }
-            else
-            {
-                std::string s2(s,hyphen+1,hyphen2);
-                std::string s3(s,hyphen2+1);
-                t2 = (unsigned int)atoi(s2.c_str());
-                tinc = atoi(s3.c_str());
-                if (tinc == 0)
-                {
-                    msg_error("vector") << "parsing \""<<s<<"\": increment is 0";
-                    tinc = (t1<t2) ? 1 : -1;
-                }
-                if (((int)(t2-t1))*tinc < 0)
-                {
-                    // increment not of the same sign as t2-t1 : swap t1<->t2
-                    t = t1;
-                    t1 = t2;
-                    t2 = t;
-                }
-            }
-            if (tinc < 0)
-                for (t=t1; t>=t2; t=(unsigned int)((int)t+tinc))
-                    this->push_back(t);
-            else
-                for (t=t1; t<=t2; t=(unsigned int)((int)t+tinc))
-                    this->push_back(t);
-        }
-    }
-    if( in.rdstate() & std::ios_base::eofbit ) { in.clear(); }
-    return in;
-}
 
 
 // ======================  operations on standard vectors

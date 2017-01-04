@@ -835,7 +835,7 @@ void RigidMapping<TIn, TOut>::parse(core::objectmodel::BaseObjectDescription* ar
 
         helper::vector< unsigned int > repartition;
         std::istringstream ss( repartitionChar );
-        repartition.read( ss );
+        ss >> repartition;
         setRepartition( repartition );
     }
 }
