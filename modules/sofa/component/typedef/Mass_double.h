@@ -41,12 +41,12 @@
 
 #include <SofaBaseMechanics/DiagonalMass.h>
 #include <SofaGeneralSimpleFem/HexahedralFEMForceFieldAndMass.h>
-#include <SofaNonUniformFem/HexahedronCompositeFEMForceFieldAndMass.h>
+//#include <SofaNonUniformFem/HexahedronCompositeFEMForceFieldAndMass.h>
 #include <SofaGeneralSimpleFem/HexahedronFEMForceFieldAndMass.h>
 #include <SofaMiscForceField/MatrixMass.h>
 #include <SofaMiscForceField/MeshMatrixMass.h>
-#include <SofaNonUniformFem/NonUniformHexahedralFEMForceFieldAndMass.h>
-#include <SofaNonUniformFem/NonUniformHexahedronFEMForceFieldAndMass.h>
+//#include <SofaNonUniformFem/NonUniformHexahedralFEMForceFieldAndMass.h>
+//#include <SofaNonUniformFem/NonUniformHexahedronFEMForceFieldAndMass.h>
 #include <SofaBaseMechanics/UniformMass.h>
 
 
@@ -69,7 +69,7 @@ typedef sofa::component::forcefield::HexahedralFEMForceFieldAndMass<sofa::defaul
 
 //---------------------------------------------------------------------------------------------
 //Typedef for HexahedronCompositeFEMForceFieldAndMass
-typedef sofa::component::forcefield::HexahedronCompositeFEMForceFieldAndMass<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > HexahedronCompositeFEMForceFieldAndMass3d;
+//typedef sofa::component::forcefield::HexahedronCompositeFEMForceFieldAndMass<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > HexahedronCompositeFEMForceFieldAndMass3d;
 
 
 
@@ -97,13 +97,13 @@ typedef sofa::component::mass::MeshMatrixMass<sofa::defaulttype::StdVectorTypes<
 
 //---------------------------------------------------------------------------------------------
 //Typedef for NonUniformHexahedralFEMForceFieldAndMass
-typedef sofa::component::forcefield::NonUniformHexahedralFEMForceFieldAndMass<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > NonUniformHexahedralFEMForceFieldAndMass3d;
+//typedef sofa::component::forcefield::NonUniformHexahedralFEMForceFieldAndMass<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > NonUniformHexahedralFEMForceFieldAndMass3d;
 
 
 
 //---------------------------------------------------------------------------------------------
 //Typedef for NonUniformHexahedronFEMForceFieldAndMass
-typedef sofa::component::forcefield::NonUniformHexahedronFEMForceFieldAndMass<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > NonUniformHexahedronFEMForceFieldAndMass3d;
+//typedef sofa::component::forcefield::NonUniformHexahedronFEMForceFieldAndMass<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > NonUniformHexahedronFEMForceFieldAndMass3d;
 
 
 
@@ -127,7 +127,7 @@ typedef DiagonalMass1d DiagonalMass1;
 typedef DiagonalMass2d DiagonalMass2;
 typedef DiagonalMass3d DiagonalMass3;
 typedef HexahedralFEMForceFieldAndMass3d HexahedralFEMForceFieldAndMass3;
-typedef HexahedronCompositeFEMForceFieldAndMass3d HexahedronCompositeFEMForceFieldAndMass3;
+//typedef HexahedronCompositeFEMForceFieldAndMass3d HexahedronCompositeFEMForceFieldAndMass3;
 typedef HexahedronFEMForceFieldAndMass3d HexahedronFEMForceFieldAndMass3;
 typedef MatrixMass1d MatrixMass1;
 typedef MatrixMass2d MatrixMass2;
@@ -135,8 +135,8 @@ typedef MatrixMass3d MatrixMass3;
 typedef MeshMatrixMass1d MeshMatrixMass1;
 typedef MeshMatrixMass2d MeshMatrixMass2;
 typedef MeshMatrixMass3d MeshMatrixMass3;
-typedef NonUniformHexahedralFEMForceFieldAndMass3d NonUniformHexahedralFEMForceFieldAndMass3;
-typedef NonUniformHexahedronFEMForceFieldAndMass3d NonUniformHexahedronFEMForceFieldAndMass3;
+//typedef NonUniformHexahedralFEMForceFieldAndMass3d NonUniformHexahedralFEMForceFieldAndMass3;
+//typedef NonUniformHexahedronFEMForceFieldAndMass3d NonUniformHexahedronFEMForceFieldAndMass3;
 typedef UniformMassRigid3d UniformMassRigid3;
 typedef UniformMassRigid2d UniformMassRigid2;
 typedef UniformMass1d UniformMass1;

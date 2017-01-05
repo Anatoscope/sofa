@@ -51,7 +51,7 @@
 #include <SofaMiscMapping/CenterPointMechanicalMapping.h>
 #include <SofaMiscMapping/CurveMapping.h>
 #include <SofaMiscMapping/ExternalInterpolationMapping.h>
-#include <SofaNonUniformFem/HexahedronCompositeFEMMapping.h>
+//#include <SofaNonUniformFem/HexahedronCompositeFEMMapping.h>
 #include <SofaBaseMechanics/IdentityMapping.h>
 #include <SofaVolumetricData/ImplicitSurfaceMapping.h>
 #include <SofaGeneralRigid/LineSetSkinningMapping.h>
@@ -135,8 +135,8 @@ typedef sofa::component::mapping::ExternalInterpolationMapping<sofa::defaulttype
 
 //---------------------------------------------------------------------------------------------
 //Typedef for HexahedronCompositeFEMMapping
-typedef sofa::component::mapping::HexahedronCompositeFEMMapping<sofa::core::Mapping<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double>, sofa::defaulttype::ExtVectorTypes<sofa::defaulttype::Vec<3, float>, sofa::defaulttype::Vec<3, float>, float> > > HexahedronCompositeFEMMapping3d_to_Ext3f;
-typedef sofa::component::mapping::HexahedronCompositeFEMMapping<sofa::core::Mapping<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double>, sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > > HexahedronCompositeFEMMapping3d_to_3d;
+//typedef sofa::component::mapping::HexahedronCompositeFEMMapping<sofa::core::Mapping<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double>, sofa::defaulttype::ExtVectorTypes<sofa::defaulttype::Vec<3, float>, sofa::defaulttype::Vec<3, float>, float> > > HexahedronCompositeFEMMapping3d_to_Ext3f;
+//typedef sofa::component::mapping::HexahedronCompositeFEMMapping<sofa::core::Mapping<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double>, sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > > HexahedronCompositeFEMMapping3d_to_3d;
 
 
 
@@ -258,8 +258,8 @@ typedef ExternalInterpolationMapping1d_to_1d ExternalInterpolationMapping1_to_1;
 typedef ExternalInterpolationMapping2d_to_2d ExternalInterpolationMapping2_to_2;
 typedef ExternalInterpolationMapping3d_to_Ext3f ExternalInterpolationMapping3_to_Ext3;
 typedef ExternalInterpolationMapping3d_to_3d ExternalInterpolationMapping3_to_3;
-typedef HexahedronCompositeFEMMapping3d_to_Ext3f HexahedronCompositeFEMMapping3_to_Ext3;
-typedef HexahedronCompositeFEMMapping3d_to_3d HexahedronCompositeFEMMapping3_to_3;
+//typedef HexahedronCompositeFEMMapping3d_to_Ext3f HexahedronCompositeFEMMapping3_to_Ext3;
+//typedef HexahedronCompositeFEMMapping3d_to_3d HexahedronCompositeFEMMapping3_to_3;
 typedef IdentityMappingRigid3d_to_Ext3f IdentityMappingRigid3_to_Ext3;
 typedef IdentityMappingRigid3d_to_Rigid3d IdentityMappingRigid3_to_Rigid3;
 typedef IdentityMappingRigid3d_to_3d IdentityMappingRigid3_to_3;

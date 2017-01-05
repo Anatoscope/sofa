@@ -39,8 +39,8 @@
 
 
 
-#include <SofaNonUniformFem/DynamicSparseGridGeometryAlgorithms.h>
-#include <SofaNonUniformFem/DynamicSparseGridTopologyAlgorithms.h>
+//#include <SofaNonUniformFem/DynamicSparseGridGeometryAlgorithms.h>
+//#include <SofaNonUniformFem/DynamicSparseGridTopologyAlgorithms.h>
 #include <SofaBaseTopology/EdgeSetGeometryAlgorithms.h>
 #include <SofaBaseTopology/EdgeSetTopologyAlgorithms.h>
 #include <SofaBaseTopology/HexahedronSetGeometryAlgorithms.h>
@@ -58,17 +58,17 @@
 
 //---------------------------------------------------------------------------------------------
 //Typedef for DynamicSparseGridGeometryAlgorithms
-typedef sofa::component::topology::DynamicSparseGridGeometryAlgorithms<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<1, double>, sofa::defaulttype::Vec<1, double>, double> > DynamicSparseGridGeometryAlgorithms1d;
-typedef sofa::component::topology::DynamicSparseGridGeometryAlgorithms<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<2, double>, sofa::defaulttype::Vec<2, double>, double> > DynamicSparseGridGeometryAlgorithms2d;
-typedef sofa::component::topology::DynamicSparseGridGeometryAlgorithms<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > DynamicSparseGridGeometryAlgorithms3d;
+//typedef sofa::component::topology::DynamicSparseGridGeometryAlgorithms<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<1, double>, sofa::defaulttype::Vec<1, double>, double> > DynamicSparseGridGeometryAlgorithms1d;
+//typedef sofa::component::topology::DynamicSparseGridGeometryAlgorithms<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<2, double>, sofa::defaulttype::Vec<2, double>, double> > DynamicSparseGridGeometryAlgorithms2d;
+//typedef sofa::component::topology::DynamicSparseGridGeometryAlgorithms<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > DynamicSparseGridGeometryAlgorithms3d;
 
 
 
 //---------------------------------------------------------------------------------------------
 //Typedef for DynamicSparseGridTopologyAlgorithms
-typedef sofa::component::topology::DynamicSparseGridTopologyAlgorithms<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<1, double>, sofa::defaulttype::Vec<1, double>, double> > DynamicSparseGridTopologyAlgorithms1d;
-typedef sofa::component::topology::DynamicSparseGridTopologyAlgorithms<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<2, double>, sofa::defaulttype::Vec<2, double>, double> > DynamicSparseGridTopologyAlgorithms2d;
-typedef sofa::component::topology::DynamicSparseGridTopologyAlgorithms<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > DynamicSparseGridTopologyAlgorithms3d;
+//typedef sofa::component::topology::DynamicSparseGridTopologyAlgorithms<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<1, double>, sofa::defaulttype::Vec<1, double>, double> > DynamicSparseGridTopologyAlgorithms1d;
+//typedef sofa::component::topology::DynamicSparseGridTopologyAlgorithms<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<2, double>, sofa::defaulttype::Vec<2, double>, double> > DynamicSparseGridTopologyAlgorithms2d;
+//typedef sofa::component::topology::DynamicSparseGridTopologyAlgorithms<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > DynamicSparseGridTopologyAlgorithms3d;
 
 
 
@@ -175,12 +175,12 @@ typedef sofa::component::topology::TriangleSetTopologyAlgorithms<sofa::defaultty
 
 
 #ifndef SOFA_FLOAT
-typedef DynamicSparseGridGeometryAlgorithms1d DynamicSparseGridGeometryAlgorithms1;
-typedef DynamicSparseGridGeometryAlgorithms2d DynamicSparseGridGeometryAlgorithms2;
-typedef DynamicSparseGridGeometryAlgorithms3d DynamicSparseGridGeometryAlgorithms3;
-typedef DynamicSparseGridTopologyAlgorithms1d DynamicSparseGridTopologyAlgorithms1;
-typedef DynamicSparseGridTopologyAlgorithms2d DynamicSparseGridTopologyAlgorithms2;
-typedef DynamicSparseGridTopologyAlgorithms3d DynamicSparseGridTopologyAlgorithms3;
+//typedef DynamicSparseGridGeometryAlgorithms1d DynamicSparseGridGeometryAlgorithms1;
+//typedef DynamicSparseGridGeometryAlgorithms2d DynamicSparseGridGeometryAlgorithms2;
+//typedef DynamicSparseGridGeometryAlgorithms3d DynamicSparseGridGeometryAlgorithms3;
+//typedef DynamicSparseGridTopologyAlgorithms1d DynamicSparseGridTopologyAlgorithms1;
+//typedef DynamicSparseGridTopologyAlgorithms2d DynamicSparseGridTopologyAlgorithms2;
+//typedef DynamicSparseGridTopologyAlgorithms3d DynamicSparseGridTopologyAlgorithms3;
 typedef EdgeSetGeometryAlgorithmsRigid3d EdgeSetGeometryAlgorithmsRigid3;
 typedef EdgeSetGeometryAlgorithmsRigid2d EdgeSetGeometryAlgorithmsRigid2;
 typedef EdgeSetGeometryAlgorithms1d EdgeSetGeometryAlgorithms1;

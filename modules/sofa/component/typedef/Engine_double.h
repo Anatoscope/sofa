@@ -42,7 +42,7 @@
 #include <SofaGeneralEngine/AverageCoord.h>
 #include <SofaGeneralEngine/BoxROI.h>
 #include <SofaGeneralEngine/DilateEngine.h>
-#include <SofaMiscEngine/Distances.h>
+//#include <SofaMiscEngine/Distances.h>
 #include <SofaGeneralEngine/ExtrudeQuadsAndGenerateHexas.h>
 #include <SofaGeneralEngine/ExtrudeSurface.h>
 #include <SofaGeneralEngine/GenerateRigidMass.h>
@@ -94,7 +94,7 @@ typedef sofa::component::engine::DilateEngine<sofa::defaulttype::StdVectorTypes<
 
 //---------------------------------------------------------------------------------------------
 //Typedef for Distances
-typedef sofa::component::engine::Distances<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > Distances3d;
+//typedef sofa::component::engine::Distances<sofa::defaulttype::StdVectorTypes<sofa::defaulttype::Vec<3, double>, sofa::defaulttype::Vec<3, double>, double> > Distances3d;
 
 
 
@@ -264,7 +264,7 @@ typedef BoxROIRigid3d BoxROIRigid3;
 typedef BoxROI3d BoxROI3;
 typedef BoxROI6d BoxROI6;
 typedef DilateEngine3d DilateEngine3;
-typedef Distances3d Distances3;
+//typedef Distances3d Distances3;
 typedef ExtrudeQuadsAndGenerateHexas3d ExtrudeQuadsAndGenerateHexas3;
 typedef ExtrudeSurface3d ExtrudeSurface3;
 typedef GenerateRigidMassRigid3d GenerateRigidMassRigid3;

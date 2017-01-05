@@ -27,7 +27,7 @@
 #include <SofaEulerianFluid/initEulerianFluid.h>
 #include <SofaSphFluid/initSPHFluid.h>
 #include <SofaVolumetricData/initVolumetricData.h>
-#include <SofaNonUniformFem/initNonUniformFEM.h>
+//#include <SofaNonUniformFem/initNonUniformFEM.h>
 
 namespace sofa
 {
@@ -47,7 +47,7 @@ void initComponentAdvanced()
     initEulerianFluid();
     initSPHFluid();
     initVolumetricData();
-    initNonUniformFEM();
+//    initNonUniformFEM();
 }
 
 

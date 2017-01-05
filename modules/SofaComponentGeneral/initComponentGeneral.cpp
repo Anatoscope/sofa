@@ -45,20 +45,20 @@
 #include <SofaBoundaryCondition/initBoundaryCondition.h>
 #include <SofaUserInteraction/initUserInteraction.h>
 #include <SofaConstraint/initConstraint.h>
-#include <SofaHaptics/initHaptics.h>
+//#include <SofaHaptics/initHaptics.h>
 
-#ifdef SOFA_HAVE_NEWMAT
-#include <SofaDenseSolver/initDenseSolver.h>
-#endif
-#ifdef SOFA_HAVE_CSPARSE
-#include <SofaSparseSolver/initSparseSolver.h>
-#endif
-#ifdef SOFA_HAVE_TAUCS
-#include <SofaTaucsSolver/initTaucsSolver.h>
-#endif
+//#ifdef SOFA_HAVE_NEWMAT
+//#include <SofaDenseSolver/initDenseSolver.h>
+//#endif
+//#ifdef SOFA_HAVE_CSPARSE
+//#include <SofaSparseSolver/initSparseSolver.h>
+//#endif
+//#ifdef SOFA_HAVE_TAUCS
+//#include <SofaTaucsSolver/initTaucsSolver.h>
+//#endif
 #include <SofaEigen2Solver/initEigen2Solver.h>
 
-#include <SofaPreconditioner/initPreconditioner.h>
+//#include <SofaPreconditioner/initPreconditioner.h>
 #include <SofaOpenglVisual/initOpenGLVisual.h>
 
 
@@ -98,17 +98,17 @@ void initComponentGeneral()
     initBoundaryCondition();
     initUserInteraction();
     initConstraint();
-    initHaptics();
-#ifdef SOFA_HAVE_NEWMAT
-    initDenseSolver();
-#endif
-#ifdef SOFA_HAVE_CSPARSE
-    initSparseSolver();
-#endif
-#ifdef SOFA_HAVE_TAUCS
-    initTaucsSolver();
-#endif
-    initPreconditioner();
+//    initHaptics();
+//#ifdef SOFA_HAVE_NEWMAT
+//    initDenseSolver();
+//#endif
+//#ifdef SOFA_HAVE_CSPARSE
+//    initSparseSolver();
+//#endif
+//#ifdef SOFA_HAVE_TAUCS
+//    initTaucsSolver();
+//#endif
+//    initPreconditioner();
 #ifndef SOFA_NO_OPENGL
     initOpenGLVisual();
 #endif
