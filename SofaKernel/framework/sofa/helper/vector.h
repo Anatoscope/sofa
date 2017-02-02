@@ -183,8 +183,76 @@ public:
     void fastResize(size_type n) {
         this->resize(n);
     }
+
+
+#ifndef NDEBUG
+    // this is to prevent resize in some siturations (eg. direct resizing of
+    // state vectors in mappings)
+    
+    void resize(size_type n, const T& value = T()) {
+        assert(resize_flag && "resize is not allowed");        
+        std::vector<T>::resize(n, value);
+    }
+
+
+    void clear() {
+        assert(resize_flag && "resize is not allowed");
+        std::vector<T>::clear();
+    }
+    
+    struct resize_enabler {
+        // scoped resize enabler
+        
+        vector* const owner;
+        const bool old;
+        
+        resize_enabler(vector* owner)
+            : owner(owner),
+              old(owner->resize_flag) {
+            owner->resize_flag = true;
+        }
+
+        ~resize_enabler() {
+            owner->resize_flag = old;
+        }
+        
+    };
+
+    // using friend functions to allow adl to kick in and override default
+    // template implementation (otherwise cuda-vectors & others complain about
+    // missing methods)
+
+    // scoped resize enabler
+    friend resize_enabler enable_resize(vector& self) {
+        return {&self};
+    }
+
+    // clears resize flag
+    friend void prevent_resize(vector& self) {
+        self.resize_flag = false;
+    }
+    
+private:
+    bool resize_flag = true;
+    
+#endif
+    
+    
 };
 
+
+#ifndef NDEBUG
+
+// default implementation is empty (for e.g. cuda vectors)
+template<class T>
+static void prevent_resize(T&) { }
+
+struct resize_enabler {};
+
+template<class T>
+static resize_enabler enable_resize(T&) { return {}; }
+
+#endif
 
 /// Input stream
 /// Specialization for reading vectors of int and unsigned int using "A-B" notation for all integers between A and B, optionnally specifying a step using "A-B-step" notation.

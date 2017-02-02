@@ -172,6 +172,12 @@ MechanicalObject<DataTypes>::MechanicalObject()
 //    write(VecCoordId::null())->forceSet();
 //    write(VecDerivId::null())->forceSet();
 
+#ifndef NDEBUG
+    prevent_resize(helper::write(x).wref());
+#endif
+    
+    // helper::write(x)->prevent_resize();    
+    
     // default size is 1
     resize(1);
 }
@@ -654,43 +660,26 @@ template <class DataTypes>
 void MechanicalObject<DataTypes>::resize(const size_t size)
 {
 #ifdef SOFA_SMP_NUMA
-    if(this->getContext()->getProcessor()!=-1)
+    if(this->getContext()->getProcessor()!=-1) {
         numa_set_preferred(this->getContext()->getProcessor()/2);
+    }
 #endif
 
-    if(size>0)
     {
-        //if (size!=vsize)
-        {
-            vsize = size;
-            for (unsigned int i = 0; i < vectorsCoord.size(); i++)
-            {
-                if (vectorsCoord[i] != NULL && vectorsCoord[i]->isSet())
-                {
-                    vectorsCoord[i]->beginEdit()->resize(size);
-                    vectorsCoord[i]->endEdit();
-                }
-            }
-
-            for (unsigned int i = 0; i < vectorsDeriv.size(); i++)
-            {
-                if (vectorsDeriv[i] != NULL && vectorsDeriv[i]->isSet())
-                {
-                    vectorsDeriv[i]->beginEdit()->resize(size);
-                    vectorsDeriv[i]->endEdit();
-                }
-            }
-        }
-        this->forceMask.resize(size);
-    }
-    else // clear
-    {
-        vsize = 0;
+        vsize = size;
         for (unsigned int i = 0; i < vectorsCoord.size(); i++)
         {
             if (vectorsCoord[i] != NULL && vectorsCoord[i]->isSet())
             {
-                vectorsCoord[i]->beginEdit()->clear();
+                auto vec = vectorsCoord[i]->beginEdit();
+#ifndef NDEBUG
+                auto lock = enable_resize(*vec);
+#endif
+                if(size > 0) {
+                    vec->resize(size);
+                } else {
+                    vec->clear();
+                }
                 vectorsCoord[i]->endEdit();
             }
         }
@@ -699,12 +688,26 @@ void MechanicalObject<DataTypes>::resize(const size_t size)
         {
             if (vectorsDeriv[i] != NULL && vectorsDeriv[i]->isSet())
             {
-                vectorsDeriv[i]->beginEdit()->clear();
+                auto vec = vectorsDeriv[i]->beginEdit();
+#ifndef NDEBUG                
+                auto lock = enable_resize(*vec);
+#endif
+                if(size > 0) {
+                    vec->resize(size);
+                } else {
+                    vec->clear();
+                }
                 vectorsDeriv[i]->endEdit();
             }
         }
+    }
+
+    if(size > 0) {
+        this->forceMask.resize(size);
+    } else {
         this->forceMask.clear();
     }
+    
 }
 
 template <class DataTypes>
