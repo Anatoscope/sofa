@@ -48,6 +48,16 @@ namespace sofa
 namespace helper
 {
 
+#ifndef NDEBUG
+
+template<class T>
+struct resize_enabler {
+    resize_enabler(T*) {} 
+};
+
+#endif
+
+
 void SOFA_HELPER_API vector_access_failure(const void* vec, unsigned size, unsigned i, const std::type_info& type);
 
 template <class T, class MemoryManager = CPUMemoryManager<T> >
@@ -200,33 +210,13 @@ public:
         std::vector<T>::clear();
     }
     
-    struct resize_enabler {
-        // scoped resize enabler
-        
-        vector* const owner;
-        const bool old;
-        
-        resize_enabler(vector* owner)
-            : owner(owner),
-              old(owner->resize_flag) {
-            owner->resize_flag = true;
-        }
-
-        ~resize_enabler() {
-            owner->resize_flag = old;
-        }
-        
-    };
-
-    // using friend functions to allow adl to kick in and override default
+    // using friend class/functions to allow adl to kick in and override default
     // template implementation (otherwise cuda-vectors & others complain about
     // missing methods)
 
     // scoped resize enabler
-    friend resize_enabler enable_resize(vector& self) {
-        return {&self};
-    }
-
+    friend class resize_enabler<vector>;
+    
     // clears resize flag
     friend void prevent_resize(vector& self) {
         self.resize_flag = false;
@@ -243,14 +233,52 @@ private:
 
 #ifndef NDEBUG
 
+template<class T>
+class resize_enabler<vector<T>> {
+    // scoped resize enabler
+        
+    vector<T>* owner;
+    bool old;
+
+public:
+
+    resize_enabler(vector<T>* owner)
+        : owner(owner),
+          old(owner->resize_flag) {
+        assert(owner);
+        owner->resize_flag = true;
+    }
+
+    ~resize_enabler() {
+        if(owner) {
+            owner->resize_flag = old;
+        }
+    }
+
+    
+    resize_enabler(const resize_enabler&) = delete;
+    resize_enabler& operator=(const resize_enabler&) = delete;
+    resize_enabler& operator=(resize_enabler&& other) = delete;
+
+    
+    resize_enabler(resize_enabler&& other)
+        : owner(other.owner),
+        old(other.old) {
+        other.owner = nullptr;
+    }
+    
+    
+};
+
+
+
 // default implementation is empty (for e.g. cuda vectors)
 template<class T>
 static void prevent_resize(T&) { }
 
-struct resize_enabler {};
 
 template<class T>
-static resize_enabler enable_resize(T&) { return {}; }
+static resize_enabler<T> enable_resize(T& self) { return {&self}; }
 
 #endif
 

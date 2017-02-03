@@ -174,6 +174,13 @@ MechanicalObject<DataTypes>::MechanicalObject()
 
 #ifndef NDEBUG
     prevent_resize(helper::write(x).wref());
+    prevent_resize(helper::write(x0).wref());
+    prevent_resize(helper::write(reset_position).wref());
+    
+    prevent_resize(helper::write(v).wref());
+    prevent_resize(helper::write(f).wref());
+    prevent_resize(helper::write(externalForces).wref());
+    prevent_resize(helper::write(reset_velocity).wref());        
 #endif
     
     // helper::write(x)->prevent_resize();    
@@ -291,6 +298,29 @@ MechanicalObject<DataTypes> &MechanicalObject<DataTypes>::operator = (const Mech
 template <class DataTypes>
 void MechanicalObject<DataTypes>::parse ( sofa::core::objectmodel::BaseObjectDescription* arg )
 {
+
+#ifndef NDEBUG
+    struct enable_resize_all {
+        std::vector<helper::resize_enabler<VecCoord>> coord;
+        std::vector<helper::resize_enabler<VecDeriv>> deriv;
+
+        enable_resize_all(MechanicalObject* self) {
+
+            using helper::write;
+
+            coord.push_back(enable_resize(write(self->x).wref()));
+            coord.push_back(enable_resize(write(self->x0).wref()));
+            coord.push_back(enable_resize(write(self->reset_position).wref()));                        
+
+            deriv.push_back(enable_resize(write(self->v).wref()));
+            deriv.push_back(enable_resize(write(self->f).wref()));
+            deriv.push_back(enable_resize(write(self->externalForces).wref()));
+            deriv.push_back(enable_resize(write(self->reset_velocity).wref()));            
+        };
+    } unlock(this);
+
+#endif
+    
     Inherited::parse(arg);
 
     if (arg->getAttribute("size") != NULL)
@@ -673,7 +703,7 @@ void MechanicalObject<DataTypes>::resize(const size_t size)
             {
                 auto vec = vectorsCoord[i]->beginEdit();
 #ifndef NDEBUG
-                auto lock = enable_resize(*vec);
+                auto unlock = enable_resize(*vec); (void) unlock;
 #endif
                 if(size > 0) {
                     vec->resize(size);
@@ -690,7 +720,7 @@ void MechanicalObject<DataTypes>::resize(const size_t size)
             {
                 auto vec = vectorsDeriv[i]->beginEdit();
 #ifndef NDEBUG                
-                auto lock = enable_resize(*vec);
+                auto unlock = enable_resize(*vec); (void) unlock;
 #endif
                 if(size > 0) {
                     vec->resize(size);
