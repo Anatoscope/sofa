@@ -689,6 +689,8 @@ void MechanicalObject<DataTypes>::renumberValues( const sofa::helper::vector< un
 template <class DataTypes>
 void MechanicalObject<DataTypes>::resize(const size_t size)
 {
+    if(size != vsize) return;
+    
 #ifdef SOFA_SMP_NUMA
     if(this->getContext()->getProcessor()!=-1) {
         numa_set_preferred(this->getContext()->getProcessor()/2);
