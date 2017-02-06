@@ -310,6 +310,8 @@ public:
         ptr.reset();
     }
 
+protected:
+    DataValue(std::shared_ptr<T> ptr) : ptr(ptr) { }
 //    T& value()
 //    {
 //        return *beginEdit();
@@ -355,6 +357,8 @@ public:
 template < class T = void* >
 class Data : public TData<T>
 {
+protected:
+    typedef DataValue<T, sofa::defaulttype::DataTypeInfo<T>::CopyOnWrite> ValueType;
 public:
 
     /// @name Class reflection system
@@ -386,8 +390,9 @@ public:
     };
 
     /** \copydoc BaseData(const BaseData::BaseInitData& init) */
-    explicit Data(const BaseData::BaseInitData& init)
+    explicit Data(const BaseData::BaseInitData& init, const ValueType& value = ValueType())
         : TData<T>(init)
+        , m_values(value)
         , shared(NULL)
     {
     }
@@ -536,8 +541,6 @@ public:
     }
 
 protected:
-
-    typedef DataValue<T, sofa::defaulttype::DataTypeInfo<T>::CopyOnWrite> ValueType;
 
     /// Value
     helper::fixed_array<ValueType, SOFA_DATA_MAX_ASPECTS> m_values;
