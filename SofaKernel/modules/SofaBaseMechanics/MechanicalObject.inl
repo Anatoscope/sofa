@@ -75,6 +75,29 @@ namespace component
 namespace container
 {
 
+#ifndef NDEBUG
+
+template<class T>
+struct enable_resize_all {
+    std::vector<helper::resize_enabler<typename T::VecCoord>> coord;
+    std::vector<helper::resize_enabler<typename T::VecDeriv>> deriv;
+
+    enable_resize_all(T* self) {
+
+        using helper::write;
+
+        coord.push_back(enable_resize(write(self->x).wref()));
+        coord.push_back(enable_resize(write(self->x0).wref()));
+        coord.push_back(enable_resize(write(self->reset_position).wref()));                        
+
+        deriv.push_back(enable_resize(write(self->v).wref()));
+        deriv.push_back(enable_resize(write(self->f).wref()));
+        deriv.push_back(enable_resize(write(self->reset_velocity).wref()));            
+    };
+};
+
+#endif
+
 template <class DataTypes>
 MechanicalObject<DataTypes>::MechanicalObject()
     : x(initData(&x, "position", "position coordinates of the degrees of freedom"))
@@ -179,7 +202,6 @@ MechanicalObject<DataTypes>::MechanicalObject()
     
     prevent_resize(helper::write(v).wref());
     prevent_resize(helper::write(f).wref());
-    prevent_resize(helper::write(externalForces).wref());
     prevent_resize(helper::write(reset_velocity).wref());        
 #endif
     
@@ -300,25 +322,7 @@ void MechanicalObject<DataTypes>::parse ( sofa::core::objectmodel::BaseObjectDes
 {
 
 #ifndef NDEBUG
-    struct enable_resize_all {
-        std::vector<helper::resize_enabler<VecCoord>> coord;
-        std::vector<helper::resize_enabler<VecDeriv>> deriv;
-
-        enable_resize_all(MechanicalObject* self) {
-
-            using helper::write;
-
-            coord.push_back(enable_resize(write(self->x).wref()));
-            coord.push_back(enable_resize(write(self->x0).wref()));
-            coord.push_back(enable_resize(write(self->reset_position).wref()));                        
-
-            deriv.push_back(enable_resize(write(self->v).wref()));
-            deriv.push_back(enable_resize(write(self->f).wref()));
-            deriv.push_back(enable_resize(write(self->externalForces).wref()));
-            deriv.push_back(enable_resize(write(self->reset_velocity).wref()));            
-        };
-    } unlock(this);
-
+    enable_resize_all<MechanicalObject> unlock(this);
 #endif
     
     Inherited::parse(arg);
@@ -1097,6 +1101,11 @@ void MechanicalObject<DataTypes>::addFromBaseVectorDifferentSize(sofa::core::Vec
 template <class DataTypes>
 void MechanicalObject<DataTypes>::init()
 {
+
+#ifndef NDEBUG
+    enable_resize_all<MechanicalObject> unlock(this);
+#endif
+    
 #ifdef SOFA_SMP_NUMA1
     if(this->getContext()->getProcessor()!=-1)
         numa_set_preferred(this->getContext()->getProcessor()/2);
@@ -1275,6 +1284,21 @@ void MechanicalObject<DataTypes>::reinit()
 
     if (grid)
         grid->setP0(p0);
+
+
+    // make sure everyone has the right size
+    std::size_t size = 0;
+
+    size = std::max(size, x.getValue().size());
+    size = std::max(size, x0.getValue().size());
+    size = std::max(size, reset_position.getValue().size());    
+    
+    size = std::max(size, v.getValue().size());
+    size = std::max(size, f.getValue().size());
+    size = std::max(size, reset_velocity.getValue().size());        
+
+    std::clog << "resizing to: " << size << std::endl;
+    this->resize(size);
 }
 
 template <class DataTypes>
@@ -1717,6 +1741,7 @@ void MechanicalObject<DataTypes>::vAvail(const core::ExecParams* /* params */, c
 template <class DataTypes>
 void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::VecCoordId v)
 {
+
 #ifdef SOFA_SMP_NUMA
     if(this->getContext()->getProcessor()!=-1)
         numa_set_preferred(this->getContext()->getProcessor()/2);
@@ -1740,6 +1765,7 @@ void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::V
 template <class DataTypes>
 void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::VecDerivId v)
 {
+    
 #ifdef SOFA_SMP_NUMA
     if(this->getContext()->getProcessor()!=-1)
         numa_set_preferred(this->getContext()->getProcessor()/2);
@@ -1848,6 +1874,11 @@ void MechanicalObject<DataTypes>::vOp(const core::ExecParams* params, core::VecI
                                       core::ConstVecId a,
                                       core::ConstVecId b, SReal f)
 {
+#ifndef NDEBUG
+    enable_resize_all<MechanicalObject> unlock(this);
+#endif
+
+ 
 #ifdef SOFA_SMP
     if (params->execMode() == core::ExecParams::EXEC_KAAPI)
     {
