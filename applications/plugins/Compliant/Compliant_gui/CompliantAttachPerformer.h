@@ -33,7 +33,7 @@
 
 #include <SofaOpenglVisual/OglModel.h>
 
-#include "CompliantAttachButtonSetting.h"
+#include "../misc/CompliantAttachButtonSetting.h"
 
 
 namespace sofa
@@ -104,8 +104,8 @@ class SOFA_Compliant_gui_API CompliantAttachPerformer: public TInteractionPerfor
 
     SReal _compliance;
     bool _isCompliance;
-    SReal _arrowSize;
-    defaulttype::Vec<4,SReal> _color;
+    float _arrowSize;
+    defaulttype::Vec4f _color;
     bool _visualmodel;  // to be able to export the mouse spring in obj
 
 
