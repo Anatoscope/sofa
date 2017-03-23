@@ -20,7 +20,7 @@
 	<PlaneForceField name="Floor" normal="-0.2 0 1" stiffness="100" damping="1" draw="1" />
 	<!-- <PlaneForceField name="Wall" normal="0 -1 0" d="-4" stiffness="100" damping="1" draw="1" color="0.4 0.4 0.4" /> -->
 
-	<AverageCoord name="center" template="Vec3d" listening="true"/>
+	<AverageCoord name="center" template="Vec3d" position="@Particles.position" listening="true"/>
 
 	<OglLabel label="Sofa framework" fontsize="30"/>
 	<OglLabel label="Falling cube on an inclined plane" fontsize="20" y="50"/>

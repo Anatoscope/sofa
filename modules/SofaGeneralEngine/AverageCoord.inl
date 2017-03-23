@@ -44,19 +44,17 @@ namespace engine
 
 template <class DataTypes>
 AverageCoord<DataTypes>::AverageCoord()
-    : d_indices( initData (&d_indices, "indices", "indices of the coordinates to average") )
-    , d_vecId(initData (&d_vecId, sofa::core::VecCoordId::position().getIndex(), "vecId", "index of the vector (default value corresponds to core::VecCoordId::position() )") )
-    , d_average( initData (&d_average, "average", "average of the values with the given indices in the given coordinate vector \n"
-                                                   "(default value corresponds to the average coord of the mechanical context)") )
+    : d_position(initData (&d_position, "position", "positions to average") )
+    , d_indices( initData (&d_indices, "indices", "indices of the coordinates to average, empty to average all positions") )
+    , d_average( initData (&d_average, "average", "average of the values with the given indices in the given coordinate vector") )
 {
 }
 
 template <class DataTypes>
 void AverageCoord<DataTypes>::init()
 {
-    mstate = dynamic_cast< sofa::core::behavior::MechanicalState<DataTypes>* >(getContext()->getMechanicalState());
+    addInput(&d_position);
     addInput(&d_indices);
-    addInput(&d_vecId);
     addOutput(&d_average);
     setDirtyValue();
 }
@@ -70,25 +68,23 @@ void AverageCoord<DataTypes>::reinit()
 template <class DataTypes>
 void AverageCoord<DataTypes>::update()
 {
-    if(mstate==NULL)
-    {
-        msg_info(this) << "This component requires a mechanical state in its context.";
-        return;
-    }
-
-    helper::ReadAccessor< Data<VecCoord> > coord = *mstate->read(core::VecCoordId(d_vecId.getValue()));
+    helper::ReadAccessor< Data<VecCoord> > coord(d_position);
     const VecIndex& indices = d_indices.getValue();
+
+    cleanDirty();
 
     Coord c;
     unsigned int n = (indices.empty()) ? coord.size() : indices.size();
+    if (0 == n) {
+        d_average.setValue(c);
+        return;
+    }
 
     for( unsigned i=0; i< n; ++i )
     {
         c += coord[ (indices.empty()) ? i : indices[i]];
     }
     c *= 1./n;
-
-    cleanDirty();
 
     d_average.setValue(c);
 }
