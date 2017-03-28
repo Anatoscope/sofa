@@ -292,8 +292,10 @@ class RigidBody(SingleMechanicalObject):
 
         def __init__(self, node, filepath, scale3d, offset, name_suffix=''):
             self.node = node.createChild( "collision"+name_suffix )  # node
-            r = Quaternion.to_euler(offset[3:])  * 180.0 / math.pi
-            self.loader = SofaPython.Tools.meshLoader(self.node, filename=filepath, name='loader', scale3d=concat(scale3d), translation=concat(offset[:3]) , rotation=concat(r), triangulate=True)
+            T = numpy.identity(4)
+            T[0:3,0:3] = numpy.dot(Quaternion.to_matrix(offset[3:]), numpy.diag(scale3d))
+            T[0:3,3] = offset[:3]
+            self.loader = SofaPython.Tools.meshLoader(self.node, filename=filepath, name='loader', transformation="["+SofaPython.Tools.listToStr(T.flatten().tolist())+"]", triangulate=True)
             self.topology = self.node.createObject('MeshTopology', name='topology', src="@loader" )
             self.dofs = self.node.createObject('MechanicalObject', name='dofs', template="Vec3"+template_suffix )
             self.triangles = self.node.createObject('TriangleModel', name='model')
