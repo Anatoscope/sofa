@@ -19,6 +19,14 @@ def listListToStr(xx):
         str_xx += listToStr(x) + " "
     return str_xx
 
+def listListToSStr(xx):
+    """ concatenate lists of list for use with data.
+    """
+    str_xx=""
+    for x in xx:
+        str_xx += str(x) + " "
+    return str_xx
+
 def strToListFloat(s):
     """ Convert a string to a list of float
     """
