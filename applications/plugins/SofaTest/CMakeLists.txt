@@ -32,15 +32,21 @@ find_package(SofaFramework REQUIRED)
 find_package(SofaMisc REQUIRED)
 find_package(SceneCreator REQUIRED)
 
+
+set(SOFATEST_COMPILER_FLAGS "")
+
 find_package(SofaPython QUIET)
 if(SofaPython_FOUND)
-    list(APPEND HEADER_FILES "Python_test.h")
-    list(APPEND SOURCE_FILES "Python_test.cpp")
+    list(APPEND HEADER_FILES Python_test.h)
+    list(APPEND SOURCE_FILES
+        Python_test.cpp
+        python/_SofaTest.cpp)
     set(PYTHON_FILES
         python/SofaTest/Macro.py
         python/SofaTest/__init__.py
     )
     message(STATUS "SofaTest: optional dependency SofaPython found, Python_test will be built")
+    set(SOFATEST_COMPILER_FLAGS "${SOFATEST_COMPILER_FLAGS} -DSOFA_HAVE_SOFAPYTHON")
 else()
     message(STATUS "SofaTest: optional dependency SofaPython NOT found, Python_test won't be built")
 endif()
@@ -56,7 +62,7 @@ target_link_libraries(${PROJECT_NAME} SceneCreator SofaComponentBase SofaCompone
 target_link_libraries(${PROJECT_NAME} gtest)
 target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>")
 target_include_directories(${PROJECT_NAME} PUBLIC "$<INSTALL_INTERFACE:include>")
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DSOFA_BUILD_TEST -DSOFA_SRC_DIR=\"${CMAKE_SOURCE_DIR}\"")
+set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DSOFA_BUILD_TEST -DSOFA_SRC_DIR=\"${CMAKE_SOURCE_DIR}\" ${SOFATEST_COMPILER_FLAGS}")
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/..")
 

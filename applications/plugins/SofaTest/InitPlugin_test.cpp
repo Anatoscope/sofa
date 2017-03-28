@@ -21,6 +21,14 @@
 ******************************************************************************/
 #include "InitPlugin_test.h"
 
+#ifdef SOFA_HAVE_SOFAPYTHON
+#include <SofaPython/PythonCommon.h>
+#include <SofaPython/PythonMacros.h>
+#include <SofaPython/PythonFactory.h>
+extern PyMethodDef _SofaTestModuleMethods[]; // functions of the _SofaTest python module
+#endif
+
+
 namespace sofa
 {
 
@@ -44,6 +52,15 @@ namespace component
 		if (first)
 		{
 			first = false;
+
+#ifdef SOFA_HAVE_SOFAPYTHON
+        // adding _SofaTest python module
+        if( PythonFactory::s_sofaPythonModule ) // add the module only if the Sofa module exists (SofaPython is loaded)
+        {
+            static PyObject *s__SofaTestPythonModule = SP_INIT_MODULE(_SofaTest);
+            (void) s__SofaTestPythonModule; // not yet used here, but could be used to add class/data bindings
+        }
+#endif
 		}
 	}
 

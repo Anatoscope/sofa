@@ -3,6 +3,13 @@ import Sofa
 import inspect
 import os
 
+
+# importing module implemented in c++
+Sofa.loadPlugin("SofaTest")
+from _SofaTest import *
+
+
+
 ## @package SofaTest
 #  Python helper to perform test in Sofa
 
