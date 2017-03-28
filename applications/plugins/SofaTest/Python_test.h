@@ -68,11 +68,13 @@ public:
 
 /// A test written as a sofa scene in python
 class SOFA_TestPlugin_API Python_scene_test : public Python_test {
-
 public:
 
+    struct test_finished : std::runtime_error { };
+    
     void run( const Python_test_data& );
 
+    static void finish();
 };
 
 

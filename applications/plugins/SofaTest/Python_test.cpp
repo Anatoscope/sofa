@@ -1,4 +1,5 @@
 #include <SofaPython/PythonScriptEvent.h>
+#include <SofaPython/PythonEnvironment.h>
 
 #include "Python_test.h"
 
@@ -64,6 +65,12 @@ struct Listener : core::objectmodel::BaseObject {
 
 };
 
+
+static bool running;
+void Python_scene_test::finish() {
+    running = false;
+}
+
 void Python_scene_test::run( const Python_test_data& data ) {
 
     msg_info("Python_scene_test") << "running "<< data.filepath;
@@ -75,6 +82,13 @@ void Python_scene_test::run( const Python_test_data& data ) {
         ASSERT_TRUE(scriptFound);
     }
 
+    // install exception hook
+    simulation::PythonEnvironment::runString
+        ("import sys; import SofaTest; sys.excepthook = lambda *args: (sys.__excepthook__(*args), SofaTest.excepthook(*args))");
+    
+    // createScene could abort the running script
+    running = true;
+    
     simulation::Node::SPtr root = loader.loadSceneWithArguments(data.filepath.c_str(),data.arguments);
 	
 	root->addObject( new Listener );
@@ -82,7 +96,7 @@ void Python_scene_test::run( const Python_test_data& data ) {
 	simulation::getSimulation()->init(root.get());
 
 	try {
-		while(true) {
+		while(running) {
 			simulation::getSimulation()->animate(root.get(), root->getDt());
 		}
 	} catch( const result& test_result ) {
