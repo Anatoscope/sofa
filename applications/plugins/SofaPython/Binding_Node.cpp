@@ -23,6 +23,7 @@
 #include <sofa/simulation/Simulation.h>
 #include <sofa/core/objectmodel/KeypressedEvent.h>
 #include <sofa/core/objectmodel/KeyreleasedEvent.h>
+#include <sofa/core/objectmodel/GUIEvent.h>
 #include <sofa/simulation/MechanicalVisitor.h>
 #include <sofa/simulation/UpdateMappingVisitor.h>
 #include <sofa/simulation/VisualVisitor.h>
@@ -339,6 +340,24 @@ extern "C" PyObject * Node_detachFromGraph(PyObject *self, PyObject * /*args*/)
     Py_RETURN_NONE;
 }
 
+extern "C" PyObject * Node_sendGUIEvent(PyObject *self, PyObject * args)
+{
+    Node* node=down_cast<Node>(((PySPtr<Base>*)self)->object->toBaseNode());
+    char* controlID;
+    char* valueName;
+    char* value;
+    if (!PyArg_ParseTuple(args, "sss",&controlID,&valueName,&value))
+    {
+        PyErr_BadArgument();
+        return NULL;
+    }
+//    PythonScriptEvent event(node,eventName,pyUserData);
+    sofa::core::objectmodel::GUIEvent event(controlID, valueName, value);
+    node->propagateEvent(sofa::core::ExecParams::defaultInstance(), &event);
+    Py_RETURN_NONE;
+}
+
+
 extern "C" PyObject * Node_sendScriptEvent(PyObject *self, PyObject * args)
 {
     Node* node=down_cast<Node>(((PySPtr<Base>*)self)->object->toBaseNode());
@@ -449,6 +468,7 @@ SP_CLASS_METHOD(Node,addChild)
 SP_CLASS_METHOD(Node,removeChild)
 SP_CLASS_METHOD(Node,moveChild)
 SP_CLASS_METHOD(Node,detachFromGraph)
+SP_CLASS_METHOD(Node,sendGUIEvent)
 SP_CLASS_METHOD(Node,sendScriptEvent)
 SP_CLASS_METHOD(Node,sendKeypressedEvent)
 SP_CLASS_METHOD(Node,sendKeyreleasedEvent)
