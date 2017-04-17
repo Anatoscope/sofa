@@ -325,8 +325,10 @@ void AssemblyVisitor::fill_prefix(simulation::Node* node) {
         if( node->mechanicalState->getSize()==0 ) return;
 
         // does the mask filter every dofs?
+#ifdef SOFA_USE_MASK
         const sofa::core::behavior::BaseMechanicalState::ForceMask::InternalStorage& mask = node->mechanicalState->forceMask.getEntries();
         if( std::find(mask.begin(), mask.end(), true) == mask.end() ) return;
+#endif
     }
 
 

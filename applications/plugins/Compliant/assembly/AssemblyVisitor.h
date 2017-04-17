@@ -346,7 +346,9 @@ struct AssemblyVisitor::process_helper {
 
         if( zero(Jc) ) {
             std::cerr << "zero mapping concatenation! " << "dofs: " << curr->getPathName() << std::endl;
+#ifdef SOFA_USE_MASK
             std::cerr << "mask: " << curr->forceMask.getEntries() << std::endl;
+#endif
         }
         
 //        if( zero(Jc) && curr->getSize() !=0 )  {
