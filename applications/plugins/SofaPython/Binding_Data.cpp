@@ -72,58 +72,119 @@ PyObject *GetDataValuePython(BaseData* data)
         }
 
         // this type is not yet supported
-        SP_MESSAGE_WARNING( "BaseData_getAttr_value unsupported native type="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value" )
+        SP_MESSAGE_WARNING( "BaseData_getAttr_value unsupported native type (non container)="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value" )
         return PyString_FromString(data->getValueString().c_str());
     }
     else
     {
-        int rowWidth = typeinfo->size();
-        int nbRows = typeinfo->size(data->getValueVoidPtr()) / typeinfo->size();
-
         // this is a vector; return a python list of the corresponding type (ints, scalars or strings)
 
         if( !typeinfo->Text() && !typeinfo->Scalar() && !typeinfo->Integer() )
         {
-            SP_MESSAGE_WARNING( "BaseData_getAttr_value unsupported native type="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value" )
+            SP_MESSAGE_WARNING( "BaseData_getAttr_value unsupported encapsulated type in container="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value" )
             return PyString_FromString(data->getValueString().c_str());
         }
 
-        PyObject *rows = PyList_New(nbRows);
-        for (int i=0; i<nbRows; i++)
+//        SP_MESSAGE_INFO("data->getValueTypeString() "<<data->getValueTypeString())
+
+
+//                SP_MESSAGE_INFO("typeinfo->ValueType()->Container() "<<typeinfo->ValueType()->Container())
+//                SP_MESSAGE_INFO("typeinfo->ValueType()->FixedSize() "<<typeinfo->ValueType()->FixedSize())
+//                SP_MESSAGE_INFO("typeinfo->ValueType()->size() "<<typeinfo->ValueType()->size())
+
+//        const AbstractTypeInfo* ti = typeinfo;
+//        while( true )
+//        {
+//            SP_MESSAGE_INFO("ti->Container() "<<ti->Container())
+//            SP_MESSAGE_INFO("ti->FixedSize() "<<ti->FixedSize())
+//            SP_MESSAGE_INFO("ti->size() "<<ti->size())
+//            if( !ti->Container() ) break;
+//            ti = ti->BaseType();
+//        }
+
+        const AbstractTypeInfo* baseType = typeinfo->BaseType();
+
+        // unidimensional array
+        if( !baseType->Container() )
         {
-            PyObject *row = PyList_New(rowWidth);
-            for (int j=0; j<rowWidth; j++)
+            int nbRows = typeinfo->FixedSize() ? typeinfo->size() : typeinfo->size(data->getValueVoidPtr()) / typeinfo->size();
+
+            PyObject *rows = PyList_New(nbRows);
+            for (int i=0; i<nbRows; i++)
             {
                 // build each value of the list
                 if (typeinfo->Text())
                 {
                     // it's some text
-                    PyList_SetItem(row,j,PyString_FromString(typeinfo->getTextValue(valueVoidPtr,i*rowWidth+j).c_str()));
+                    PyList_SetItem(rows,i,PyString_FromString(typeinfo->getTextValue(valueVoidPtr,i).c_str()));
                 }
                 else if (typeinfo->Scalar())
                 {
                     // it's a Real
-                    PyList_SetItem(row,j,PyFloat_FromDouble(typeinfo->getScalarValue(valueVoidPtr,i*rowWidth+j)));
+                    PyList_SetItem(rows,i,PyFloat_FromDouble(typeinfo->getScalarValue(valueVoidPtr,i)));
                 }
                 else if (typeinfo->Integer())
                 {
                     // it's some Integer...
-                    PyList_SetItem(row,j,PyInt_FromLong((long)typeinfo->getIntegerValue(valueVoidPtr,i*rowWidth+j)));
+                    PyList_SetItem(rows,i,PyInt_FromLong((long)typeinfo->getIntegerValue(valueVoidPtr,i)));
                 }
                 else
                 {
                     // this type is not yet supported (should not happen)
-                    SP_MESSAGE_ERROR( "BaseData_getAttr_value unsupported native type="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value (should not come here!)" )
+                    SP_MESSAGE_ERROR( "BaseData_getAttr_value unsupported native type (unidimensional container)="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value (should not come here!)" )
                 }
             }
-            PyList_SetItem(rows,i,row);
+            return rows;
+        }
+        // special case for two-dimensional arrays with a fixed encapsulated size
+        else if( baseType->FixedSize() && !baseType->BaseType()->Container() )
+        {
+            int rowWidth = typeinfo->size();
+            int nbRows = typeinfo->size(data->getValueVoidPtr()) / rowWidth;
+
+            PyObject *rows = PyList_New(nbRows);
+            for (int i=0; i<nbRows; i++)
+            {
+                PyObject *row = PyList_New(rowWidth);
+                for (int j=0; j<rowWidth; j++)
+                {
+                    // build each value of the list
+                    if (typeinfo->Text())
+                    {
+                        // it's some text
+                        PyList_SetItem(row,j,PyString_FromString(typeinfo->getTextValue(valueVoidPtr,i*rowWidth+j).c_str()));
+                    }
+                    else if (typeinfo->Scalar())
+                    {
+                        // it's a Real
+                        PyList_SetItem(row,j,PyFloat_FromDouble(typeinfo->getScalarValue(valueVoidPtr,i*rowWidth+j)));
+                    }
+                    else if (typeinfo->Integer())
+                    {
+                        // it's some Integer...
+                        PyList_SetItem(row,j,PyInt_FromLong((long)typeinfo->getIntegerValue(valueVoidPtr,i*rowWidth+j)));
+                    }
+                    else
+                    {
+                        // this type is not yet supported (should not happen)
+                        SP_MESSAGE_ERROR( "BaseData_getAttr_value unsupported native type (2d container)="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value (should not come here!)" )
+                    }
+                }
+                PyList_SetItem(rows,i,row);
+            }
+            return rows;
+        }
+        else // general multidimensional arrays
+        {
+            // TODO handle multidimensional arrays with encapsulated fixed sizes
+            SP_MESSAGE_WARNING( "BaseData_getAttr_value unsupported multidimensional arrays="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value" )
+            return PyString_FromString(data->getValueString().c_str());
         }
 
-        return rows;
     }
 
     // default (should not happen)...
-    SP_MESSAGE_WARNING( "BaseData_getAttr_value unsupported native type="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value (should not come here!)" )
+    SP_MESSAGE_ERROR( "BaseData_getAttr_value unsupported native type="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value (should not come here!)" )
     return PyString_FromString(data->getValueString().c_str());
 }
 
@@ -685,20 +746,40 @@ extern "C" PyObject * Data_getValueVoidPtr(PyObject * self, PyObject * /*args*/)
     void* dataValueVoidPtr = const_cast<void*>(data->getValueVoidPtr()); // data->beginEditVoidPtr();  // warning a endedit should be necessary somewhere (when releasing the python variable?)
     void* valueVoidPtr = typeinfo->getValuePtr(dataValueVoidPtr);
 
+    if( !typeinfo->Scalar() && !typeinfo->Integer() ) SP_MESSAGE_WARNING( "Data_getValueVoidPtr: non-numerical type="<<data->getValueTypeString()<<" data="<<data->getName() )
+
 
     // N-dimensional arrays
     sofa::helper::vector<size_t> dimensions;
-    dimensions.push_back( typeinfo->size(dataValueVoidPtr) ); // total size to begin with
-    const AbstractTypeInfo* valuetypeinfo = typeinfo; // to go trough encapsulated types (at the end, it will correspond to the finest type)
 
-
-    while( valuetypeinfo->Container() )
+    if( typeinfo->Container() )
     {
-        size_t s = typeinfo->size(); // the current type size
-        dimensions.back() /= s; // to get the number of current type, the previous total size must be devided by the current type size
-        dimensions.push_back( s );
-        valuetypeinfo=valuetypeinfo->ValueType();
+        dimensions.push_back( typeinfo->size(dataValueVoidPtr) ); // total size to begin with
+        const AbstractTypeInfo* ti = typeinfo->BaseType(); // to go trough encapsulated types (at the end, it will correspond to the finest type)
+
+        while( ti->Container() )
+        {
+            if( !ti->FixedSize() )
+            {
+               SP_MESSAGE_WARNING( "Data_getValueVoidPtr: cannot get shape for a container of unknown-sized container type="<<data->getValueTypeString()<<" data="<<data->getName() )
+               dimensions.resize(1); dimensions[0] = 1; // like a scalar
+               break;
+            }
+
+            size_t s = ti->size(); // the current type size
+            dimensions.back() /= s; // to get the number of current type, the previous total size must be devided by the current type size
+            dimensions.push_back( s );
+
+            ti=ti->BaseType(); // go to the next encapsulated type
+        }
     }
+    else // scalar
+    {
+        dimensions.push_back( 1 );
+    }
+
+//    SP_MESSAGE_INFO( "Data_getValueVoidPtr: dim="<<dimensions)
+
 
     PyObject* shape = PyTuple_New(dimensions.size());
     for( size_t i=0; i<dimensions.size() ; ++i )
@@ -716,7 +797,7 @@ extern "C" PyObject * Data_getValueVoidPtr(PyObject * self, PyObject * /*args*/)
     PyTuple_SetItem( res, 1, shape );
 
     // the most basic type name
-    PyTuple_SetItem( res, 2, PyString_FromString( valuetypeinfo->name().c_str() ) );
+    PyTuple_SetItem( res, 2, PyString_FromString( typeinfo->ValueType()->name().c_str() ) );
 
 
     return res;

@@ -30,7 +30,7 @@ def as_numpy( data ):
     type = ctypeFromName.get(typename,None)
     if not type: raise Exception("can't map data of type " + typename)
 
-    # print (shape)
+    # print ("as_numpy shape=",shape)
 
     # fold
     array_type = reduce(lambda x, y: x * y, reversed(shape), type)
