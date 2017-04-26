@@ -30,7 +30,6 @@ def createSceneAndController(node):
 
 
     fc = node.createObject("FixedConstraint", fixAll=False, indices="0 1", drawSize="10.2")
-    # print "a simple bool:", fc.fixAll, SofaPython.SofaNumpy.numpy_data( fc, "fixAll" )
     print "a simple scalar:", fc.drawSize, SofaPython.SofaNumpy.numpy_data( fc, "drawSize" )
     print "an array:", node.gravity, SofaPython.SofaNumpy.numpy_data( node, "gravity" )
     print "a 1D array:", fc.indices, SofaPython.SofaNumpy.numpy_data( fc, "indices" )
@@ -44,12 +43,20 @@ def createSceneAndController(node):
     print "a 2D array (Mat4x4):", te.inT, SofaPython.SofaNumpy.numpy_data( te, "inT" )
 
 
-
-
-
-
     m = node.createObject("MatrixMass",massMatrices="[1 2 3, 4 5 6, 7 8 9] [4 5 6, 3 2 1, -8 -9 -6]")
     print "a 3D vector (vector of matrices)",m.massMatrices,SofaPython.SofaNumpy.numpy_data( m, "massMatrices" )
+
+
+    print "\n\n=== extra copy accessors: === \n"
+    print "a simple bool:", fc.fixAll#, SofaPython.SofaNumpy.numpy_data( fc, "fixAll" )
+    print "a simple string:", fc.name
+
+    rp = node.createObject("RequiredPlugin", pluginName="SofaPython SofaPython")
+    print "a vector of strings:", rp.pluginName
+
+
+    mroi = node.createObject("MergeROIs", nbROIs=2, indices1="0 1 2", indices2="3 4 5"); mroi.init()
+    print "an encapsulated variable-sized vector (vector<SVector<int>>):", mroi.roiIndices
 
 
     sys.stdout.flush()

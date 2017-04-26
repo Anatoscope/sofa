@@ -45,8 +45,8 @@ SP_CLASS_ATTR_SET(Data,name)(PyObject *self, PyObject * args, void*)
     return 0;
 }
 
-/// returning a PyObject* from a BaseData recursively with error (0=>everything went fine, <0=>error and should return NULL)
-PyObject* createPythonData( int& error, const void* dataPtr, const AbstractTypeInfo *initialtypeinfo, const AbstractTypeInfo *typeinfo, size_t offset = 0 )
+/// returns a PyObject* from a BaseData recursively (returns nullptr if an error occured)
+PyObject* createPythonData( const void* dataPtr, const AbstractTypeInfo *initialtypeinfo, const AbstractTypeInfo *typeinfo, size_t offset = 0 )
 {
     if( !typeinfo->Container() )
     {
@@ -70,7 +70,7 @@ PyObject* createPythonData( int& error, const void* dataPtr, const AbstractTypeI
         }
         else
         {
-            error = -1;
+            SP_MESSAGE_ERROR( "Data_createPythonData: unsupported native type (should never go there)" )
             assert(false); // we should never go there
             return nullptr;
         }
@@ -80,11 +80,7 @@ PyObject* createPythonData( int& error, const void* dataPtr, const AbstractTypeI
         size_t totalSize;
         if( initialtypeinfo!=typeinfo ) // not the master container
         {
-            if( !typeinfo->FixedSize() ) // non fixed-size encapsulated container
-            {
-                error = -2;
-                return nullptr;
-            }
+            if( !typeinfo->FixedSize() ) return nullptr; // non fixed-size encapsulated container
             totalSize = typeinfo->size();
         }
         else // master container can have a variable size
@@ -96,10 +92,12 @@ PyObject* createPythonData( int& error, const void* dataPtr, const AbstractTypeI
         const size_t size = totalSize / baseSize;
 
         PyObject *pyList = PyList_New(size);
-        for( size_t i=0 ; i<size && !error ; ++i )
+        for( size_t i=0 ; i<size ; ++i )
         {
             const size_t index = offset + i * baseSize;
-            PyList_SetItem( pyList, i, createPythonData( error, dataPtr, initialtypeinfo, typeinfo->BaseType(), index ) );
+            PyObject* pyItem = createPythonData( dataPtr, initialtypeinfo, typeinfo->BaseType(), index );
+            if( !pyItem ) return nullptr;
+            PyList_SetItem( pyList, i, pyItem );
         }
         return pyList;
     }
@@ -114,32 +112,18 @@ PyObject *GetDataValuePython(BaseData* data)
 
     if( !typeinfo->Scalar() && !typeinfo->Integer() && !typeinfo->Text() )
     {
-        SP_MESSAGE_WARNING( "Data_getValueVoidPtr: unsupported native type="<<data->getValueTypeString()<<" data="<<data->getName() )
+        SP_MESSAGE_WARNING( "Data_getValueVoidPtr: unsupported native type="<<data->getValueTypeString()<<" for data="<<data->getName()<<" ; returning string value." )
+        return PyString_FromString(data->getValueString().c_str());
     }
 
-
-    int error = 0;
-    PyObject* pyObject = createPythonData( error, data->getValueVoidPtr(), typeinfo, typeinfo );
+    PyObject* pyObject = createPythonData( data->getValueVoidPtr(), typeinfo, typeinfo );
     if( pyObject )
     {
-        assert( !error );
         return pyObject;
     }
     else
     {
-        assert( error );
-        switch(error)
-        {
-            case -1:
-                SP_MESSAGE_ERROR( "Data_getValueVoidPtr: unsupported native type ="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value! (should never go there)" )
-                break;
-            case -2:
-                SP_MESSAGE_WARNING( "Data_getValueVoidPtr: unsupported container encapsulating unknown-sized containers, type ="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value!" )
-                break;
-            default:
-                SP_MESSAGE_ERROR( "Data_getValueVoidPtr: unknown error, type ="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value! (should never go there)" )
-                break;
-        }
+        SP_MESSAGE_WARNING( "Data_getValueVoidPtr: unsupported container type ="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value." )
         return PyString_FromString(data->getValueString().c_str());
     }
     return pyObject;
