@@ -508,22 +508,22 @@ class FEMDof:
         if not self.mapping is None:
             if self.mapping.getClassName().find("Linear") != -1:
                 data['mappingType']=self.mapping.getClassName()
-                data['indices']=self.mapping.indices
-                data['weights']=self.mapping.weights
+                data['indices']=self.mapping.findData('indices').getValueString()
+                data['weights']=self.mapping.findData('weights').getValueString()
             elif self.mapping.getClassName().find("SubsetMultiMapping") != -1:
                 data['mappingType']=self.mapping.getClassName()
-                data['indexPairs']=lconcat(self.mapping.indexPairs)
+                data['indexPairs']=self.mapping.findData('indexPairs').getValueString()
             elif self.mapping.getClassName().find("SubsetMapping") != -1:
                 data['mappingType']=self.mapping.getClassName()
-                data['indices']=lconcat(self.mapping.indices)
+                data['indices']=self.mapping.findData('indices').getValueString()
 
         # add some topology data if existing
         if not self.mesh is None:
             # data['edges']=self.mesh.edges
             # data['triangles']=self.mesh.triangles
             # data['quads']=self.mesh.quads
-            data['hexahedra']=lconcat(self.mesh.hexahedra)
-            data['tetrahedra']=lconcat(self.mesh.tetrahedra)
+            data['hexahedra']=self.mesh.findData('hexahedra').getValueString()
+            data['tetrahedra']=self.mesh.findData('tetrahedra').getValueString()
 
         # add mass data if existing
         if not self.mass is None:
