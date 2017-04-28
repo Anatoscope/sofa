@@ -23,7 +23,6 @@
 #define SOFA_DEFAULTTYPE_QUAT_H
 
 #include <sofa/helper/Quater.h>
-#include <sofa/defaulttype/DataTypeInfo.h>
 
 namespace sofa
 {

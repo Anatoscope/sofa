@@ -31,7 +31,6 @@
 #include <sofa/core/topology/TopologyChange.h>
 #include <SofaBaseTopology/RegularGridTopology.h>
 
-#include <sofa/defaulttype/DataTypeInfo.h>
 
 #include <sofa/helper/accessor.h>
 

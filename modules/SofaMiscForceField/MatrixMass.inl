@@ -25,7 +25,6 @@
 #include <SofaMiscForceField/MatrixMass.h>
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/defaulttype/RigidTypes.h>
-#include <sofa/defaulttype/DataTypeInfo.h>
 #include <SofaBaseMechanics/AddMToMatrixFunctor.h>
 
 #ifdef SOFA_SUPPORT_MOVING_FRAMES

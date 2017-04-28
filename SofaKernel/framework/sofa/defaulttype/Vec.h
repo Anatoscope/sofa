@@ -24,7 +24,6 @@
 
 #include <sofa/helper/fixed_array.h>
 #include <sofa/helper/rmath.h>
-#include <sofa/defaulttype/DataTypeInfo.h>
 #include <functional>
 #include <limits>
 

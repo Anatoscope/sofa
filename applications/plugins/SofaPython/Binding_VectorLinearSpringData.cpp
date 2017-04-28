@@ -23,7 +23,6 @@
 #include "Binding_Data.h"
 
 #include <SofaDeformable/SpringForceField.h>
-#include <sofa/defaulttype/DataTypeInfo.h>
 #include "Binding_LinearSpring.h"
 
 using namespace sofa::core::objectmodel;

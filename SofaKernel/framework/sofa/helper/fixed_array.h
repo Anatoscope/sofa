@@ -54,6 +54,7 @@
 
 #include <sofa/helper/system/config.h>
 #include <sofa/helper/helper.h>
+#include <sofa/defaulttype/DataTypeInfo.h>
 
 #include <cstddef>
 #include <stdexcept>
@@ -499,6 +500,17 @@ inline fixed_array<T, 10> make_array(const T& v0, const T& v1, const T& v2, cons
 }
 
 } // namespace helper
+
+namespace defaulttype
+{
+
+    template<class T, std::size_t N>
+    struct DataTypeInfo< sofa::helper::fixed_array<T,N> > : public FixedArrayTypeInfo<sofa::helper::fixed_array<T,N> >
+    {
+        static std::string name() { std::ostringstream o; o << "fixed_array<" << DataTypeName<T>::name() << "," << N << ">"; return o.str(); }
+    };
+
+} // namespace defaulttype
 
 } // namespace sofa
 

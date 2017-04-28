@@ -23,21 +23,13 @@
 #define SOFA_DEFAULTTYPE_DATATYPEINFO_H
 
 #include <vector>
-#include <sofa/helper/fixed_array.h>
-#include <sofa/helper/vector.h>
-#include <sofa/helper/set.h>
 #include <sstream>
 #include <typeinfo>
 #include <sofa/helper/logging/Messaging.h>
 
+
 namespace sofa
 {
-
-namespace helper
-{
-template <class T, class MemoryManager >
-class vector;
-}
 
 namespace defaulttype
 {
@@ -118,6 +110,7 @@ struct DataTypeInfo
     static size_t byteSize() { return 1; }
 
     static size_t size(const DataType& /*data*/) { return 1; }
+    static size_t currentSize(const DataType& /*data*/) { return 1; }
 
     template <typename T>
     static void getValue(const DataType& /*data*/, size_t /*index*/, T& /*value*/)
@@ -139,12 +132,12 @@ struct DataTypeInfo
     {
     }
 
-    static const void* getValuePtr(const DataType& /*type*/)
+    static const void* getValuePtr(const DataType& /*type*/, size_t=0)
     {
         return NULL;
     }
 
-    static void* getValuePtr(DataType& /*type*/)
+    static void* getValuePtr(DataType& /*type*/, size_t=0)
     {
         return NULL;
     }
@@ -248,9 +241,15 @@ public:
     virtual size_t byteSize() const = 0;
 
     /// The size of \a data, in number of elements.
+    /// `fixed_array<fixed_array<int, 2> 3>` => 6,
     virtual size_t size(const void* data) const = 0;
-    /// Resize \a data to \a size elements, if relevant.
 
+    /// The size of \a data, in number of elements at the current data level.
+    /// `fixed_array<fixed_array<int, 2> 3>` => 3
+    virtual size_t currentSize(const void* data) const = 0;
+
+
+    /// Resize \a data to \a size elements, if relevant.
     /// But resizing is not always relevant, for example:
     /// - nothing happens if FixedSize() is true;
     /// - sets can't be resized; they are cleared instead;
@@ -279,11 +278,11 @@ public:
 
     /// Get a read pointer to the underlying memory
     /// Relevant only if this type is SimpleLayout
-    virtual const void* getValuePtr(const void* type) const = 0;
+    virtual const void* getValuePtr(const void* type, size_t index=0) const = 0;
 
     /// Get a write pointer to the underlying memory
     /// Relevant only if this type is SimpleLayout
-    virtual void* getValuePtr(void* type) const = 0;
+    virtual void* getValuePtr(void* type, size_t index=0) const = 0;
 
     /// Get the type_info for this type.
     virtual const std::type_info* type_info() const = 0;
@@ -335,6 +334,10 @@ public:
     {
         return Info::size(*(const DataType*)data);
     }
+    virtual size_t currentSize(const void* data) const
+    {
+        return Info::currentSize(*(const DataType*)data);
+    }
     virtual bool setSize(void* data, size_t size) const
     {
         return Info::setSize(*(DataType*)data, size);
@@ -375,13 +378,13 @@ public:
     {
         Info::setValueString(*(DataType*)data, index, value);
     }
-    virtual const void* getValuePtr(const void* data) const
+    virtual const void* getValuePtr(const void* data, size_t index=0) const
     {
-        return Info::getValuePtr(*(const DataType*)data);
+        return Info::getValuePtr(*(const DataType*)data, index);
     }
-    virtual void* getValuePtr(void* data) const
+    virtual void* getValuePtr(void* data, size_t index=0) const
     {
-        return Info::getValuePtr(*(DataType*)data);
+        return Info::getValuePtr(*(DataType*)data, index);
     }
 
     virtual const std::type_info* type_info() const { return &typeid(DataType); }
@@ -417,6 +420,7 @@ struct IntegerTypeInfo
     static size_t byteSize() { return sizeof(DataType); }
 
     static size_t size(const DataType& /*data*/) { return 1; }
+    static size_t currentSize(const DataType& /*data*/) { return 1; }
 
     static bool setSize(DataType& /*data*/, size_t /*size*/) { return false; }
 
@@ -446,12 +450,12 @@ struct IntegerTypeInfo
         std::istringstream i(value); i >> data;
     }
 
-    static const void* getValuePtr(const DataType& data)
+    static const void* getValuePtr(const DataType& data, size_t=0)
     {
         return &data;
     }
 
-    static void* getValuePtr(DataType& data)
+    static void* getValuePtr(DataType& data, size_t=0)
     {
         return &data;
     }
@@ -482,6 +486,7 @@ struct BoolTypeInfo
     static size_t byteSize() { return sizeof(DataType); }
 
     static size_t size(const DataType& /*data*/) { return 1; }
+    static size_t currentSize(const DataType& /*data*/) { return 1; }
 
     static bool setSize(DataType& /*data*/, size_t /*size*/) { return false; }
 
@@ -526,12 +531,12 @@ struct BoolTypeInfo
         data = b;
     }
 
-    static const void* getValuePtr(const DataType& data)
+    static const void* getValuePtr(const DataType& data, size_t=0)
     {
         return &data;
     }
 
-    static void* getValuePtr(DataType& data)
+    static void* getValuePtr(DataType& data, size_t=0)
     {
         return &data;
     }
@@ -563,6 +568,7 @@ struct ScalarTypeInfo
     static size_t byteSize() { return sizeof(DataType); }
 
     static size_t size(const DataType& /*data*/) { return 1; }
+    static size_t currentSize(const DataType& /*data*/) { return 1; }
 
     static bool setSize(DataType& /*data*/, size_t /*size*/) { return false; }
 
@@ -592,12 +598,12 @@ struct ScalarTypeInfo
         std::istringstream i(value); i >> data;
     }
 
-    static const void* getValuePtr(const DataType& data)
+    static const void* getValuePtr(const DataType& data, size_t=0)
     {
         return &data;
     }
 
-    static void* getValuePtr(DataType& data)
+    static void* getValuePtr(DataType& data, size_t=0)
     {
         return &data;
     }
@@ -629,6 +635,7 @@ struct TextTypeInfo
     static size_t byteSize() { return 1; }
 
     static size_t size(const DataType& /*data*/) { return 1; }
+    static size_t currentSize(const DataType& /*data*/) { return 1; }
 
     static bool setSize(DataType& /*data*/, size_t /*size*/) { return false; }
 
@@ -658,12 +665,12 @@ struct TextTypeInfo
         data = value;
     }
 
-    static const void* getValuePtr(const DataType& /*data*/)
+    static const void* getValuePtr(const DataType& /*data*/, size_t=0)
     {
         return NULL;
     }
 
-    static void* getValuePtr(DataType& /*data*/)
+    static void* getValuePtr(DataType& /*data*/, size_t=0)
     {
         return NULL;
     }
@@ -713,6 +720,8 @@ struct FixedArrayTypeInfo
             return s;
         }
     }
+
+    static size_t currentSize(const DataType& /*data*/) { return DataType::size(); }
 
     static bool setSize(DataType& data, size_t size)
     {
@@ -832,14 +841,14 @@ struct FixedArrayTypeInfo
         }
     }
 
-    static const void* getValuePtr(const DataType& data)
+    static const void* getValuePtr(const DataType& data, size_t index=0)
     {
-        return &data[0];
+        return &data[index];
     }
 
-    static void* getValuePtr(DataType& data)
+    static void* getValuePtr(DataType& data, size_t index=0)
     {
-        return &data[0];
+        return &data[index];
     }
 };
 
@@ -869,7 +878,6 @@ struct VectorTypeInfo
     {
         return BaseTypeInfo::size();
     }
-
     static size_t byteSize()
     {
         return ValueTypeInfo::byteSize();
@@ -888,6 +896,7 @@ struct VectorTypeInfo
             return s;
         }
     }
+    static size_t currentSize(const DataType& data) { return data.size(); }
 
     static bool setSize(DataType& data, size_t size)
     {
@@ -1005,14 +1014,14 @@ struct VectorTypeInfo
         }
     }
 
-    static const void* getValuePtr(const DataType& data)
+    static const void* getValuePtr(const DataType& data, size_t index=0)
     {
-        return &data[0];
+        return &data[index];
     }
 
-    static void* getValuePtr(DataType& data)
+    static void* getValuePtr(DataType& data, size_t index=0)
     {
-        return &data[0];
+        return &data[index];
     }
 };
 
@@ -1060,6 +1069,8 @@ struct SetTypeInfo
             return s;
         }
     }
+
+    static size_t currentSize(const DataType& data) { return data.size(); }
 
     static bool setSize(DataType& data, size_t /*size*/)
     {
@@ -1145,12 +1156,12 @@ struct SetTypeInfo
         }
     }
 
-    static const void* getValuePtr(const DataType& /*data*/)
+    static const void* getValuePtr(const DataType& /*data*/, size_t=0)
     {
         return NULL;
     }
 
-    static void* getValuePtr(DataType& /*data*/)
+    static void* getValuePtr(DataType& /*data*/, size_t=0)
     {
     return NULL;
     }
@@ -1239,15 +1250,11 @@ struct DataTypeInfo<std::string> : public TextTypeInfo<std::string>
 {
     static const char* name() { return "string"; }
 
-    static const void* getValuePtr(const std::string& data) { return &data[0]; }
-    static void* getValuePtr(std::string& data) { return &data[0]; }
+    static const void* getValuePtr(const std::string& data, size_t=0) { return &data[0]; }
+    static void* getValuePtr(std::string& data, size_t=0) { return &data[0]; }
 };
 
-template<class T, std::size_t N>
-struct DataTypeInfo< sofa::helper::fixed_array<T,N> > : public FixedArrayTypeInfo<sofa::helper::fixed_array<T,N> >
-{
-    static std::string name() { std::ostringstream o; o << "fixed_array<" << DataTypeName<T>::name() << "," << N << ">"; return o.str(); }
-};
+
 
 template<class T, class Alloc>
 struct DataTypeInfo< std::vector<T,Alloc> > : public VectorTypeInfo<std::vector<T,Alloc> >
@@ -1255,29 +1262,18 @@ struct DataTypeInfo< std::vector<T,Alloc> > : public VectorTypeInfo<std::vector<
     static std::string name() { std::ostringstream o; o << "std::vector<" << DataTypeName<T>::name() << ">"; return o.str(); }
 };
 
-template<class T, class Alloc>
-struct DataTypeInfo< sofa::helper::vector<T,Alloc> > : public VectorTypeInfo<sofa::helper::vector<T,Alloc> >
-{
-    static std::string name() { std::ostringstream o; o << "vector<" << DataTypeName<T>::name() << ">"; return o.str(); }
-};
-
 // vector<bool> is a bitset, cannot get a pointer to the values
 template<class Alloc>
-struct DataTypeInfo< sofa::helper::vector<bool,Alloc> > : public VectorTypeInfo<sofa::helper::vector<bool,Alloc> >
+struct DataTypeInfo< std::vector<bool,Alloc> > : public VectorTypeInfo<std::vector<bool,Alloc> >
 {
     enum { SimpleLayout = 0 };
 
-    static std::string name() { std::ostringstream o; o << "vector<bool>"; return o.str(); }
+    static std::string name() { std::ostringstream o; o << "std::vector<bool>"; return o.str(); }
 
-    static const void* getValuePtr(const sofa::helper::vector<bool,Alloc>& /*data*/) { return NULL; }
-    static void* getValuePtr(sofa::helper::vector<bool,Alloc>& /*data*/) { return NULL; }
+    static const void* getValuePtr(const std::vector<bool,Alloc>& /*data*/, size_t=0) { return NULL; }
+    static void* getValuePtr(std::vector<bool,Alloc>& /*data*/, size_t=0) { return NULL; }
 };
 
-template<class T, class Compare, class Alloc>
-struct DataTypeInfo< std::set<T,Compare,Alloc> > : public SetTypeInfo<std::set<T,Compare,Alloc> >
-{
-    static std::string name() { std::ostringstream o; o << "std::set<" << DataTypeName<T>::name() << ">"; return o.str(); }
-};
 
 
 } // namespace defaulttype

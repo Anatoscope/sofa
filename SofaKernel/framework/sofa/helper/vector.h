@@ -397,6 +397,30 @@ void removeIndex( std::vector<T,TT>& v, size_t index )
 
 } // namespace helper
 
+
+namespace defaulttype
+{
+
+    template<class T, class Alloc>
+    struct DataTypeInfo< sofa::helper::vector<T,Alloc> > : public VectorTypeInfo<sofa::helper::vector<T,Alloc> >
+    {
+        static std::string name() { std::ostringstream o; o << "vector<" << DataTypeName<T>::name() << ">"; return o.str(); }
+    };
+
+    // vector<bool> is a bitset, cannot get a pointer to the values
+    template<class Alloc>
+    struct DataTypeInfo< sofa::helper::vector<bool,Alloc> > : public VectorTypeInfo<sofa::helper::vector<bool,Alloc> >
+    {
+        enum { SimpleLayout = 0 };
+
+        static std::string name() { std::ostringstream o; o << "vector<bool>"; return o.str(); }
+
+        static const void* getValuePtr(const sofa::helper::vector<bool,Alloc>& /*data*/, size_t=0) { return NULL; }
+        static void* getValuePtr(sofa::helper::vector<bool,Alloc>& /*data*/, size_t=0) { return NULL; }
+    };
+
+} // namespace defaulttype
+
 } // namespace sofa
 
 #endif //SOFA_HELPER_VECTOR_H

@@ -28,8 +28,6 @@
 #include <sofa/helper/vector.h>
 #include <iostream>
 
-#include <sofa/defaulttype/DataTypeInfo.h>
-
 namespace sofa
 {
 

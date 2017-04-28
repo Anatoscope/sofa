@@ -22,6 +22,7 @@
 #include <sofa/helper/io/MeshTopologyLoader.h>
 #include <sofa/helper/system/FileRepository.h>
 #include <sofa/defaulttype/Vec.h>
+#include <set>
 #include <string.h>
 
 #if defined(WIN32) || defined(_XBOX)

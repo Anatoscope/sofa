@@ -27,7 +27,6 @@
 #endif
 
 #include <sofa/helper/set.h>
-#include <sofa/defaulttype/DataTypeInfo.h>
 #include <sofa/core/core.h>
 #include <iostream>
 #include <string>

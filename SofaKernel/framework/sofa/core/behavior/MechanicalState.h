@@ -25,7 +25,6 @@
 #include <sofa/core/behavior/BaseMechanicalState.h>
 #include <sofa/core/VecId.h>
 #include <sofa/core/State.h>
-#include <sofa/defaulttype/DataTypeInfo.h>
 
 namespace sofa
 {

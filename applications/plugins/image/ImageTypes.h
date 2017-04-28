@@ -979,6 +979,7 @@ struct ImageTypeInfo
     static size_t byteSize() { return 1; }
 
     static size_t size(const DataType& /*data*/) { return 1; }
+    static size_t currentSize(const DataType& /*data*/) { return 1; }
 
     static bool setSize(DataType& /*data*/, size_t /*size*/) { return false; }
 
@@ -1006,12 +1007,12 @@ struct ImageTypeInfo
         std::istringstream i(value); i >> data;
     }
 
-    static const void* getValuePtr(const DataType&)
+    static const void* getValuePtr(const DataType&, size_t=0)
     {
         return NULL;
     }
 
-    static void* getValuePtr(DataType&)
+    static void* getValuePtr(DataType&, size_t=0)
     {
         return NULL;
     }

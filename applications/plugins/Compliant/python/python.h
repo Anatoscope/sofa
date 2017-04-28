@@ -81,6 +81,7 @@ struct DataTypeInfo< python::opaque<T*> > {
 
     static std::size_t size() { return 1; }
     static std::size_t size(const DataType& /*data*/) { return 1; }
+    static std::size_t currentSize(const DataType& /*data*/) { return 1; }
     
     static std::size_t byteSize() { return sizeof(python::opaque<T*>); }    
     static bool setSize(DataType& /*data*/, std::size_t /*size*/) { return false; }
@@ -104,12 +105,12 @@ struct DataTypeInfo< python::opaque<T*> > {
     }
 
     
-    static const void* getValuePtr(const DataType& type)
+    static const void* getValuePtr(const DataType& type, size_t=0)
     {
         return (void*) &type;
     }
 
-    static void* getValuePtr(DataType& type)
+    static void* getValuePtr(DataType& type, size_t=0)
     {
         return (void*) &type;
     }

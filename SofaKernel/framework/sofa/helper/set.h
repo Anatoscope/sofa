@@ -30,6 +30,8 @@
 
 #include <sofa/helper/logging/Messaging.h>
 
+#include <sofa/defaulttype/DataTypeInfo.h>
+
 
 /// adding string serialization to std::set to make it compatible with Data
 /// \todo: refactoring of the containers required
@@ -190,5 +192,21 @@ inline std::istream& operator>> ( std::istream& in, std::set<unsigned int>& _set
 
 
 } // namespace std
+
+
+namespace sofa
+{
+    namespace defaulttype
+    {
+
+        template<class T, class Compare, class Alloc>
+        struct DataTypeInfo< std::set<T,Compare,Alloc> > : public SetTypeInfo<std::set<T,Compare,Alloc> >
+        {
+            static std::string name() { std::ostringstream o; o << "std::set<" << DataTypeName<T>::name() << ">"; return o.str(); }
+        };
+
+    } // namespace defaulttype
+} // namespace sofa
+
 
 #endif
