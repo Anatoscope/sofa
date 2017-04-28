@@ -24,6 +24,7 @@
 #include <sofa/helper/system/FileRepository.h>
 #include <sofa/helper/system/SetDirectory.h>
 #include <sofa/helper/Factory.inl>
+#include <sofa/core/ObjectFactory.h>
 
 #include <QImage>
 #include <QList>
