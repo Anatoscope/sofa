@@ -22,8 +22,6 @@
 #include "Binding_Data.h"
 #include "Binding_LinearSpring.h"
 
-#include <sofa/core/objectmodel/BaseData.h>
-#include <sofa/defaulttype/DataTypeInfo.h>
 #include <sofa/core/objectmodel/Data.h>
 #include <sofa/core/objectmodel/BaseNode.h>
 
@@ -46,57 +44,54 @@ SP_CLASS_ATTR_SET(Data,name)(PyObject *self, PyObject * args, void*)
 }
 
 /// returns a PyObject* from a BaseData recursively (returns nullptr if an error occured)
-PyObject* createPythonData( const void* dataPtr, const AbstractTypeInfo *initialtypeinfo, const AbstractTypeInfo *typeinfo, size_t offset = 0 )
+PyObject* createPythonData( const void* dataPtr, const AbstractTypeInfo *typeinfo )
 {
+    if( !dataPtr )
+    {
+//        SP_MESSAGE_INFO( "Data_createPythonData: null ptr, type=" << typeinfo->name() )
+        return nullptr;
+    }
+
     if( !typeinfo->Container() )
     {
-        assert( typeinfo->size() == 1 );
+        assert( typeinfo->currentSize() == 1 );
 
         // build each value of the list
         if (typeinfo->Text())
         {
             // it's some text
-            return PyString_FromString(initialtypeinfo->getTextValue(dataPtr,offset).c_str());
+            return PyString_FromString(typeinfo->getTextValue(dataPtr,0).c_str());
         }
         else if (typeinfo->Scalar())
         {
             // it's a Real
-            return PyFloat_FromDouble(initialtypeinfo->getScalarValue(dataPtr,offset));
+            return PyFloat_FromDouble(typeinfo->getScalarValue(dataPtr,0));
         }
         else if (typeinfo->Integer())
         {
             // it's some Integer...
-            return PyInt_FromLong((long)initialtypeinfo->getIntegerValue(dataPtr,offset));
+            return PyInt_FromLong((long)typeinfo->getIntegerValue(dataPtr,0));
         }
         else
         {
-            SP_MESSAGE_ERROR( "Data_createPythonData: unsupported native type (should never go there)" )
+            SP_MESSAGE_ERROR( "Data_createPythonData: unsupported native type=" << typeinfo->name() << " (should never go there)" )
             assert(false); // we should never go there
             return nullptr;
         }
     }
     else
     {
-        size_t totalSize;
-        if( initialtypeinfo!=typeinfo ) // not the master container
-        {
-            if( !typeinfo->FixedSize() ) return nullptr; // non fixed-size encapsulated container
-            totalSize = typeinfo->size();
-        }
-        else // master container can have a variable size
-        {
-            totalSize = typeinfo->FixedSize() ? typeinfo->size() : typeinfo->size(dataPtr);
-        }
-
-        const size_t baseSize = typeinfo->BaseType()->size();
-        const size_t size = totalSize / baseSize;
+        const size_t size = typeinfo->currentSize(dataPtr);
 
         PyObject *pyList = PyList_New(size);
         for( size_t i=0 ; i<size ; ++i )
         {
-            const size_t index = offset + i * baseSize;
-            PyObject* pyItem = createPythonData( dataPtr, initialtypeinfo, typeinfo->BaseType(), index );
-            if( !pyItem ) return nullptr;
+            PyObject* pyItem = createPythonData( typeinfo->getValuePtr(dataPtr,i), typeinfo->BaseType() );
+            if( !pyItem )
+            {
+//                SP_MESSAGE_INFO( "Data_createPythonData: no child, type=" << typeinfo->name() )
+                return nullptr;
+            }
             PyList_SetItem( pyList, i, pyItem );
         }
         return pyList;
@@ -106,24 +101,30 @@ PyObject* createPythonData( const void* dataPtr, const AbstractTypeInfo *initial
 
 PyObject *GetDataValuePython(BaseData* data)
 {
-    // depending on the data type, we return the good python type (int, float, string, array, ...)
+    // returning the good python type depending on the Data type (int, float, string, array, ...)
 
     const AbstractTypeInfo *typeinfo = data->getValueTypeInfo();
 
     if( !typeinfo->Scalar() && !typeinfo->Integer() && !typeinfo->Text() )
     {
-        SP_MESSAGE_WARNING( "Data_getValueVoidPtr: unsupported native type="<<data->getValueTypeString()<<" for data="<<data->getName()<<" ; returning string value." )
+        SP_MESSAGE_WARNING( "Data_getValueVoidPtr: unsupported native type="<<data->getValueTypeString()<<", data="<<data->getName()<<" ; returning string value." )
         return PyString_FromString(data->getValueString().c_str());
     }
 
-    PyObject* pyObject = createPythonData( data->getValueVoidPtr(), typeinfo, typeinfo );
+    if( !typeinfo->SimpleLayout() && !typeinfo->Text() ) // NB: text is not considered as SimpleLayout
+    {
+        SP_MESSAGE_ERROR( "Data_getValueVoidPtr: unsupported non SimpleLayout type="<<data->getValueTypeString()<<", data="<<data->getName()<<" ; returning string value." )
+        return nullptr;
+    }
+
+    PyObject* pyObject = createPythonData( data->getValueVoidPtr(), typeinfo );
     if( pyObject )
     {
         return pyObject;
     }
     else
     {
-        SP_MESSAGE_WARNING( "Data_getValueVoidPtr: unsupported container type ="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value." )
+        SP_MESSAGE_WARNING( "Data_getValueVoidPtr: unsupported container type ="<<data->getValueTypeString()<<", data "<<data->getName()<<" ; returning string value." )
         return PyString_FromString(data->getValueString().c_str());
     }
     return pyObject;
@@ -687,8 +688,17 @@ extern "C" PyObject * Data_getValueVoidPtr(PyObject * self, PyObject * /*args*/)
     void* dataValueVoidPtr = const_cast<void*>(data->getValueVoidPtr()); // data->beginEditVoidPtr();  // warning a endedit should be necessary somewhere (when releasing the python variable?)
     void* valueVoidPtr = typeinfo->getValuePtr(dataValueVoidPtr);
 
-    if( !typeinfo->Scalar() && !typeinfo->Integer() ) SP_MESSAGE_WARNING( "Data_getValueVoidPtr: non-numerical type="<<data->getValueTypeString()<<" data="<<data->getName() )
+    if( !typeinfo->Scalar() && !typeinfo->Integer() )
+    {
+        SP_MESSAGE_WARNING( "Data_getValueVoidPtr: non-numerical type="<<data->getValueTypeString()<<", data="<<data->getName() )
+        return nullptr;
+    }
 
+    if( !typeinfo->SimpleLayout() ) // not contiguous in memory
+    {
+        SP_MESSAGE_ERROR( "Data_getValueVoidPtr: cannot bind non-contiguous memory, type="<<data->getValueTypeString()<<", data="<<data->getName() )
+        return nullptr;
+    }
 
     // N-dimensional arrays
     sofa::helper::vector<size_t> dimensions;
@@ -700,9 +710,9 @@ extern "C" PyObject * Data_getValueVoidPtr(PyObject * self, PyObject * /*args*/)
 
         while( ti->Container() )
         {
-            if( !ti->FixedSize() )
+            if( !ti->FixedSize() ) // TODO handle specific case where all children have the same size?
             {
-               SP_MESSAGE_WARNING( "Data_getValueVoidPtr: cannot get shape for a container of unknown-sized container type="<<data->getValueTypeString()<<" data="<<data->getName() )
+               SP_MESSAGE_WARNING( "Data_getValueVoidPtr: cannot get shape for a container of unknown-sized container type="<<data->getValueTypeString()<<", data="<<data->getName() )
                dimensions.resize(1); dimensions[0] = 1; // like a scalar
                break;
             }
@@ -716,6 +726,7 @@ extern "C" PyObject * Data_getValueVoidPtr(PyObject * self, PyObject * /*args*/)
     }
     else // scalar
     {
+        SP_MESSAGE_WARNING( "Data_getValueVoidPtr: binding a scalar, type="<<data->getValueTypeString()<<", data="<<data->getName() )
         dimensions.push_back( 1 );
     }
 
