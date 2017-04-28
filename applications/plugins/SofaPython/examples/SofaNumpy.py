@@ -55,7 +55,7 @@ def createSceneAndController(node):
     print "a vector of strings:", rp.pluginName
 
 
-    mroi = node.createObject("MergeROIs", nbROIs=2, indices1="0 1 2", indices2="3 4 5"); mroi.init()
+    mroi = node.createObject("MergeROIs", nbROIs=3, indices1="0 1 2", indices2="3 4 5 6 7", indices3="8"); mroi.init()
     print "an encapsulated variable-sized vector (vector<SVector<int>>):", mroi.roiIndices
 
 
