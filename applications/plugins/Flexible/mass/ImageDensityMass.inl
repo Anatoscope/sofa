@@ -7,12 +7,6 @@
 #include "../shapeFunction/BaseShapeFunction.h"
 
 #include <sofa/core/visual/VisualParams.h>
-#include <sofa/defaulttype/DataTypeInfo.h>
-//#include <SofaBaseMechanics/AddMToMatrixFunctor.h>
-
-
-
-#include <sofa/helper/gl/template.h>
 
 namespace sofa
 {
