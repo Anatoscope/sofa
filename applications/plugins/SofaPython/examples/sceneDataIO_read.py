@@ -91,7 +91,7 @@ class MyClass(Sofa.PythonScriptController):
 
     def bwdInitGraph(self, root):
         print 'bwdInitGraph: backward init'
-        self.loadState('./SceneDataIO/')
+        self.loadState(SofaPython.Tools.localPath(__file__,'SceneDataIO'))
 
     # ===============================================================================
     # Scene methods

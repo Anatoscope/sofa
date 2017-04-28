@@ -25,7 +25,7 @@ def createScene(root_node):
 
     root_node.createObject('CompliantAttachButtonSetting')
 
-    root_node.createObject('PythonScriptController', name='MyClass', filename=__file, classname='MyClass')
+    root_node.createObject('PythonScriptController', name='MyClass', classname='MyClass')
 
 # ================================================================= #
 # Creation of the scene
@@ -90,13 +90,15 @@ class MyClass(Sofa.PythonScriptController):
 
     def cleanup(self):
         print 'cleanup: the scene has been close'
-        self.saveState('SceneDataIO')
+        self.saveState(SofaPython.Tools.localPath(__file__,'SceneDataIO'))
         print 'The scene state has been save at t=', self.node.getTime()
+        sys.stdout.flush()
 
     def onEndAnimationStep(self, dt):
         if self.node.getTime() >= dt*5 and self.node.getTime() < dt*6:
-            self.saveState('SceneDataIO')
+            self.saveState(SofaPython.Tools.localPath(__file__,'SceneDataIO'))
             print 'The scene state has been save at t=', self.node.getTime()
+            sys.stdout.flush()
 
     # ===============================================================================
     # Scene methods

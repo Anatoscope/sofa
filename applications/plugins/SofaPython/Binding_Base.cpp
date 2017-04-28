@@ -167,6 +167,7 @@ extern "C" PyObject * Base_getName(PyObject * self, PyObject * /*args*/)
     return PyString_FromString(node->getName().c_str());
 }
 
+/// returns a dict {dataname : Sofa.Data }
 extern "C" PyObject * Base_getDataFields(PyObject *self, PyObject * /*args*/)
 {
     Base * component = ((PySPtr<Base>*)self)->object.get();
@@ -181,7 +182,12 @@ extern "C" PyObject * Base_getDataFields(PyObject *self, PyObject * /*args*/)
 
     PyObject * pyDict = PyDict_New();
     for (size_t i=0; i<dataFields.size(); i++)
-        PyDict_SetItem(pyDict, PyString_FromString(dataFields[i]->getName().c_str()), GetDataValuePython(dataFields[i]));
+    {
+        PyObject* pyData = sofa::PythonFactory::toPython(dataFields[i]); // from factory (e.g DisplayFlags, OptionsGroup)
+        if( !pyData ) pyData = SP_BUILD_PYPTR(Data,BaseData,dataFields[i],false); // default BaseData
+
+        PyDict_SetItem(pyDict, PyString_FromString(dataFields[i]->getName().c_str()), pyData);
+    }
 
     return pyDict;
 }

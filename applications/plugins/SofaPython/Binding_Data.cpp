@@ -133,6 +133,7 @@ PyObject *GetDataValuePython(BaseData* data)
 
 static int SetDataValuePythonList(BaseData* data, PyObject* args,
                             const int rowWidth, int nbRows) {
+
     const AbstractTypeInfo *typeinfo = data->getValueTypeInfo(); // info about the data value
         
     // check list emptyness
@@ -362,9 +363,7 @@ static int SetDataValuePythonList(BaseData* data, PyObject* args,
 
 int SetDataValuePython(BaseData* data, PyObject* args)
 {
-
     // What is args' type ?
-
 
     // string
     if (PyString_Check(args))
@@ -609,9 +608,11 @@ extern "C" PyObject * Data_read(PyObject *self, PyObject * args)
         return NULL;
     }
 
-    if (PyString_Check(value))
+    char* valueStr = PyString_AsString(value);
+
+    if (valueStr)
     {
-        data->read(PyString_AsString(value));
+        data->read(valueStr);
     }
     else
     {

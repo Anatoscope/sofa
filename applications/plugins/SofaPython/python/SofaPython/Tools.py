@@ -9,11 +9,29 @@ import units
 def listToStr(x):
     """ concatenate lists for use with data.
     """
+
+    if isinstance(x, basestring):
+        Sofa.msg_warning( "Tools", "'listToStr' used on a string" )
+        return x
+
+    if hasattr(x[0], "__len__"): # x is a list of list
+        Sofa.msg_warning( "Tools", "'listToStr' used on a list of list" )
+        return listListToStr(x)
+
+
     return ' '.join(map(str, x))
 
 def listListToStr(xx):
     """ concatenate lists of list for use with data.
     """
+
+    if len(xx)==0:
+        return ""
+
+    elif not hasattr(xx[0], "__len__"): # xx is a simple list
+            Sofa.msg_warning( "Tools", "'listListToStr' used on a unidimensional list, please use 'listToStr' "+str(type(xx))+" "+str(type(xx[0])) )
+            return listToStr
+
     str_xx=""
     for x in xx:
         str_xx += listToStr(x) + " "
@@ -149,18 +167,9 @@ class SceneDataIO:
             componentData = component.getDataFields()
             filename = directory + os.sep + component.getContext().name + '_' + component.name +".json"
 
-            for name, value in componentData.iteritems():
-                if isinstance(value, (list, dict, str, int, float, bool)):
-                    if isinstance(value, (list)) and len(value):
-                        filteredData[name] = value
-                    elif isinstance(value, (dict)) and len(value):
-                        filteredData[name] = value
-                    elif isinstance(value, (str)) and (len(value) or value!=""):
-                        filteredData[name] = value
-                    elif isinstance(value, (int, float, bool)):
-                        filteredData[name] = value
-                    elif isinstance(value, (unicode)):
-                        filteredData[name] = value
+            for name, data in componentData.iteritems():
+                # if isinstance(data.value, (list, dict, str, int, float, bool)): # why this filter and why hard-coded?
+                filteredData[name] = data.getValueString()
 
             with open(filename,'w') as file:
                 try:
@@ -175,11 +184,11 @@ class SceneDataIO:
 
         # Lets check that the directory exists and it is not empty
         if directory == None or not os.path.isdir(directory):
-            print "[SceneDataIO]: There is no directory where component data has been stored."
+            Sofa.msg_warning("SceneDataIO", "There is no directory where component data has been stored.")
             return -1
 
         if not len(os.listdir(directory)):
-            print "[SceneDataIO]: The selected directory:", directory, "is empty."
+            Sofa.msg_warning("SceneDataIO", "The selected directory:"+ directory+ "is empty.")
             return -1
 
         nb_json = 0
@@ -187,7 +196,7 @@ class SceneDataIO:
             if file.endswith('.json'):
                 nb_json = nb_json +1
         if not nb_json:
-            print "[SceneDataIO]: The selected directory:", directory, "do not contains any json files."
+            Sofa.msg_warning("SceneDataIO", "The selected directory:"+ directory+ "do not contains any json files.")
             return
 
         # Lets get all the components of the scene
@@ -204,20 +213,21 @@ class SceneDataIO:
                 continue
             with open(filename,'r') as file:
                 componentData = json.load(file)
-                for name, value in componentData.iteritems():
-                    if isinstance(value, (list)) and len(value):
-                        component.findData(name).value = value
-                    elif isinstance(value, (dict)) and len(value):
-                        component.findData(name).value = value
-                    elif isinstance(value, (str)) and (len(value) or value!=""):
-                        component.findData(name).value = value
-                    elif isinstance(value, (int, float, bool)):
-                        component.findData(name).value = value
-                    elif isinstance(value, (unicode)):
-                        component.findData(name).value = value.encode("ascii")
+                for name, valuestr in componentData.iteritems():
+                    component.findData(name).read( valuestr )
+                #     if isinstance(value, (list)) and len(value):
+                #         component.findData(name).value = value
+                #     elif isinstance(value, (dict)) and len(value):
+                #         component.findData(name).value = value
+                #     elif isinstance(value, (str)) and (len(value) or value!=""):
+                #         component.findData(name).value = value
+                #     elif isinstance(value, (int, float, bool)):
+                #         component.findData(name).value = value
+                #     elif isinstance(value, (unicode)):
+                #         component.findData(name).value = value.encode("ascii")
             component.reinit()
 
-        print "[SceneDataIO]: the previous scene state has been restored."
+        Sofa.msg_info("SceneDataIO", "the previous scene state has been restored.")
 
         return 1
 
@@ -253,13 +263,13 @@ class ComponentDataIO:
     def writeData(self, filename=None):
         componentData=dict()
         for d in self.dataList:
-            componentData[d] = self.component.findData(d).value
+            componentData[d] = self.component.findData(d).getValueString()
         _filename = filename
         if _filename is None:
             _filename = self.component.name+".json"
         with open(_filename,'w') as file:
             json.dump(componentData, file)
-        print "[ComponentDataIO]: component:", self.component.name, "data written to:", _filename
+        Sofa.msg_info("ComponentDataIO", "component: "+self.component.name+" data written to: "+_filename)
         
     def readData(self, filename=None):
         _filename = filename
@@ -268,8 +278,9 @@ class ComponentDataIO:
         with open(_filename,'r') as file:
             componentData = json.load(file)
             for d in self.dataList:
-                self.component.findData(d).value = componentData[d]
-        print "[ComponentDataIO]: component:", self.component.name, "data read from:", _filename
+                print d,type(componentData[d])
+                self.component.findData(d).read( componentData[d] )
+        Sofa.msg_info("ComponentDataIO","component: "+self.component.name+" data read from: "+_filename)
         
         
 def localPath( localfile, filename ):

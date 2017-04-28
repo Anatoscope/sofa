@@ -7,5 +7,5 @@ def createSceneAndController(rootNode):
     dofDataIO = SofaPython.Tools.ComponentDataIO(dof, ["position"])
     
 def bwdInitGraph(node):
-    dofDataIO.writeData()
+    dofDataIO.writeData( SofaPython.Tools.localPath(__file__, dofDataIO.component.name+".json") )
     
