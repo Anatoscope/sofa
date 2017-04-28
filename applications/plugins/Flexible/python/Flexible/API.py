@@ -233,7 +233,7 @@ class Deformable:
         if self.mapping.getClassName().find("Linear") == -1:
             return
         filename = self.getFilename(filenamePrefix,directory)
-        data = {'indices': self.mapping.indices, 'weights': self.mapping.weights}
+        data = {'indices': self.mapping.findData('indices').getValueString(), 'weights': self.mapping.findData('weights').getValueString()}
         with open(filename, 'w') as f:
             json.dump(data, f)
             if printLog:
@@ -252,10 +252,10 @@ class Deformable:
             data = dict()
             with open(filename,'r') as f:
                 data.update(json.load(f))
+                if printLog:
+                    Sofa.msg_info("Flexible.API.Deformable",'Importing Weights from '+filename)
                 self.mapping.indices= str(data['indices'])
                 self.mapping.weights= str(data['weights'])
-                if printLog:
-                    Sofa.msg_info("Flexible.API.Deformable",'Imported Weights from '+filename)
 
 class AffineMass:
 
@@ -283,9 +283,9 @@ class AffineMass:
             data = dict()
             with open(filename,'r') as f:
                 data.update(json.load(f))
-                self.mass = self.dofAffineNode.createObject('AffineMass', name='mass', massMatrix=data['massMatrix'])
                 if printLog:
-                    Sofa.msg_info("Flexible.API.AffineMass",'Imported Affine Mass from '+filename)
+                    Sofa.msg_info("Flexible.API.AffineMass",'Importing Affine Mass from '+filename)
+                self.mass = self.dofAffineNode.createObject('AffineMass', name='mass', massMatrix=data['massMatrix'])
 
     def write(self, filenamePrefix=None, directory=""):
         filename = self.getFilename(filenamePrefix,directory)
@@ -332,9 +332,9 @@ class AffineDof:
             data = dict()
             with open(filename,'r') as f:
                 data.update(json.load(f))
-                self.dof = self.node.createObject("MechanicalObject", name="dofs", template=data['template'], position=data['position'], rest_position=data['rest_position'])
                 if printLog:
-                    Sofa.msg_info("Flexible.API.AffineDof",'Imported Affine Dof from '+filename)
+                    Sofa.msg_info("Flexible.API.AffineDof",'Importing Affine Dof from '+filename)
+                self.dof = self.node.createObject("MechanicalObject", name="dofs", template=data['template'], position=data['position'], rest_position=data['rest_position'])
 
     def write(self, filenamePrefix=None, directory=""):
         if self.dof is None:
@@ -464,6 +464,8 @@ class FEMDof:
             data = dict()
             with open(filename,'r') as f:
                 data.update(json.load(f))
+                if printLog:
+                    Sofa.msg_info("Flexible.API.FEMDof",'Importing FEM Dof from '+filename)
                 # dofs
                 self.dof = self.node.createObject("MechanicalObject", name="dofs", template=data['template'], position=(data['position']), rest_position=(data['rest_position']))
                 # mesh
@@ -472,8 +474,6 @@ class FEMDof:
                 # uniform mass
                 if 'totalMass' in data :
                     self.addUniformMass(data['totalMass'])
-                if printLog:
-                    Sofa.msg_info("Flexible.API.FEMDof",'Imported FEM Dof from '+filename)
 
     def readMapping(self, filenamePrefix=None, directory=""):
         """ read mapping parameters
@@ -486,6 +486,8 @@ class FEMDof:
             data = dict()
             with open(filename,'r') as f:
                 data.update(json.load(f))
+                if printLog:
+                    Sofa.msg_info("Flexible.API.FEMDof",'Importing FEM Dof mapping from '+filename)
                 if 'mappingType' in data:
                     if data['mappingType'].find("Linear") != -1:
                         self.mapping.indices= str(data['indices'])
@@ -494,8 +496,6 @@ class FEMDof:
                         self.mapping.indexPairs= str(data['indexPairs'])
                     elif data['mappingType'].find("SubsetMapping") != -1:
                         self.mapping.indices= str(data['indices'])
-                if printLog:
-                    Sofa.msg_info("Flexible.API.FEMDof",'Imported FEM Dof mapping from '+filename)
 
     def write(self, filenamePrefix=None, directory=""):
         if self.dof is None:
@@ -598,14 +598,14 @@ class Behavior:
         data = dict()
         with open(filename,'r') as f:
             data.update(json.load(f))
+            if printLog:
+                Sofa.msg_info("Flexible.API.Behavior",'Importing Gauss Points from '+filename)
             self.type = data['type']
             self.sampler = self.node.createObject('GaussPointContainer',name='GPContainer', volumeDim=data['volumeDim'], inputVolume=data['inputVolume'], position=data['position'], **kwargs)
             if not self.labelImage is None and not self.labels is None:
                 if self.labelImage.prefix == "Branching":
                     celloffsets = self.node.createObject("BranchingCellOffsetsFromPositions", template=self.labelImage.template(), name="cell", position =self.sampler.getLinkPath()+".position", src=self.labelImage.getImagePath(), labels=concat(self.labels))
                     self.cell = celloffsets.getLinkPath()+".cell"
-            if printLog:
-                Sofa.msg_info("Flexible.API.Behavior",'Imported Gauss Points from '+filename)
 
 
     def readWeights(self, filenamePrefix=None, directory=""):
@@ -621,19 +621,31 @@ class Behavior:
             data = dict()
             with open(filename,'r') as f:
                 data.update(json.load(f))
+                if printLog:
+                    Sofa.msg_info("Flexible.API.Behavior",'Importing Weights from '+filename)
                 self.mapping.indices= str(data['indices'])
                 self.mapping.weights= str(data['weights'])
                 self.mapping.weightGradients= str(data['weightGradients'])
-                self.mapping.weightHessians= str(data['weightHessians'])    
-                if printLog:
-                    Sofa.msg_info("Flexible.API.Behavior",'Imported Weights from '+filename)
+                self.mapping.weightHessians= str(data['weightHessians'])
 
     def write(self, filenamePrefix=None, directory=""):
         filename = self.getFilename(filenamePrefix,directory)
-        volumeDim = len(self.sampler.volume)/ len(self.sampler.position) if len(self.sampler.position)>0 and isinstance(self.sampler.volume, list) is True else 1 # when volume is a list (several GPs or order> 1)
-        data = {'type': self.type, 'volumeDim': str(volumeDim), 'inputVolume': SofaPython.Tools.listListToStr(self.sampler.volume), 'position': SofaPython.Tools.listListToStr(self.sampler.position),
-                'indices': self.mapping.indices, 'weights': self.mapping.weights,
-                'weightGradients': self.mapping.weightGradients, 'weightHessians': self.mapping.weightHessians}
+        volumeDim = len(self.sampler.volume)/ len(self.sampler.position) if len(self.sampler.position)>0 and isinstance(self.sampler.volume, list) else 1 # when volume is a list (several GPs or order> 1)
+
+        # Sofa.msg_info("flaxibleapi","write indices "+self.mapping.findData('indices').getValueTypeString()+" "
+        #               +str(type(self.mapping.findData('indices').getValueString()))+"\n"
+        #               +self.mapping.findData('indices').getValueString())
+
+        data = {'type': self.type, 'volumeDim': str(volumeDim),
+                'inputVolume': SofaPython.Tools.listListToStr(self.sampler.volume),
+                'position': SofaPython.Tools.listListToStr(self.sampler.position),
+                'indices': self.mapping.findData('indices').getValueString(),
+                'weights': self.mapping.findData('weights').getValueString(),
+                'weightGradients': self.mapping.findData('weightGradients').getValueString(),
+                'weightHessians': self.mapping.findData('weightHessians').getValueString()}
+
+        # Sofa.msg_info("flaxibleapi",str(data['indices']))
+
         # @todo: add restShape ?
         with open(filename, 'w') as f:
             json.dump(data, f)
