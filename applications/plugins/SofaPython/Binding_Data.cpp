@@ -54,7 +54,7 @@ PyObject* createPythonData( const void* dataPtr, const AbstractTypeInfo *typeinf
 
     if( !typeinfo->Container() )
     {
-        assert( typeinfo->currentSize() == 1 );
+        assert( typeinfo->currentSize(dataPtr) == 1 );
 
         // build each value of the list
         if (typeinfo->Text())
