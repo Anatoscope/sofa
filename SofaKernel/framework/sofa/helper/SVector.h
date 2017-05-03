@@ -92,10 +92,10 @@ public:
     {
         if ( !this->empty() )
         {
-            typename SVector<T>::const_iterator i = this->begin();
+            typename SVector<T>::const_iterator i = this->begin(), iend = this->end();
             os << "[ " << *i;
             ++i;
-            for ( ; i!=this->end(); ++i )
+            for ( ; i!=iend ; ++i )
                 os << ", " << *i;
             os << " ]";
 
@@ -117,6 +117,7 @@ public:
         if ( c != '[' )
         {
             msg_error("SVector") << "read : Bad begin character : " << c << ", expected  [";
+            in.setstate( std::ios::failbit );
             return in;
         }
         std::streampos pos = in.tellg();
@@ -138,6 +139,7 @@ public:
             if ( c != ']' )
             {
                 msg_error("SVector") << "read : Bad end character : " << c << ", expected  ]";
+                in.setstate( std::ios::failbit );
                 return in;
             }
         }
