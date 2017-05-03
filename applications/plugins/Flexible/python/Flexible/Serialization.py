@@ -2,6 +2,7 @@ import Sofa
 import SofaPython.Tools
 import json
 
+printLog = True
 
 
 def exportImageShapeFunction( node, sf, filename_indices, filename_weights ):
@@ -32,38 +33,47 @@ def importImageShapeFunction( node, filename_indices, filename_weights, dofname 
 
 def exportGaussPoints(gausssampler,filename):
     # TODO could be simplified with pure string export / import of vector<SVector<>> BUT it would need specific stuff to be able to import
+        if printLog:
+            Sofa.msg_info("Flexible.Serialization","exporting gauss points " + filename)
         volumeDim = len(gausssampler.volume)/ len(gausssampler.position) if isinstance(gausssampler.volume, list) else 1 # when volume is a list (several GPs or order> 1)
         data = {'volumeDim': str(volumeDim), 'inputVolume': SofaPython.Tools.listListToStr(gausssampler.volume), 'position': SofaPython.Tools.listListToStr(gausssampler.position)}
         with open(filename, 'w') as f:
             json.dump(data, f)
-            print "exporting gauss points " + filename
 
 def importGaussPoints(node,filename):
+        if printLog:
+            Sofa.msg_info("Flexible.Serialization","importing GaussPoints from "+filename)
         data = dict()
         with open(filename,'r') as f:
             data.update(json.load(f))
         return node.createObject('GaussPointContainer',name='sampler', volumeDim=data['volumeDim'], inputVolume=data['inputVolume'], position=data['position'])
 
 def exportLinearMapping(mapping,filename):
+        if printLog:
+            Sofa.msg_info("Flexible.Serialization","exporting mapping "+SofaPython.Tools.getObjectPath(mapping)+" in "+filename)
         data = {'indices': mapping.findData("indices").getValueString(), 'weights': mapping.findData("weights").getValueString(),
                 'weightGradients': mapping.findData("weightGradients").getValueString(), 'weightHessians': mapping.findData("weightHessians").getValueString()}
         with open(filename, 'w') as f:
             json.dump(data, f)
-            print "exporting mapping "+SofaPython.Tools.getObjectPath(mapping)+" in "+filename
 
 def importLinearMapping(node,filename):
+        if printLog:
+            Sofa.msg_info("Flexible.Serialization","importing LieanrMapping from "+filename)
         data = dict()
         with open(filename,'r') as f:
             data.update(json.load(f))
         return node.createObject('LinearMapping', indices= str(data['indices']), weights= str(data['weights']), weightGradients= str(data['weightGradients']), weightHessians= str(data['weightHessians']) )
 
 def exportAffineMass(affineMass,filename):
+        if printLog:
+            Sofa.msg_info("Flexible.Serialization","exporting Affine Mass "+filename)
         data = {'affineMassMatrix': affineMass.findData("massMatrix").getValueString()}
         with open(filename, 'w') as f:
             json.dump(data, f)
-            print "exporting Affine Mass "+filename
 
 def importAffineMass(node,filename):
+        if printLog:
+            Sofa.msg_info("Flexible.Serialization","importing AffineMass from "+filename)
         data = dict()
         with open(filename,'r') as f:
             data.update(json.load(f))
@@ -71,13 +81,16 @@ def importAffineMass(node,filename):
 
 
 def exportRigidDofs(dofs,filename):
+        if printLog:
+            Sofa.msg_info("Flexible.Serialization","exporting RigidDofs "+filename)
         str = dofs.findData("position").getValueString()
         data = {'position': str}
         with open(filename, 'w') as f:
             json.dump(data, f)
-            print "exporting Rigid dofs "+filename
 
 def importRigidDofs(node,filename):
+        if printLog:
+            Sofa.msg_info("Flexible.Serialization","importing RigidDofs from "+filename)
         data = dict()
         with open(filename,'r') as f:
             data.update(json.load(f))

@@ -4,6 +4,9 @@
 
 import os
 
+
+Sofa.msg_deprecated("Flexible.IO","deprecated have a look to Flexible.Serialization")
+
 # helper functions
 def datatostr(component,data):
 	return str(component.findData(data).value).replace('[', '').replace("]", '').replace(",", ' ')

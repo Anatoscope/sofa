@@ -15,8 +15,8 @@ def listToStr(x):
         return x
 
     if hasattr(x[0], "__len__"): # x is a list of list
-        Sofa.msg_warning( "Tools", "'listToStr' used on a list of list" )
-        return listListToStr(x)
+        Sofa.msg_warning( "Tools", "'listToStr' used on a list of lists" )
+        # return listListToStr(x)
 
 
     return ' '.join(map(str, x))
