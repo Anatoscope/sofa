@@ -85,6 +85,7 @@ struct DataTypeInfo< python::opaque<T*> > {
     
     static std::size_t byteSize() { return sizeof(python::opaque<T*>); }    
     static bool setSize(DataType& /*data*/, std::size_t /*size*/) { return false; }
+    static bool setCurrentSize(DataType& /*data*/, std::size_t /*size*/) { return false; }
 
     template <typename U>
     static void getValue(const DataType& /*data*/, std::size_t /*index*/, U& /*value*/)

@@ -982,6 +982,7 @@ struct ImageTypeInfo
     static size_t currentSize(const DataType& /*data*/) { return 1; }
 
     static bool setSize(DataType& /*data*/, size_t /*size*/) { return false; }
+    static bool setCurrentSize(DataType& /*data*/, size_t /*size*/) { return false; }
 
     template <typename T>
     static void getValue(const DataType &/*data*/, size_t /*index*/, T& /*value*/)

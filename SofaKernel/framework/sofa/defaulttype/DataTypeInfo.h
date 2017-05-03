@@ -118,6 +118,7 @@ struct DataTypeInfo
     }
 
     static bool setSize(DataType& /*data*/, size_t /*size*/) { return false; }
+    static bool setCurrentSize(DataType& /*data*/, size_t /*size*/) { return false; }
 
     template<typename T>
     static void setValue(DataType& /*data*/, size_t /*index*/, const T& /*value*/)
@@ -260,6 +261,14 @@ public:
     /// Returns true iff the data was resizable
     virtual bool setSize(void* data, size_t size) const = 0;
 
+    /// Resize \a data to \a size elements, if relevant.
+    /// But resizing is not always relevant, for example:
+    /// - nothing happens if FixedSize() is true;
+    /// - sets can't be resized; they are cleared instead;
+    ///
+    /// Returns true iff the data was resizable
+    virtual bool setCurrentSize(void* data, size_t size) const = 0;
+
     /// Get the value at \a index of \a data as an integer.
     /// Relevant only if this type can be casted to `long long`.
     virtual long long   getIntegerValue(const void* data, size_t index) const = 0;
@@ -342,6 +351,10 @@ public:
     {
         return Info::setSize(*(DataType*)data, size);
     }
+    virtual bool setCurrentSize(void* data, size_t size) const
+    {
+        return Info::setCurrentSize(*(DataType*)data, size);
+    }
 
     virtual long long getIntegerValue(const void* data, size_t index) const
     {
@@ -423,6 +436,7 @@ struct IntegerTypeInfo
     static size_t currentSize(const DataType& /*data*/) { return 1; }
 
     static bool setSize(DataType& /*data*/, size_t /*size*/) { return false; }
+    static bool setCurrentSize(DataType& /*data*/, size_t /*size*/) { return false; }
 
     template <typename T>
     static void getValue(const DataType &data, size_t index, T& value)
@@ -489,6 +503,7 @@ struct BoolTypeInfo
     static size_t currentSize(const DataType& /*data*/) { return 1; }
 
     static bool setSize(DataType& /*data*/, size_t /*size*/) { return false; }
+    static bool setCurrentSize(DataType& /*data*/, size_t /*size*/) { return false; }
 
     template <typename T>
     static void getValue(const DataType &data, size_t index, T& value)
@@ -571,6 +586,7 @@ struct ScalarTypeInfo
     static size_t currentSize(const DataType& /*data*/) { return 1; }
 
     static bool setSize(DataType& /*data*/, size_t /*size*/) { return false; }
+    static bool setCurrentSize(DataType& /*data*/, size_t /*size*/) { return false; }
 
     template <typename T>
     static void getValue(const DataType &data, size_t index, T& value)
@@ -638,6 +654,7 @@ struct TextTypeInfo
     static size_t currentSize(const DataType& /*data*/) { return 1; }
 
     static bool setSize(DataType& /*data*/, size_t /*size*/) { return false; }
+    static bool setCurrentSize(DataType& /*data*/, size_t /*size*/) { return false; }
 
     template <typename T>
     static void getValue(const DataType &data, size_t index, T& value)
@@ -734,6 +751,7 @@ struct FixedArrayTypeInfo
         }
         return false;
     }
+    static bool setCurrentSize(DataType& /*data*/, size_t /*size*/) { return false; }
 
     template <typename T>
     static void getValue(const DataType &data, size_t index, T& value)
@@ -907,6 +925,12 @@ struct VectorTypeInfo
         }
         return false;
     }
+    static bool setCurrentSize(DataType& data, size_t size)
+    {
+        if( !SimpleLayout ) return false;
+        data.resize(size);
+        return true;
+    }
 
     template <typename T>
     static void getValue(const DataType &data, size_t index, T& value)
@@ -1073,6 +1097,11 @@ struct SetTypeInfo
     static size_t currentSize(const DataType& data) { return data.size(); }
 
     static bool setSize(DataType& data, size_t /*size*/)
+    {
+        data.clear(); // we can't "resize" a set, so the only meaningfull operation is to clear it, as values will be added dynamically in setValue
+        return true;
+    }
+    static bool setCurrentSize(DataType& data, size_t /*size*/)
     {
         data.clear(); // we can't "resize" a set, so the only meaningfull operation is to clear it, as values will be added dynamically in setValue
         return true;
