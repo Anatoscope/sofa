@@ -100,7 +100,7 @@ protected:
                 float totalRef = std::accumulate(data, data + total, 0, std::plus<unsigned int>());
                 float totalTest = std::accumulate(testdata, testdata + total, 0, std::plus<unsigned int>());
 
-                res = fabs(totalRef - totalTest)/total < PIXEL_TOLERANCE;
+                res = std::abs(totalRef - totalTest)/total < PIXEL_TOLERANCE;
 
             }
             else
