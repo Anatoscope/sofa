@@ -58,5 +58,14 @@ def createSceneAndController(node):
     mroi = node.createObject("MergeROIs", nbROIs=3, indices1="0 1 2", indices2="3 4 5 6 7", indices3="8"); mroi.init()
     print "an encapsulated variable-sized vector (vector<SVector<int>>):", mroi.roiIndices
 
+    # vector<SVector<>>
+    sclr = node.createObject("SelectConnectedLabelsROI", nbLabels=1, labels1="[0,1] [1,2]" )
+    print sclr.labels1
+    sclr.labels1 = "[0,1,2][1,2,3]" # modification by string with different sizes
+    print sclr.labels1
+    sclr.labels1 = [[1,2,3],[2,3,4]] # modification by list with same sizes
+    print sclr.labels1
+    sclr.labels1 = [[1,2],[3,4],[6,7,8]] # modification by list with different sizes
+    print sclr.labels1
 
     sys.stdout.flush()

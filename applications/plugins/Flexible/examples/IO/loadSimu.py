@@ -16,7 +16,7 @@ def createScene(rootNode):
 
 	rootNode.createObject('VisualStyle', displayFlags="showBehaviorModels showVisual")
 
-    	rootNode.findData('dt').value=0.05
+	rootNode.findData('dt').value=0.05
 	rootNode.findData('gravity').value='0 -9.8 0'
 
 	rootNode.createObject('EulerImplicit',rayleighStiffness="0",rayleighMass="0")

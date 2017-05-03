@@ -20,7 +20,7 @@ def createScene(rootNode):
 
 	rootNode.createObject('VisualStyle', displayFlags="showBehaviorModels showVisual")
 
-    	rootNode.findData('dt').value=0.05
+	rootNode.findData('dt').value=0.05
 	rootNode.findData('gravity').value='0 -9.8 0'
 
 	rootNode.createObject('EulerImplicit',rayleighStiffness="0",rayleighMass="0")
@@ -88,6 +88,6 @@ class simu_save(Sofa.PythonScriptController):
 			Flexible.IO.export_AffineFrames(self.dof, file_Dof)
 			Flexible.IO.export_ImageShapeFunction(self.node, self.sf, file_SF)
 			Flexible.IO.export_GaussPoints(self.gp, file_GP)
-			print "Simulation state saved";
+			print "Simulation state saved"
 		return 0
 
