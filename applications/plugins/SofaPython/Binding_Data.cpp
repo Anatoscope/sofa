@@ -131,235 +131,67 @@ PyObject *GetDataValuePython(BaseData* data)
 }
 
 
-static int SetDataValuePythonList(BaseData* data, PyObject* args,
-                            const int rowWidth, int nbRows) {
+static int fromPythonData( void* dataPtr, const AbstractTypeInfo* typeinfo, PyObject* pyData )
+{
+    const size_t size = typeinfo->currentSize(dataPtr);
 
-    const AbstractTypeInfo *typeinfo = data->getValueTypeInfo(); // info about the data value
-        
-    // check list emptyness
-    if (PyList_Size(args)==0)
+    // int
+    if( PyInt_Check(pyData) )
     {
-        data->read("");
+        if( ( !typeinfo->Integer() && !typeinfo->Scalar() ) || size!=1 )
+        {
+            PyErr_BadArgument();
+            return -1;
+        }
+        long value = PyInt_AsLong(pyData);
+        if (typeinfo->Scalar())
+            typeinfo->setScalarValue(dataPtr,0,(SReal)value); // cast int to float
+        else
+            typeinfo->setIntegerValue(dataPtr,0,value);
         return 0;
     }
 
-    // is it a double-dimension list ?
-    //PyObject *firstRow = PyList_GetItem(args,0);
 
-    if (PyList_Check(PyList_GetItem(args,0)))
+    // scalar
+    if( PyFloat_Check(pyData) )
     {
-        // two-dimension array!
-
-        void* editVoidPtr = data->beginEditVoidPtr();
-
-        // same number of rows?
+        if( !typeinfo->Scalar() || size!=1 )
         {
-            int newNbRows = PyList_Size(args);
-            if (newNbRows!=nbRows)
-            {
-                // try to resize (of course, it is not possible with every container, the resize policy is defined in DataTypeInfo)
-                typeinfo->setSize( editVoidPtr, newNbRows*rowWidth );
-
-                if( typeinfo->size(editVoidPtr) != (size_t)(newNbRows*rowWidth) )
-                {
-                    // resizing was not possible
-                    // only a warning; do not raise an exception...
-                    SP_MESSAGE_WARNING( "list size mismatch for data \""<<data->getName()<<"\" (incorrect rows count)" )
-                        if (newNbRows<nbRows)
-                            nbRows = newNbRows;
-                }
-                else
-                {
-                    // resized
-                    nbRows = newNbRows;
-                }
-            }
+            PyErr_BadArgument();
+            return -1;
         }
-
-
-        // let's fill our rows!
-        for (int i=0; i<nbRows; i++)
-        {
-            PyObject *row = PyList_GetItem(args,i);
-
-            // right number of list members ?
-            int size = rowWidth;
-            if (PyList_Size(row)!=size)
-            {
-                // only a warning; do not raise an exception...
-                SP_MESSAGE_WARNING( "row "<<i<<" size mismatch for data \""<<data->getName()<<"\"" )
-                    if (PyList_Size(row)<size)
-                        size = PyList_Size(row);
-            }
-
-            // okay, let's set our list...
-            for (int j=0; j<size; j++)
-            {
-
-                PyObject *listElt = PyList_GetItem(row,j);
-
-                if (PyInt_Check(listElt))
-                {
-                    // it's an int
-                    if (typeinfo->Integer())
-                    {
-                        // integer value
-                        long value = PyInt_AsLong(listElt);
-                        typeinfo->setIntegerValue(editVoidPtr,i*rowWidth+j,value);
-                    }
-                    else if (typeinfo->Scalar())
-                    {
-                        // cast to scalar value
-                        SReal value = (SReal)PyInt_AsLong(listElt);
-                        typeinfo->setScalarValue(editVoidPtr,i*rowWidth+j,value);
-                    }
-                    else
-                    {
-                        // type mismatch
-                        PyErr_BadArgument();
-                        return -1;
-                    }
-                }
-                else if (PyFloat_Check(listElt))
-                {
-                    // it's a scalar
-                    if (!typeinfo->Scalar())
-                    {
-                        // type mismatch
-                        PyErr_BadArgument();
-                        return -1;
-                    }
-                    SReal value = PyFloat_AsDouble(listElt);
-                    typeinfo->setScalarValue(editVoidPtr,i*rowWidth+j,value);
-                }
-                else if (PyString_Check(listElt))
-                {
-                    // it's a string
-                    if (!typeinfo->Text())
-                    {
-                        // type mismatch
-                        PyErr_BadArgument();
-                        return -1;
-                    }
-                    char *str = PyString_AsString(listElt); // pour les setters, un seul objet et pas un tuple....
-                    typeinfo->setTextValue(editVoidPtr,i*rowWidth+j,str);
-                }
-                else
-                {
-                    msg_warning("SetDataValuePython") << "Lists not yet supported...";
-                    PyErr_BadArgument();
-                    return -1;
-                }
-            }
-
-
-
-        }
-        data->endEditVoidPtr();
-        return 0;
-
-    }
-    else
-    {
-        // it is a one-dimension only array
-
-        void* editVoidPtr = data->beginEditVoidPtr();
-
-        // same number of list members?
-        int size = rowWidth*nbRows; // start with oldsize
-        {
-            int newSize = PyList_Size(args);
-            if (newSize!=size)
-            {
-                // try to resize (of course, it is not possible with every container, the resize policy is defined in DataTypeInfo)
-                typeinfo->setSize( editVoidPtr, newSize );
-
-                if( typeinfo->size(editVoidPtr) != (size_t)newSize )
-                {
-                    // resizing was not possible
-                    // only a warning; do not raise an exception...
-                    SP_MESSAGE_WARNING( "list size mismatch for data \""<<data->getName()<<"\" (incorrect rows count)" )
-                        if (newSize<size)
-                            size = newSize;
-                }
-                else
-                {
-                    // resized
-                    size = newSize;
-                }
-            }
-        }
-
-        // okay, let's set our list...
-        for (int i=0; i<size; i++)
-        {
-
-            PyObject *listElt = PyList_GetItem(args,i);
-
-            if (PyInt_Check(listElt))
-            {
-                // it's an int
-                if (typeinfo->Integer())
-                {
-                    // integer value
-                    long value = PyInt_AsLong(listElt);
-                    typeinfo->setIntegerValue(editVoidPtr,i,value);
-                }
-                else if (typeinfo->Scalar())
-                {
-                    // cast to scalar value
-                    SReal value = (SReal)PyInt_AsLong(listElt);
-                    typeinfo->setScalarValue(editVoidPtr,i,value);
-                }
-                else
-                {
-                    // type mismatch
-                    PyErr_BadArgument();
-                    return -1;
-                }
-            }
-            else if (PyFloat_Check(listElt))
-            {
-                // it's a scalar
-                if (!typeinfo->Scalar())
-                {
-                    // type mismatch
-                    PyErr_BadArgument();
-                    return -1;
-                }
-                SReal value = PyFloat_AsDouble(listElt);
-                typeinfo->setScalarValue(editVoidPtr,i,value);
-            }
-            else if (PyString_Check(listElt))
-            {
-                // it's a string
-                if (!typeinfo->Text())
-                {
-                    // type mismatch
-                    PyErr_BadArgument();
-                    return -1;
-                }
-                char *str = PyString_AsString(listElt); // pour les setters, un seul objet et pas un tuple....
-                typeinfo->setTextValue(editVoidPtr,i,str);
-            }
-            else
-            {
-                msg_warning("SetDataValuePython") << "Lists not yet supported...";
-                PyErr_BadArgument();
-                return -1;
-
-            }
-        }
-        data->endEditVoidPtr();
+        SReal value = PyFloat_AsDouble(pyData);
+        typeinfo->setScalarValue(dataPtr,0,value);
         return 0;
     }
 
-    // no idea whether this is reachable
-    PyErr_BadArgument();
-    return -1;
+
+    // list
+
+    assert( PyList_Check(pyData) );
+
+    size_t pySize = PyList_Size(pyData);
+
+    if( pySize != size )
+    {
+        // size mismatch => resizing
+        if( !typeinfo->setCurrentSize( dataPtr, pySize ) )
+        {
+            SP_MESSAGE_ERROR( "fromPythonData: size mismatch on a FixedSize Data "<<pySize<<" vs "<<size );
+            PyErr_BadArgument();
+            return -1;
+        }
+    }
+
+
+    for( size_t i=0 ; i<pySize ; ++i )
+    {
+        fromPythonData( typeinfo->getValuePtr(dataPtr,i), typeinfo->BaseType(), PyList_GetItem(pyData,i) );
+    }
+
+    return 0;
+
 }
-
-
 
 int SetDataValuePython(BaseData* data, PyObject* args)
 {
@@ -383,53 +215,17 @@ int SetDataValuePython(BaseData* data, PyObject* args)
     }
 
     const AbstractTypeInfo *typeinfo = data->getValueTypeInfo(); // info about the data value
-    const bool valid = (typeinfo && typeinfo->ValidInfo());
+//    const bool valid = (typeinfo && typeinfo->ValidInfo()); // useful?
 
-    const int rowWidth = valid ? typeinfo->size() : 1;
-    const int nbRows = valid ? typeinfo->size(data->getValueVoidPtr()) / typeinfo->size() : 1;
-
-
-    // int
-    if (PyInt_Check(args))
-    {
-        if (rowWidth*nbRows<1 || (!typeinfo->Integer() && !typeinfo->Scalar()))
-        {
-            // type mismatch or too long list
-            PyErr_BadArgument();
-            return -1;
-        }
-        long value = PyInt_AsLong(args);
-        void* editVoidPtr = data->beginEditVoidPtr();
-        if (typeinfo->Scalar())
-            typeinfo->setScalarValue(editVoidPtr,0,(SReal)value); // cast int to float
-        else
-            typeinfo->setIntegerValue(editVoidPtr,0,value);
-        data->endEditVoidPtr();
-        return 0;
-    }
-
-
-    // scalar
-    if (PyFloat_Check(args))
-    {
-        if (rowWidth*nbRows<1 || !typeinfo->Scalar())
-        {
-            // type mismatch or too long list
-            PyErr_BadArgument();
-            return -1;
-        }
-        SReal value = PyFloat_AsDouble(args);
-        void* editVoidPtr = data->beginEditVoidPtr();
-        typeinfo->setScalarValue(editVoidPtr,0,value);
-        data->endEditVoidPtr();
-        return 0;
-    }
 
 
     // list
-    if ( PyList_Check(args))
+    if ( PyInt_Check(args) || PyFloat_Check(args) || PyList_Check(args) )
     {
-        return SetDataValuePythonList(data, args, rowWidth, nbRows);
+        void* editVoidPtr = data->beginEditVoidPtr();
+        int res = fromPythonData( editVoidPtr, typeinfo, args );
+        data->endEditVoidPtr();
+        return res;
     }
 
 
