@@ -83,6 +83,8 @@ protected:
     unsigned int oldVerticesSize, oldNormalsSize, oldTexCoordsSize, oldTangentsSize, oldBitangentsSize, oldEdgesSize, oldTrianglesSize, oldQuadsSize;
     void internalDraw(const core::visual::VisualParams* vparams, bool transparent);
 
+    void doInitVisual();
+    void updateVisual();
     void drawGroup(int ig, bool transparent);
     void drawGroups(bool transparent);
 
@@ -141,6 +143,10 @@ public:
     void updateTrianglesIndicesBuffer();
     void updateQuadsIndicesBuffer();
 #endif
+
+private:
+    bool visualDirty;
+
 };
 
 typedef sofa::defaulttype::Vec<3,GLfloat> GLVec3f;
