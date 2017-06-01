@@ -85,7 +85,7 @@ OglModel::OglModel()
     , vbo(0), iboEdges(0), iboTriangles(0), iboQuads(0)
     , canUseVBO(false), VBOGenDone(false), initDone(false), useEdges(false), useTriangles(false), useQuads(false), canUsePatches(false)
     , oldVerticesSize(0), oldNormalsSize(0), oldTexCoordsSize(0), oldTangentsSize(0), oldBitangentsSize(0), oldEdgesSize(0), oldTrianglesSize(0), oldQuadsSize(0)
-    , visualDirty(true)
+    , m_isVisualInitialized(false)
 {
 
     textures.clear();
@@ -146,10 +146,13 @@ OglModel::~OglModel()
 
 }
 
+
 void OglModel::updateVisual()
 {
-    if(visualDirty)
+    if( !m_isVisualInitialized )
         doInitVisual();
+
+    Inherit1::updateVisual();
 }
 
 void OglModel::drawGroup(int ig, bool transparent)
@@ -832,7 +835,7 @@ bool OglModel::loadTextures()
 
 void OglModel::initVisual()
 {
-    visualDirty = true;
+    m_isVisualInitialized = false;
 }
 
 void OglModel::doInitVisual()
@@ -904,7 +907,7 @@ void OglModel::doInitVisual()
         dfactor = getGLenum( destFactor.getValue().getSelectedItem().c_str() );
     }
 
-    visualDirty = false;
+    m_isVisualInitialized = true;
 }
 
 void OglModel::initTextures()

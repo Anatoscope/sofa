@@ -109,8 +109,6 @@ public:
     void initTextures();
     virtual void initVisual();
 
-    virtual void init() { VisualModelImpl::init(); }
-
     virtual void updateBuffers();
 
     bool hasTransparent() const;
@@ -145,7 +143,7 @@ public:
 #endif
 
 private:
-    bool visualDirty;
+    bool m_isVisualInitialized; ///< if false, the next call to updateVisual will first trigger an doInitVisual (simple way to disconnect a call to initVisual and its execution so opengl commands are only exectued in the right opengl context)
 
 };
 
