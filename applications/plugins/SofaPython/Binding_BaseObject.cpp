@@ -94,23 +94,6 @@ static PyObject * BaseObject_setSrc(PyObject *self, PyObject * args)
     Py_RETURN_NONE;
 }
 
-static PyObject * BaseObject_getPathName(PyObject * self, PyObject * /*args*/)
-{
-    BaseObject* obj=((PySPtr<Base>*)self)->object->toBaseObject();
-
-    return PyString_FromString(obj->getPathName().c_str());
-}
-
-
-
-// the same as 'getPathName' with a extra prefix '@'
-static PyObject * BaseObject_getLinkPath(PyObject * self, PyObject * /*args*/)
-{
-    BaseObject* obj=((PySPtr<Base>*)self)->object->toBaseObject();
-
-    return PyString_FromString(("@"+obj->getPathName()).c_str());
-}
-
 
 static PyObject * BaseObject_getSlaves(PyObject * self, PyObject * /*args*/)
 {
@@ -145,19 +128,9 @@ SP_CLASS_METHOD(BaseObject,cleanup)
 SP_CLASS_METHOD(BaseObject,getContext)
 SP_CLASS_METHOD(BaseObject,getMaster)
 SP_CLASS_METHOD(BaseObject,setSrc)
-SP_CLASS_METHOD(BaseObject,getPathName)
-SP_CLASS_METHOD(BaseObject,getLinkPath)
 SP_CLASS_METHOD(BaseObject,getSlaves)
 SP_CLASS_METHOD(BaseObject,getName)
 SP_CLASS_METHODS_END;
-
-static struct patch {
-    patch() {
-        SP_SOFAPYTYPEOBJECT(BaseObject).tp_str = [](PyObject* self) {
-            return BaseObject_getLinkPath(self, nullptr);
-        };
-    }
-} patcher;
 
 
 SP_CLASS_TYPE_SPTR(BaseObject, BaseObject, Base);
