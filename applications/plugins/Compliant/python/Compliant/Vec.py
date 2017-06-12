@@ -86,7 +86,9 @@ class Proxy:
 
     def __setitem__(self, index, value):
         self.data[index] = value
-    
+
+    def __len__(self): return len(self.data)
+        
     def __str__(self):
         return ' '.join(map(str, self.data))
 
