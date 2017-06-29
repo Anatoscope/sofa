@@ -294,37 +294,27 @@ bool PythonEnvironment::runFile( const char *filename, const std::vector<std::st
 
     //    SP_MESSAGE_INFO( commandString.c_str() )
 
-    if(!arguments.empty())
-    {
-        char**argv = new char*[arguments.size()+1];
-        argv[0] = new char[bareFilename.size()+1];
-        strcpy( argv[0], bareFilename.c_str() );
-        for( size_t i=0 ; i<arguments.size() ; ++i )
-        {
-            argv[i+1] = new char[arguments[i].size()+1];
-            strcpy( argv[i+1], arguments[i].c_str() );
+    if(arguments.size()) {
+        std::vector<const char*> argv;
+
+        // not sure we want this
+        argv.push_back(bareFilename.c_str());
+        
+        for(const std::string& arg : arguments) {
+            argv.push_back(arg.c_str());
         }
 
-        Py_SetProgramName(argv[0]); // TODO check what it is doing exactly
-
-        PySys_SetArgv(arguments.size()+1, argv);
-
-        for( size_t i=0 ; i<arguments.size()+1 ; ++i )
-        {
-            delete [] argv[i];
-        }
-        delete [] argv;
+        // TODO check what it is doing exactly        
+        Py_SetProgramName((char*) argv[0]);
+        PySys_SetArgv(argv.size(), (char**) argv.data());
     }
 
     //  Py_BEGIN_ALLOW_THREADS
 
     // Load the scene script
-    char* pythonFilename = strdup(filename);
-    PyObject* scriptPyFile = PyFile_FromString(pythonFilename, (char*)("r"));
-    free(pythonFilename);
-
-    if( !scriptPyFile )
-    {
+    PyObject* scriptPyFile = PyFile_FromString((char*)filename, (char*)("r"));
+    
+    if( !scriptPyFile ) {
         SP_MESSAGE_ERROR("cannot open file:" << filename)
         PyErr_Print();
         return false;
@@ -334,9 +324,10 @@ bool PythonEnvironment::runFile( const char *filename, const std::vector<std::st
 
     std::string backupFileName;
     PyObject* backupFileObject = PyDict_GetItemString(pDict, "__file__");
-    if(backupFileObject)
+    if(backupFileObject) {
         backupFileName = PyString_AsString(backupFileObject);
-
+    }
+    
     PyObject* newFileObject = PyString_FromString(filename);
     PyDict_SetItemString(pDict, "__file__", newFileObject);
 
