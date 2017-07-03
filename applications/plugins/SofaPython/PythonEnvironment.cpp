@@ -143,7 +143,11 @@ void PythonEnvironment::Init()
 
 void PythonEnvironment::Release()
 {
+    if ( !Py_IsInitialized() ) return;
+    
     // Finish the Python Interpreter
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
     Py_Finalize();
 }
 
