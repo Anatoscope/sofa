@@ -45,6 +45,7 @@ namespace simulation
 
 PyMODINIT_FUNC initModulesHelper(const std::string& name, PyMethodDef* methodDef)
 {
+    gil lock;
     Py_InitModule(name.c_str(), methodDef);
 }
 
@@ -77,6 +78,9 @@ void PythonEnvironment::Init()
     {
         Py_Initialize();
     }
+
+    // the first gil lock is here
+    gil lock;
 
     // Append sofa modules to the embedded python environment.
     bindSofaPythonModule();
@@ -144,6 +148,8 @@ void PythonEnvironment::Init()
 void PythonEnvironment::Release()
 {
     if ( !Py_IsInitialized() ) return;
+
+    gil lock;
     
     // Finish the Python Interpreter
     PyGILState_STATE gstate;
@@ -157,7 +163,12 @@ void PythonEnvironment::addPythonModulePath(const std::string& path)
     if (addedPath.find(path)==addedPath.end()) {
         // note not to insert at first 0 place
         // an empty string must be at first so modules can be found in the current directory first.
-        PyRun_SimpleString(std::string("sys.path.insert(1,\""+path+"\")").c_str());
+
+        {
+            gil lock;
+            PyRun_SimpleString(std::string("sys.path.insert(1,\""+path+"\")").c_str());
+        }
+        
         SP_MESSAGE_INFO("Added '" + path + "' to sys.path");
         addedPath.insert(path);
     }
@@ -218,6 +229,7 @@ void PythonEnvironment::addPythonModulePathsForPlugins(const std::string& plugin
 // basic script functions
 std::string PythonEnvironment::getError()
 {
+    gil lock;
     std::string error;
 
     PyObject *ptype, *pvalue /* error msg */, *ptraceback /*stack snapshot and many other informations (see python traceback structure)*/;
@@ -230,6 +242,7 @@ std::string PythonEnvironment::getError()
 
 bool PythonEnvironment::runString(const std::string& script)
 {
+    gil lock;
     PyObject* pDict = PyModule_GetDict(PyImport_AddModule("__main__"));
     PyObject* result = PyRun_String(script.data(), Py_file_input, pDict, pDict);
 
@@ -248,6 +261,7 @@ bool PythonEnvironment::runString(const std::string& script)
 
 std::string PythonEnvironment::getStackAsString()
 {
+    gil lock;
     PyObject* pDict = PyModule_GetDict(PyImport_AddModule("SofaPython"));
     PyObject* pFunc = PyDict_GetItemString(pDict, "getStackForSofa");
     if (PyCallable_Check(pFunc))
@@ -295,6 +309,9 @@ helper::logging::FileInfo::SPtr PythonEnvironment::getPythonCallingPointAsFileIn
 
 bool PythonEnvironment::runFile( const char *filename, const std::vector<std::string>& arguments)
 {
+    gil lock;
+    
+//    SP_MESSAGE_INFO( "Loading python script \""<<filename<<"\"" )
     std::string dir = sofa::helper::system::SetDirectory::GetParentDir(filename);
     std::string bareFilename = sofa::helper::system::SetDirectory::GetFileNameWithoutExtension(filename);
 
@@ -350,6 +367,7 @@ bool PythonEnvironment::runFile( const char *filename, const std::vector<std::st
 
 void PythonEnvironment::SceneLoaderListerner::rightBeforeLoadingScene()
 {
+    gil lock;
     // unload python modules to force importing their eventual modifications
     PyRun_SimpleString("SofaPython.unloadModules()");
 }
@@ -364,15 +382,20 @@ void PythonEnvironment::setAutomaticModuleReload( bool b )
 
 void PythonEnvironment::excludeModuleFromReload( const std::string& moduleName )
 {
+    gil lock;    
     PyRun_SimpleString( std::string( "try: SofaPython.__SofaPythonEnvironment_modulesExcludedFromReload.append('" + moduleName + "')\nexcept:pass" ).c_str() );
 }
 
 
 
 static PyGILState_Release lock() {
-    // this ensures that we start with no active thread before locking the
-    // gil. the first gil should be taken right after the python initializer is
-    // initialized.
+    // this ensures that we start with no active thread before first locking the
+    // gil: this way the last gil unlock lets python threads to run (otherwise
+    // the main thread still holds the gil, preventing python threads to run
+    // until the main thread exits).
+
+    // the first gil aquisition should happen right after the python interpreter
+    // is initialized.
     static const PyThreadState* init = PyEval_SaveThread(); (void) init;
     return PyGILState_Ensure();
 }
