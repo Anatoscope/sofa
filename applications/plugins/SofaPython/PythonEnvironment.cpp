@@ -157,8 +157,9 @@ void PythonEnvironment::Release()
     gil lock(__func__);
     
     // Finish the Python Interpreter
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+
+    // obviously can't use raii here
+    PyGILState_Ensure();    
     Py_Finalize();
 }
 
