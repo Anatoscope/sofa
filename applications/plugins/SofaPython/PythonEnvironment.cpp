@@ -154,10 +154,7 @@ void PythonEnvironment::Release()
 {
     if ( !Py_IsInitialized() ) return;
 
-    gil lock(__func__);
-    
     // Finish the Python Interpreter
-
     // obviously can't use raii here
     PyGILState_Ensure();    
     Py_Finalize();
