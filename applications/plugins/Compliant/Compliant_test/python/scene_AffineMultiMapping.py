@@ -24,7 +24,7 @@ def insert_point(node, name, position, mass = 1.0):
     res.createObject('MechanicalObject', 
                      name = 'dofs',
                      template = 'Vec3d',
-                     position = vec(position))
+                     position = [position])
 
     res.createObject('UniformMass',
                      mass = mass)
