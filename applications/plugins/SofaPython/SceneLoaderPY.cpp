@@ -82,6 +82,29 @@ sofa::simulation::Node::SPtr SceneLoaderPY::load(const char *filename)
     return root;
 }
 
+void SceneLoaderPY::clearPythonScene()
+{
+    PythonEnvironment::runString("createScene=None");
+    PythonEnvironment::runString("createSceneAndController=None");
+    PythonEnvironment::runString("onLoaded=None");
+    PythonEnvironment::runString("createGraph=None");
+    PythonEnvironment::runString("initGraph=None");
+    PythonEnvironment::runString("bwdInitGraph=None");
+    PythonEnvironment::runString("onBeginAnimationStep=None");
+    PythonEnvironment::runString("onEndAnimationStep=None");
+    PythonEnvironment::runString("storeResetState=None");
+    PythonEnvironment::runString("reset=None");
+    PythonEnvironment::runString("cleanup=None");
+    PythonEnvironment::runString("onGUIEvent=None");
+    PythonEnvironment::runString("onKeyPressed=None");
+    PythonEnvironment::runString("onKeyReleased=None");
+    PythonEnvironment::runString("onMouseButtonLeft=None");
+    PythonEnvironment::runString("onMouseButtonRight=None");
+    PythonEnvironment::runString("onMouseButtonMiddle=None");
+    PythonEnvironment::runString("onMouseWheel=None");
+    PythonEnvironment::runString("draw=None");
+}
+
 void SceneLoaderPY::loadSceneWithArguments(const char *filename,
                                            const std::vector<std::string>& arguments,
                                            Node::SPtr* root_out)
@@ -93,8 +116,7 @@ void SceneLoaderPY::loadSceneWithArguments(const char *filename,
         return;
     }
 
-    PythonEnvironment::runString("createScene=None");
-    PythonEnvironment::runString("createSceneAndController=None");
+    clearPythonScene();
 
     PythonEnvironment::runString(std::string("__file__=\"") + filename + "\"");
 
@@ -151,8 +173,7 @@ bool SceneLoaderPY::loadTestWithArguments(const char *filename, const std::vecto
         return false;
     }
 
-    PythonEnvironment::runString("createScene=None");
-    PythonEnvironment::runString("createSceneAndController=None");
+    clearPythonScene();
 
     PythonEnvironment::runString(std::string("__file__=\"") + filename + "\"");
 
