@@ -69,6 +69,8 @@ public:
     static void setHeader(const std::string& header);
 
 private:
+    /// undefine any global function recognized by sofa
+    void clearPythonScene();
     static std::string                          OurHeader;
 
 };
