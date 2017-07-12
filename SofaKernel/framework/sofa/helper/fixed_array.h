@@ -346,16 +346,6 @@ public:
             elems[i] = value;
     }
 
-    //template<int NN = N, typename std::enable_if<NN>0,int>::type = 0>
-    inline friend std::ostream& operator << (std::ostream& out, const fixed_array<T,N>& a)
-    {
-        out << "[";
-        for( std::size_t i=0; i<N-1; ++i )
-            out<<a[i]<<", ";
-        out<<a[N-1] << "]";
-        return out;
-    }
-
     std::istream& read(std::istream& in)
     {
         std::size_t i=0;
@@ -412,22 +402,6 @@ public:
         }
     }
 
-    inline friend std::istream& operator >> (std::istream& in, fixed_array<T,N>& a)
-    {
-        std::streampos pos = in.tellg();
-        char c;
-
-        if( !( in >> c ) || in.eof() )
-            return in; // empty stream
-        in.seekg( pos ); // coming-back to the previous character
-        if ( c == '[' ) {
-            return a.readDelimiter(in);
-        }
-        else {
-            return a.read(in);
-        }
-    }
-
     inline bool operator < (const fixed_array& v ) const
     {
         for( size_type i=0; i<N; i++ )
@@ -452,6 +426,36 @@ private:
     }
 
 };
+
+//template<int NN = N, typename std::enable_if<NN>0,int>::type = 0>
+template<class T, std::size_t  N>
+inline std::ostream& operator << (std::ostream& out, const fixed_array<T, N>& a)
+{
+    out << "[";
+    for (std::size_t i = 0; i<N - 1; ++i)
+        out << a[i] << ", ";
+    out << a[N - 1] << "]";
+    return out;
+}
+
+template<class T, std::size_t  N>
+inline std::istream& operator >> (std::istream& in, fixed_array<T, N>& a)
+{
+    std::streampos pos = in.tellg();
+    char c;
+
+    if (!(in >> c) || in.eof())
+        return in; // empty stream
+    in.seekg(pos); // coming-back to the previous character
+    if (c == '[') {
+        return a.readDelimiter(in);
+    }
+    else {
+        return a.read(in);
+    }
+}
+
+
 
 template<class T>
 inline fixed_array<T, 2> make_array(const T& v0, const T& v1)
@@ -570,9 +574,9 @@ inline fixed_array<T, 10> make_array(const T& v0, const T& v1, const T& v2, cons
     return v;
 }
 
-//#ifndef FIXED_ARRAY_CPP
-//extern template class fixed_array<float, 4> ;
-//#endif //
+#ifndef FIXED_ARRAY_CPP
+    extern template class SOFA_HELPER_API fixed_array<float, 4> ;
+#endif //
 
 } // namespace helper
 

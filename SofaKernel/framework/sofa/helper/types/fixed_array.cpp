@@ -26,12 +26,13 @@
 #define FIXED_ARRAY_CPP
 
 #include "../fixed_array.h"
+
 namespace sofa
 {
 namespace helper
 {
 
-template class fixed_array<float, 4>;
+template  class SOFA_HELPER_API fixed_array<float, 4>;
 
 } // namespace helper
 } // namespace sofa
