@@ -145,6 +145,7 @@ class Model:
             self.inertia_rotation = None # only useful for diagonal (3 values) inertia
             self.massInfo = None # store the SofaPython.mass.RigidMassInfo() once computed
 
+            self.parent = None # Parent Id for armature
             self.skinnings=list()
             if not solidXml is None:
                 self.parseXml(solidXml)
@@ -176,6 +177,8 @@ class Model:
             self.position=Tools.strToListFloat(objXml.find("position").text)
             if not objXml.find("mass") is None:
                 self.mass = float(objXml.find("mass").text)
+            if not objXml.find("parent") is None:
+                self.parent = objXml.find("parent").text
             if not objXml.find("com") is None:
                 self.com = Tools.strToListFloat(objXml.find("com").text)
             if not objXml.find("inertia") is None:
