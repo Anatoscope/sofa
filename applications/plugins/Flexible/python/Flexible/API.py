@@ -67,18 +67,17 @@ class Deformable:
 
     def loadMesh(self, meshPath, offset = [0,0,0,0,0,0,1], scale=[1,1,1], triangulate=False):
         r = Quaternion.to_euler(offset[3:])  * 180.0 / math.pi
-        self.meshLoader = SofaPython.Tools.meshLoader(self.node, meshPath, translation=concat(offset[:3]) , rotation=concat(r), scale3d=concat(scale), triangulate=triangulate)
+        self.meshLoader = SofaPython.Tools.meshLoader(self.node, meshPath, translation=concat(offset[:3]) , rotation=r.tolist(), scale3d=concat(scale), triangulate=triangulate)
         self.topology = self.node.createObject("MeshTopology", name="topology", src="@"+self.meshLoader.name )
 
     def loadVisual(self, meshPath, offset = [0,0,0,0,0,0,1], scale=[1,1,1], color=[1,1,1,1],**kwargs):
         r = Quaternion.to_euler(offset[3:])  * 180.0 / math.pi
-        self.visual =  self.node.createObject("VisualModel", name="model", filename=meshPath, translation=concat(offset[:3]) , rotation=concat(r), scale3d=concat(scale), color=concat(color), putOnlyTexCoords=True,computeTangents=True,**kwargs)
+        self.visual =  self.node.createObject("VisualModel", name="model", filename=meshPath, translation=concat(offset[:3]) , rotation=r.tolist(), scale3d=concat(scale), color=concat(color), putOnlyTexCoords=True,computeTangents=True,**kwargs)
         # self.visual =  self.node.createObject("VisualModel", name="model", filename=meshPath, translation=concat(offset[:3]) , rotation=concat(r), scale3d=concat(scale), color=concat(color), **kwargs)
         self.visual.setColor(color[0],color[1],color[2],color[3]) # the previous assignement fails when reloading a scene..
         self.normals = self.visual
 
-    def loadVisualCylinder(self, meshPath, offset = [0,0,0,0,0,0,1], scale=[1,1,1], color=[1,1,1,1],radius=0.01,**kwargs):
-        r = Quaternion.to_euler(offset[3:])  * 180.0 / math.pi
+    def loadVisualCylinder(self, radius=0.01):
         self.visual = self.node.createObject("OglCylinderModel", radius=radius, position="@topology.position", edges="@topology.edges" )
         self.normals = self.visual
 
@@ -216,7 +215,7 @@ class Deformable:
     def addSkinning(self, armatureNode, indices, weights, assemble=True, isMechanical=True):
         """ Add skinning (linear) mapping based on the armature in armatureNode using
         """
-        self.mapping = self.node.createObject("LinearMapping", name="mapping", input="@"+armatureNode.getPathName(), indices=concat(indices), weights=concat(weights), assemble=assemble, mapForces=isMechanical, mapConstraints=isMechanical, mapMasses=isMechanical)
+        self.mapping = self.node.createObject("LinearMapping", name="mapping", input="@"+armatureNode.getPathName(), indices=indices, weights=weights, assemble=assemble, mapForces=isMechanical, mapConstraints=isMechanical, mapMasses=isMechanical)
         # self.dofs.resize( len(indices) )
 
 
@@ -253,8 +252,8 @@ class Deformable:
             data = dict()
             with open(filename,'r') as f:
                 data.update(json.load(f))
-                self.mapping.indices= repr(data['indices'])
-                self.mapping.weights= repr(data['weights'])
+                self.mapping.indices= data['indices']
+                self.mapping.weights= data['weights']
                 if printLog:
                     Sofa.msg_info("Flexible.API.Deformable",'Imported Weights from '+filename)
 
@@ -489,12 +488,12 @@ class FEMDof:
                 data.update(json.load(f))
                 if 'mappingType' in data:
                     if data['mappingType'].find("Linear") != -1:
-                        self.mapping.indices= repr(data['indices'])
-                        self.mapping.weights= repr(data['weights'])
+                        self.mapping.indices= data['indices']
+                        self.mapping.weights= data['weights']
                     elif data['mappingType'].find("SubsetMultiMapping") != -1:
-                        self.mapping.indexPairs= repr(data['indexPairs'])
+                        self.mapping.indexPairs= data['indexPairs']
                     elif data['mappingType'].find("SubsetMapping") != -1:
-                        self.mapping.indices= repr(data['indices'])
+                        self.mapping.indices= data['indices']
                 if printLog:
                     Sofa.msg_info("Flexible.API.FEMDof",'Imported FEM Dof mapping from '+filename)
 
@@ -622,10 +621,10 @@ class Behavior:
             data = dict()
             with open(filename,'r') as f:
                 data.update(json.load(f))
-                self.mapping.indices= repr(data['indices'])
-                self.mapping.weights= repr(data['weights'])
-                self.mapping.weightGradients= repr(data['weightGradients'])
-                self.mapping.weightHessians= repr(data['weightHessians'])
+                self.mapping.indices= data['indices']
+                self.mapping.weights= data['weights']
+                self.mapping.weightGradients= data['weightGradients']
+                self.mapping.weightHessians= data['weightHessians']
                 if printLog:
                     Sofa.msg_info("Flexible.API.Behavior",'Imported Weights from '+filename)
 
