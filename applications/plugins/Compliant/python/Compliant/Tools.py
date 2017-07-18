@@ -9,6 +9,7 @@ import os
 # concatenate lists for use with data. TODO: consider using
 # Vec.Proxy.__str__ instead as it's much more powerful
 def cat(x):
+#    Sofa.msg_deprecated("Compliant.Tools.cat", "In Node.createObject: no need to explicitely convert a list to string")
     return ' '.join(map(str, x))
 
 
