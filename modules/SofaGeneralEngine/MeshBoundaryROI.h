@@ -94,6 +94,9 @@ public:
         helper::ReadAccessor<Data< SeqTriangles > > triangles(this->d_triangles);
         helper::ReadAccessor<Data< SeqQuads > > quads(this->d_quads);
 
+        std::set<unsigned int> ROI; //ROI as a set (and not a vector) for efficient look-up
+        ROI.insert(this->d_inputROI.getValue().begin(), this->d_inputROI.getValue().end());
+
         cleanDirty();
 
         helper::WriteOnlyAccessor<Data< SetIndex > >  indices(this->d_indices);
@@ -101,14 +104,14 @@ public:
 
         std::map<PointPair, unsigned int> edgeCount;
         for(size_t i=0;i<triangles.size();i++)
-            if(inROI(triangles[i][0]) && inROI(triangles[i][1]) && inROI(triangles[i][2]))
+            if(inROI(triangles[i][0],ROI) && inROI(triangles[i][1],ROI) && inROI(triangles[i][2],ROI))
                 for(unsigned int j=0;j<3;j++)
                 {
                     PointPair edge(triangles[i][j],triangles[i][(j==2)?0:j+1]);
                     this->countEdge(edgeCount,edge);
                 }
         for(size_t i=0;i<quads.size();i++)
-            if(inROI(quads[i][0]) && inROI(quads[i][1]) && inROI(quads[i][2]) && inROI(quads[i][3]))
+            if(inROI(quads[i][0],ROI) && inROI(quads[i][1],ROI) && inROI(quads[i][2],ROI) && inROI(quads[i][3],ROI))
                 for(unsigned int j=0;j<4;j++)
                 {
                     PointPair edge(quads[i][j],quads[i][(j==3)?0:j+1]);
@@ -138,11 +141,10 @@ public:
         else  edgeCount[edge]=1;
     }
 
-    inline bool inROI(const PointID& index) const
+    inline bool inROI(const PointID& index, const std::set<unsigned int>& ROI) const
     {
-        const SetIndex& ROI=this->d_inputROI.getValue();
         if(ROI.size()==0) return true; // ROI empty -> use all points
-        if(std::find(ROI.begin(),ROI.end(),index)==ROI.end()) return false;
+        if(ROI.find(index)==ROI.end()) return false;
         return true;
     }
 
