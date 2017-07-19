@@ -217,7 +217,7 @@ class SceneArticulatedRigid(SofaPython.sml.BaseScene):
         for rigid in self.rigids.itervalues():
             for mid,visual in rigid.visuals.iteritems():
                 filename = os.path.join(dir, os.path.basename(self.model.meshes[mid].source))
-                e = visual.node.createObject('ObjExporter', name='ObjExporter', filename=filename, printLog=True, exportAtEnd=ExportAtEnd)
+                e = visual.node.createObject('ObjExporter', name='ObjExporter', filename=filename, printLog=True, exportAtEnd=ExportAtEnd, exportMTL=False)
                 self.meshExporters.append(e)
 
 
