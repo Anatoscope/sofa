@@ -191,8 +191,8 @@ class Deformable:
         if self.topology is None:
             Sofa.msg_error("Flexible.API.Deformable","addNormals : no topology for "+ self.name)
             return
-        pos = '@'+self.topology.name+'.position' if self.dofs is None else  '@'+self.dofs.name+'.position'
-        self.normals = self.node.createObject("NormalsFromPoints", warning=False, template='Vec3', name="normalsFromPoints", position=pos, triangles='@'+self.topology.name+'.triangles', quads='@'+self.topology.name+'.quads', invertNormals=invert )
+        pos = self.topology.getLinkPath()+'.position' if self.dofs is None else  self.dofs.getLinkPath()+'.position'
+        self.normals = self.node.createObject("NormalsFromPoints", warning=False, template='Vec3', name="normalsFromPoints", position=pos, triangles=self.topology.getLinkPath()+'.triangles', quads=self.topology.getLinkPath()+'.quads', invertNormals=invert )
 
     def addMass(self,totalMass):
         if self.dofs is None:
