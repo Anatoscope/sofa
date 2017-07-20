@@ -114,6 +114,12 @@ class Model:
                 self.visual = False if objXml.attrib["visual"] in {'False','0','false'} else True
             parseTag(self, objXml)
 
+        def getValueByTag(self, valuesByTag, noDefault=False):
+            """
+            \sa getValueByTag()
+            """
+            return getValueByTag(valuesByTag, self.tags, noDefault)
+
     class Image:
         def __init__(self, imageXml=None):
             self.format=None
@@ -165,11 +171,11 @@ class Model:
         def addImage(self, image):
             self.image.append(image)
 
-        def getValueByTag(self, valuesByTag):
+        def getValueByTag(self, valuesByTag, noDefault=False):
             """
             \sa getValueByTag()
             """
-            return getValueByTag(valuesByTag, self.tags)
+            return getValueByTag(valuesByTag, self.tags, noDefault)
 
         def parseXml(self, objXml):
             parseIdName(self, objXml)
@@ -574,7 +580,7 @@ class BaseScene:
             for e in err:
                 Sofa.msg_error("SofaPython.sml",e)
 
-def getValueByTag(valueByTag, tags):
+def getValueByTag(valueByTag, tags, noDefault=False):
     """ look into the valueByTag dictionary for a tag contained in tags
         \return the corresponding value, or the "default" value if none is found
         \todo print a warning if several matching tags are found in valueByTag
@@ -586,6 +592,8 @@ def getValueByTag(valueByTag, tags):
         Sofa.msg_warning("SofaPython.sml.getValueByTag", "sevaral tags from {0} are defined in values {1}".format(tags, valueByTag))
     if not len(tag)==0:
         return valueByTag[tag.pop()]
+    elif noDefault:
+        return None
     else:
         if "default" in valueByTag:
             return valueByTag["default"]
