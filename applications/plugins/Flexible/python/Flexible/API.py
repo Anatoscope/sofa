@@ -65,10 +65,12 @@ class Deformable:
         self.mass=None
 
 
-    def loadMesh(self, meshPath, offset = [0,0,0,0,0,0,1], scale=[1,1,1], triangulate=False):
+    def loadMesh(self, meshPath, offset = [0,0,0,0,0,0,1], scale=[1,1,1], triangulate=False, addVisual=False, color=[1,1,1,1]):
         r = Quaternion.to_euler(offset[3:])  * 180.0 / math.pi
         self.meshLoader = SofaPython.Tools.meshLoader(self.node, meshPath, translation=concat(offset[:3]) , rotation=r.tolist(), scale3d=concat(scale), triangulate=triangulate)
         self.topology = self.node.createObject("MeshTopology", name="topology", src="@"+self.meshLoader.name )
+        if addVisual:
+            self.visual =  self.node.createObject("VisualModel", name="model", src="@"+self.meshLoader.name, color=concat(color))
 
     def loadVisual(self, meshPath, offset = [0,0,0,0,0,0,1], scale=[1,1,1], color=[1,1,1,1],**kwargs):
         r = Quaternion.to_euler(offset[3:])  * 180.0 / math.pi
