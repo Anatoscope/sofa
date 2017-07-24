@@ -209,18 +209,6 @@ class SceneArticulatedRigid(SofaPython.sml.BaseScene):
             Sofa.msg_warning("Compliant.sml", "insertMergeRigid: no rigid merged")
         return mergeNode
 
-    def addMeshExporters(self, dir, ExportAtEnd=False):
-        """ add obj Exporters for each visual model of the scene
-        """
-        if not os.path.exists(dir):
-            os.makedirs(dir)
-        for rigid in self.rigids.itervalues():
-            for mid,visual in rigid.visuals.iteritems():
-                filename = os.path.join(dir, os.path.basename(self.model.meshes[mid].source))
-                e = visual.node.createObject('ObjExporter', name='ObjExporter', filename=filename, printLog=True, exportAtEnd=ExportAtEnd, exportMTL=False)
-                self.meshExporters.append(e)
-
-
     def createScene(self):
         self.node.createObject('RequiredPlugin', name = 'Flexible' )
         self.node.createObject('RequiredPlugin', name = 'Compliant' )
