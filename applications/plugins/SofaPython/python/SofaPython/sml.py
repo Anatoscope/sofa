@@ -544,11 +544,11 @@ class BaseScene:
         """ returns a collision object identified by solidId/meshId
         """
         mesh=None
-        if hasattr(self, 'rigids'):  # inserted by Compliant.sml
+        if hasattr(self, 'rigids'):  # inserted by Compliant.sml FIXME: parent class should not know child class !
             if solidId in self.rigids:
                 if meshId in self.rigids[solidId].collisions:
                     mesh = self.rigids[solidId].collisions[meshId]
-        if hasattr(self, 'collisions'):  # inserted by Anatomy.sml
+        if hasattr(self, 'collisions'):  # inserted by Anatomy.sml FIXME: parent class should not know child class !
             if solidId in self.collisions:
                 if meshId in self.collisions[solidId]:
                     mesh = self.collisions[solidId][meshId]
@@ -558,16 +558,15 @@ class BaseScene:
         """ returns a visual object identified by solidId/meshId
         """
         mesh=None
-        if hasattr(self, 'rigids'):  # inserted by Compliant.sml
+        if hasattr(self, 'rigids'):  # inserted by Compliant.sml FIXME: parent class should not know child class !
             if solidId in self.rigids:
                 if meshId in self.rigids[solidId].visuals:
                     mesh = self.rigids[solidId].visuals[meshId]
-        if hasattr(self, 'visuals'):  # inserted by Anatomy.sml
+        if hasattr(self, 'visuals'):  # inserted by Anatomy.sml FIXME: parent class should not know child class !
             if solidId in self.visuals:
                 if meshId in self.visuals[solidId]:
                     mesh = self.visuals[solidId][meshId]
         return mesh
-
 
     def exportMeshes(self):
         for e in self.meshExporters:
