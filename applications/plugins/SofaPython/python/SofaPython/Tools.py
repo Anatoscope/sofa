@@ -98,6 +98,10 @@ class Material:
         self._reset()
         with open(filename,'r') as file:
             self.data.update(json.load(file))
+
+    def setPoissonRatio(self, value):
+        for m in self.data:
+            self.data[m]['poissonRatio'] = value
             
     def density(self, material):
         return units.massDensity_from_SI(self._get(material, "density"))
