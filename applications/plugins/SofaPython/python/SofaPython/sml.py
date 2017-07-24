@@ -593,6 +593,40 @@ class BaseScene:
                     mesh = self.visuals[solidId][meshId]
         return mesh
 
+    def getVisualsByTags(self, solidTags=set(), meshTags=set()):
+        """ \return a selection of visual models, based on solidTags and meshTags
+        an empty tag set means all solids or meshes
+        """
+        visuals = list()
+        solids = self.model.getSolidsByTags(solidTags) if len(solidTags) else self.model.solids.values()
+        for solid in solids:
+            if not solid.id in self.visuals:
+                if printLog:
+                    Sofa.msg_info("SofaPython.sml", "No visual for solid "+solid.id+", export not added")
+                continue
+            solidVisuals = self.visuals[solid.id]
+            meshes = solid.getMeshesByTags(meshTags) if len(meshTags) else solid.mesh
+            for mesh in meshes:
+                if not mesh.id in solidVisuals:
+                    if printLog:
+                        Sofa.msg_info("SofaPython.sml", "No visual for solid "+solid.id+", mesh: "+mesh.id+", export not added")
+                    continue
+                visual = solidVisuals[mesh.id]
+                visual.mesh = mesh # make sure we known which mesh is attached to this visual
+                visuals.append(visual)
+        return visuals
+
+    def addMeshExporters(self, dir, ExportAtEnd=False, solidTags=set(), meshTags=set()):
+        """ add obj exporters to selected collision models,
+        selection is done by solidTags and meshTags, empty set means all solids or meshes
+        \todo make ExportAtEnd consistant with exportAtEnd data
+        """
+        visuals = self.getVisualsByTags(solidTags, meshTags)
+        for visual in visuals:
+            filename = os.path.join(dir, os.path.basename(visual.mesh.source))
+            e = visual.node.createObject('ObjExporter', name='ObjExporter', filename=filename, printLog=True, exportMTL=False, exportAtEnd=ExportAtEnd)
+            self.meshExporters.append(e)
+
     def exportMeshes(self):
         for e in self.meshExporters:
             e.writeOBJ()
