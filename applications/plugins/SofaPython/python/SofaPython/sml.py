@@ -98,6 +98,7 @@ class Model:
 
     class MeshAttributes:
         def __init__(self,objXml=None):
+            self.mesh = None
             self.collision=True
             self.simulation=True
             self.visual=True
@@ -139,7 +140,7 @@ class Model:
             self.tags = set()
             self.position = None
             self.keyPositions = {} # optional animated keyframed positions {name(string):position(6 floats)}, note 'name' can represent a time (that would need to be casted as a float in your sml moulinette)
-            self.mesh = list() # list of meshes
+            self.mesh = list() # list of meshes TODO: should be self.meshes to be consistent
             self.meshAttributes = dict() # attributes associated with each mesh
             self.image = list() # list of images
             self.offsets = list()  # list of rigid offsets
@@ -167,6 +168,7 @@ class Model:
                 self.meshAttributes[mesh.id]=attr
             else:
                 self.meshAttributes[mesh.id]= Model.MeshAttributes()
+            self.meshAttributes[mesh.id].mesh = mesh
 
         def addImage(self, image):
             self.image.append(image)
@@ -176,6 +178,14 @@ class Model:
             \sa getValueByTag()
             """
             return getValueByTag(valuesByTag, self.tags, noDefault)
+
+        def getMeshesByTags(self, tags):
+            """ \return a list of solids which contains at least one tag from tags
+            """
+            meshes = list()
+            for ma in _getObjectsByTags(self.meshAttributes.values(), tags):
+                meshes.append(ma.mesh)
+            return meshes
 
         def parseXml(self, objXml):
             parseIdName(self, objXml)
