@@ -448,6 +448,21 @@ class Model:
                     Sofa.msg_error("SofaPython.sml","Model: in joint {0}, unknown solid {1} referenced".format(joint.name, o.attrib["id"]))
             self.genericJoints[joint.id]=joint
 
+    def setMeshDirectoryPath(self, path):
+        """ Change all the meshes directory path to be path.
+        If path is not absolute, model directory is appended to it
+        """
+        _path = None
+        if os.path.isabs(path):
+            _path = path
+        else:
+            _path = os.path.join(self.modelDir, path)
+        for mesh in self.meshes.itervalues():
+            if not mesh.source is None:
+                mesh.source = os.path.join(_path, os.path.basename(mesh.source))
+                if not os.path.exists(mesh.source):
+                    Sofa.msg_warning("SofaPython.sml","Model: mesh not found: "+mesh.source)
+
     def getSolidsByTags(self, tags):
         """ \return a list of solids which contains at least one tag from tags
         """
