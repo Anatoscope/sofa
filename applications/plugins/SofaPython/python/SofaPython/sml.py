@@ -617,15 +617,34 @@ class BaseScene:
         return visuals
 
     def addMeshExporters(self, dir, ExportAtEnd=False, solidTags=set(), meshTags=set()):
-        """ add obj exporters to selected collision models,
+        """ add obj exporters to selected visual models,
         selection is done by solidTags and meshTags, empty set means all solids or meshes
         \todo make ExportAtEnd consistant with exportAtEnd data
         """
-        visuals = self.getVisualsByTags(solidTags, meshTags)
-        for visual in visuals:
+        for visual in self.getVisualsByTags(solidTags, meshTags):
             filename = os.path.join(dir, os.path.basename(visual.mesh.source))
             e = visual.node.createObject('ObjExporter', name='ObjExporter', filename=filename, printLog=True, exportMTL=False, exportAtEnd=ExportAtEnd)
             self.meshExporters.append(e)
+
+    def addVisualStyles(self, displayFlags="", solidTags=set(), meshTags=set()):
+        """ add visual styles to selected visual models,
+        selection is done by solidTags and meshTags, empty set means all solids or meshes
+        """
+        for visual in self.getVisualsByTags(solidTags, meshTags):
+            visual.node.createObject("VisualStyle", name="visualStyle", displayFlags=displayFlags)
+
+    def setVisualStyles(self, displayFlags="showVisual", solidTags=set(), meshTags=set()):
+        """ set visual tags to selected visual models,
+        a visualStyle must have been already created
+        selection is done by solidTags and meshTags, empty set means all solids or meshes
+        """
+        for visual in self.getVisualsByTags(solidTags, meshTags):
+            vs = visual.node.getObject("visualStyle")
+            if vs is None:
+                Sofa.msg_warning("sml.BaseScene", "Missing VisualStyle component in "+visual.node.getPathName())
+                continue
+            vs.displayFlags=displayFlags
+
 
     def exportMeshes(self):
         for e in self.meshExporters:
