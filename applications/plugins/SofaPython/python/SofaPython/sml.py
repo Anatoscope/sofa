@@ -644,7 +644,8 @@ class BaseScene:
                 Sofa.msg_warning("sml.BaseScene", "Missing VisualStyle component in "+visual.node.getPathName())
                 continue
             vs.displayFlags=displayFlags
-
+            if "showVisual" in displayFlags:
+                visual.node.propagatePositionAndVelocity()
 
     def exportMeshes(self):
         for e in self.meshExporters:
