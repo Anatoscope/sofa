@@ -312,7 +312,7 @@ class Model:
             self.open(filename)
 
     def open(self, filename):
-        self.modelDir = os.path.dirname(filename)
+        self.modelDir = os.path.abspath(os.path.dirname(filename))
         with open(filename,'r') as f:
             # TODO automatic DTD validation could go here, not available in python builtin ElementTree module
             modelXml = etree.parse(f).getroot()
