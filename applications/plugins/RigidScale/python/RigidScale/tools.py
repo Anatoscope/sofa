@@ -85,9 +85,14 @@ class Armature:
     def updateChildren(self, bone):
         if(bone in self.children):
             position = SofaNumpy.numpy_data(self.scene.rigidScales[bone].rigidDofs,"position").view(dtype=Types.Rigid3)[0]
+            scale = SofaNumpy.numpy_data(self.scene.rigidScales[bone].scaleDofs,"position")[0]
             for child in self.children[bone]:
-                newPosition = position*self.localCoordinates[child]
+                localCoordinates = np.copy(self.localCoordinates[child]).view(dtype=Types.Rigid3)
+                localCoordinates.center = localCoordinates.center*scale
+                newPosition = position*(localCoordinates)
+                
                 SofaNumpy.numpy_data(self.scene.rigidScales[child].rigidDofs,"position").view(dtype=Types.Rigid3)[0] = newPosition
+                SofaNumpy.numpy_data(self.scene.rigidScales[child].scaleDofs,"position")[0] = scale # children inherit their parent scale
                 self.updateChildren(child)
                 
         return
@@ -105,7 +110,6 @@ class Armature:
         position.center = initPosition.center + translation
         self.updateChildren(bone)
         if(self.model.solids[bone].parent):
-            
             self.localCoordinates[bone] = parentPosition.inv() * position      
         return
 
@@ -116,7 +120,7 @@ class Armature:
             parentPosition = np.array(self.scene.rigidScales[self.model.solids[bone].parent].rigidDofs.position).view(dtype=Types.Rigid3)[0]
             initPosition = parentPosition * self.initialLocalCoordinates[bone];
         else:
-            initPosition = np.array(self.scene.rigidScales[bone].rigidDofs.reset_position).view(dtype=Types.Rigid3)[0]
+            initPosition = np.array(self.scene.rigidScales[bone].rigidDofs.rest_position).view(dtype=Types.Rigid3)[0]
 
         position = SofaNumpy.numpy_data(self.scene.rigidScales[bone].rigidDofs,"position").view(dtype=Types.Rigid3)[0]
         q = SofaPython.Quaternion.from_euler(rotation[:]).view(dtype=Types.Quaternion)
@@ -127,4 +131,6 @@ class Armature:
 
 
     def scale(self, bone, scale):
-        self.scene.rigidScales[bone].scaleDofs.position = scale
+
+        SofaNumpy.numpy_data(self.scene.rigidScales[bone].scaleDofs,"position")[0] = scale
+        self.updateChildren(bone)
