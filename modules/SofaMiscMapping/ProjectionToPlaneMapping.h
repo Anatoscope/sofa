@@ -76,8 +76,8 @@ public:
     typedef defaulttype::Vec<In::spatial_dimensions> Normals;
 
     Data< helper::vector<unsigned> > f_indices;         ///< indices of the parent points
-    Data< OutVecCoord >      f_origins; ///< origins of the lines the point is projected to
-    Data< OutVecCoord >      f_normals; ///< directions of the lines the point is projected to (should be normalized, and are normalized in init)
+    Data< OutVecCoord >      f_origins; ///< origins of the planes the point is projected to
+    Data< OutVecCoord >      f_normals; ///< normals of the planes the point is projected to (should be normalized, and are normalized in init)
     Data< Real > d_factor;
 
     Data< SReal >            d_drawScale; ///< drawing scale
