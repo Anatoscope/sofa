@@ -47,7 +47,7 @@ namespace mapping
 
     In: parent point positions
 
-    Out: orthogonal projection of each point on a target line
+    Out: orthogonal projection of each point on a target plane
 
     @author Matthieu Nesme
   */
