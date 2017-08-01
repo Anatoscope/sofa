@@ -524,6 +524,9 @@ class BaseScene:
         self.solidMaterial = dict() # assign a material to a solid
         self.nodes = dict() # to store special nodes
         self.meshExporters = list() # optional components to exports meshes
+        self.collisions = dict() # to store collisions of the scene by [solidId][meshId]
+        self.visuals = dict() # to store visuals of the scene by [solidId][meshId]
+
         n=name
         if n is None:
             n=self.model.name
@@ -569,6 +572,7 @@ class BaseScene:
     def getCollision(self,solidId,meshId):
         """ returns a collision object identified by solidId/meshId
         """
+        Sofa.msg_deprecated("SofaPython.sml.BaseScene","getCollision is deprecated, access directly self.collisions[solidId][meshId]")
         mesh=None
         if hasattr(self, 'rigids'):  # inserted by Compliant.sml FIXME: parent class should not know child class !
             if solidId in self.rigids:
@@ -583,6 +587,7 @@ class BaseScene:
     def getVisual(self,solidId,meshId):
         """ returns a visual object identified by solidId/meshId
         """
+        Sofa.msg_deprecated("SofaPython.sml.BaseScene","getCollision is deprecated, access directly self.visuals[solidId][meshId]")
         mesh=None
         if hasattr(self, 'rigids'):  # inserted by Compliant.sml FIXME: parent class should not know child class !
             if solidId in self.rigids:
