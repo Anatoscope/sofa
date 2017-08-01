@@ -221,7 +221,10 @@ class SceneArticulatedRigid(SofaPython.sml.BaseScene):
 
         # rigids
         for rigidModel in self.model.getSolidsByTags(self.param.rigidTags):
-            self.rigids[rigidModel.id] = insertRigid(self.node, rigidModel, self.material.density(self.getMaterial(rigidModel.id)), self._geometricScale, self.param)
+            rigid =  insertRigid(self.node, rigidModel, self.material.density(self.getMaterial(rigidModel.id)), self._geometricScale, self.param)
+            self.rigids[rigidModel.id] = rigid
+            self.visuals[rigidModel.id] = rigid.visuals
+            self.collisions[rigidModel.id] = rigid.collisions
         
         # joints
         for jointModel in self.model.genericJoints.values():
