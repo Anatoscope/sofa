@@ -157,6 +157,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADER_FILES}"
 set(IMAGE_COMPILER_FLAGS "-DSOFA_BUILD_IMAGE")
 
 
+if( SOFA_IMAGE_DONT_BUILD_ALL_IMAGE_TYPES )
+  message("not building all images types (yay)")
+  set(IMAGE_COMPILER_FLAGS "${IMAGE_COMPILER_FLAGS} -DSOFA_IMAGE_DONT_BUILD_ALL_IMAGE_TYPES")
+endif()
+
+
 if( SofaPython_FOUND )
     target_link_libraries(${PROJECT_NAME} SofaPython)    
     set(IMAGE_COMPILER_FLAGS "${IMAGE_COMPILER_FLAGS} -DSOFA_HAVE_SOFAPYTHON")
