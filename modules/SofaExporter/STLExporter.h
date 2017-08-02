@@ -75,6 +75,8 @@ public:
 protected:
     STLExporter();
     virtual ~STLExporter();
+
+    std::string getFilename() const;
 public:
     void init();
     void cleanup();

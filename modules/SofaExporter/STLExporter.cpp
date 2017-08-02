@@ -115,19 +115,33 @@ void STLExporter::init()
 
 }
 
-void STLExporter::writeSTL()
+std::string STLExporter::getFilename() const
 {
     std::string filename = stlFilename.getFullPath();
-
     if (maxStep)
     {
+        // if extension given, remove it
+        if (".stl" == filename.substr(filename.size()-4, 4))
+            filename = filename.substr(0, filename.size()-4);
         std::ostringstream oss;
         oss.width(5);
         oss.fill('0');
         oss << nbFiles;
         filename += oss.str();
+        filename += ".stl";
     }
-    filename += ".stl";
+    else
+    {
+        // add the file extension if necessary
+        if (".stl" != filename.substr(filename.size()-4, 4))
+        filename += ".stl";
+    }
+    return filename;
+}
+
+void STLExporter::writeSTL()
+{
+    std::string filename = getFilename();
 
     sofa::helper::io::File outFile;
     if(!outFile.open(filename.c_str(), std::ios_base::out))
@@ -212,16 +226,7 @@ void STLExporter::writeSTL()
 
 void STLExporter::writeSTLBinary()
 {
-    std::string filename = stlFilename.getFullPath();
-    if (maxStep)
-    {
-        std::ostringstream oss;
-        oss.width(5);
-        oss.fill('0');
-        oss << nbFiles;
-        filename += oss.str();
-    }
-    filename += ".stl";
+    std::string filename = getFilename();
 
     sofa::helper::io::File outFile;
     if(!outFile.open(filename.c_str(), std::ios_base::out | std::ios::binary))
