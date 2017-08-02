@@ -45,6 +45,11 @@ DataController::DataController()
 {
 }
 
+DataController::~DataController()
+{
+
+}
+
 void DataController::setValue(const char* v)
 {
     data.read(v);
