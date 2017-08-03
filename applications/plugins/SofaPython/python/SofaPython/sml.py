@@ -140,7 +140,7 @@ class Model:
             self.id = None
             self.name = None
             self.tags = set()
-            self.position = None
+            self.position = [0,0,0,0,0,0,1]
             self.keyPositions = {} # optional animated keyframed positions {name(string):position(6 floats)}, note 'name' can represent a time (that would need to be casted as a float in your sml moulinette)
             self.mesh = list() # list of meshes TODO: should be self.meshes to be consistent
             self.meshAttributes = dict() # attributes associated with each mesh
@@ -192,7 +192,8 @@ class Model:
         def parseXml(self, objXml):
             parseIdName(self, objXml)
             parseTag(self,objXml)
-            self.position=Tools.strToListFloat(objXml.find("position").text)
+            if not objXml.find("position") is None:
+                self.position=Tools.strToListFloat(objXml.find("position").text)
             if not objXml.find("mass") is None:
                 self.mass = float(objXml.find("mass").text)
             if not objXml.find("parent") is None:
