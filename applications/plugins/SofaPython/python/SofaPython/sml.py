@@ -603,52 +603,60 @@ class BaseScene:
                     mesh = self.visuals[solidId][meshId]
         return mesh
 
-    def getVisualsByTags(self, solidTags=set(), meshTags=set()):
+    def getVisualsByTags(self, solidId=None, solidTags=set(), meshTags=set()):
         """ \return a selection of visual models, based on solidTags and meshTags
         an empty tag set means all solids or meshes
         """
         visuals = list()
-        solids = self.model.getSolidsByTags(solidTags) if len(solidTags) else self.model.solids.values()
+        if not solidId is None and len(solidTags):
+            Sofa.msg_warning("sml.Model.getVisualsByTags", "solidId and solidTags both specified, solidTags ignored")
+        solids = None
+        if not solidId is None:
+            solids = [self.model.solids[solidId]]
+        elif len(solidTags) :
+            solids = self.model.getSolidsByTags(solidTags)
+        else :
+            solids = self.model.solids.values()
         for solid in solids:
             if not solid.id in self.visuals:
                 if printLog:
-                    Sofa.msg_info("SofaPython.sml", "No visual for solid "+solid.id+", export not added")
+                    Sofa.msg_info("SofaPython.sml", "No visual for solid "+solid.id)
                 continue
             solidVisuals = self.visuals[solid.id]
             meshes = solid.getMeshesByTags(meshTags) if len(meshTags) else solid.mesh
             for mesh in meshes:
                 if not mesh.id in solidVisuals:
                     if printLog:
-                        Sofa.msg_info("SofaPython.sml", "No visual for solid "+solid.id+", mesh: "+mesh.id+", export not added")
+                        Sofa.msg_info("SofaPython.sml", "No visual for solid "+solid.id+", mesh: "+mesh.id)
                     continue
                 visual = solidVisuals[mesh.id]
                 visual.mesh = mesh # make sure we known which mesh is attached to this visual
                 visuals.append(visual)
         return visuals
 
-    def addMeshExporters(self, dir, ExportAtEnd=False, solidTags=set(), meshTags=set()):
+    def addMeshExporters(self, dir, ExportAtEnd=False, solidId=None, solidTags=set(), meshTags=set()):
         """ add obj exporters to selected visual models,
         selection is done by solidTags and meshTags, empty set means all solids or meshes
         \todo make ExportAtEnd consistant with exportAtEnd data
         """
-        for visual in self.getVisualsByTags(solidTags, meshTags):
+        for visual in self.getVisualsByTags(solidId, solidTags, meshTags):
             filename = os.path.join(dir, os.path.basename(visual.mesh.source))
             e = visual.node.createObject('ObjExporter', name='ObjExporter', filename=filename, printLog=True, exportMTL=False, exportAtEnd=ExportAtEnd)
             self.meshExporters.append(e)
 
-    def addVisualStyles(self, displayFlags="", solidTags=set(), meshTags=set()):
+    def addVisualStyles(self, displayFlags="", solidId=None, solidTags=set(), meshTags=set()):
         """ add visual styles to selected visual models,
         selection is done by solidTags and meshTags, empty set means all solids or meshes
         """
-        for visual in self.getVisualsByTags(solidTags, meshTags):
+        for visual in self.getVisualsByTags(solidId, solidTags, meshTags):
             visual.node.createObject("VisualStyle", name="visualStyle", displayFlags=displayFlags)
 
-    def setVisualStyles(self, displayFlags="showVisual", solidTags=set(), meshTags=set()):
+    def setVisualStyles(self, displayFlags="showVisual", solidId=None, solidTags=set(), meshTags=set()):
         """ set visual tags to selected visual models,
         a visualStyle must have been already created
         selection is done by solidTags and meshTags, empty set means all solids or meshes
         """
-        for visual in self.getVisualsByTags(solidTags, meshTags):
+        for visual in self.getVisualsByTags(solidId, solidTags, meshTags):
             vs = visual.node.getObject("visualStyle")
             if vs is None:
                 Sofa.msg_warning("sml.BaseScene", "Missing VisualStyle component in "+visual.node.getPathName())
