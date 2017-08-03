@@ -19,7 +19,6 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#ifndef SOFA_COMPONENT_ENGINE_DILATEENGINE_CPP
 #define SOFA_COMPONENT_ENGINE_DILATEENGINE_CPP
 #include <SofaGeneralEngine/DilateEngine.inl>
 #include <sofa/core/ObjectFactory.h>
@@ -60,6 +59,4 @@ template class SOFA_GENERAL_ENGINE_API DilateEngine<Vec3dTypes>;
 } // namespace component
 
 } // namespace sofa
-
-#endif
 
