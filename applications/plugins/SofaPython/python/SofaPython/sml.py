@@ -74,8 +74,10 @@ class Model:
 
         def parseXml(self, meshXml):
             parseIdName(self,meshXml)
-            self.format = meshXml.find("source").attrib["format"]
-            self.source = meshXml.find("source").text
+
+            if not meshXml.find("source") is None:
+                self.format = meshXml.find("source").attrib["format"]
+                self.source = meshXml.find("source").text
 
             for g in meshXml.findall("group"):
                 self.group[g.attrib["id"]] = Model.Mesh.Group()
@@ -331,11 +333,12 @@ class Model:
                     if m.attrib["id"] in self.meshes:
                         Sofa.msg_warning("SofaPython.sml","Model: mesh id {0} already defined".format(m.attrib["id"]) )
                     mesh = Model.Mesh(m)
-                    sourceFullPath = os.path.join(self.modelDir,mesh.source)
-                    if os.path.exists(sourceFullPath):
-                        mesh.source=sourceFullPath
-                    elif printLog:
-                        Sofa.msg_warning("SofaPython.sml","Model: mesh not found: "+mesh.source )
+                    if not mesh.source is None:
+                        sourceFullPath = os.path.join(self.modelDir,mesh.source)
+                        if os.path.exists(sourceFullPath):
+                            mesh.source=sourceFullPath
+                        elif printLog:
+                            Sofa.msg_warning("SofaPython.sml","Model: mesh not found: "+mesh.source )
                     self.meshes[m.attrib["id"]] = mesh
 
             # images
