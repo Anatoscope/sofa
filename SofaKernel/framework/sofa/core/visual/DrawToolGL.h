@@ -189,6 +189,8 @@ protected:
     helper::gl::BasicShapesGL_Sphere<Vector3> m_sphereUtil;
     helper::gl::BasicShapesGL_FakeSphere<Vector3> m_fakeSphereUtil;
 
+public:
+
     // utility functions, defining primitives
     virtual void internalDrawPoint(const Vector3 &p, const Vec4f &c);
     virtual void internalDrawPoint(const Vector3 &p, const Vector3 &n, const Vec4f &c);

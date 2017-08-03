@@ -236,6 +236,7 @@ void DataDisplay::drawVisual(const core::visual::VisualParams* vparams)
         {
             // Triangles
             int nbTriangles = topology->getNbTriangles();
+            glBegin(GL_TRIANGLES);
             for (int i=0; i<nbTriangles; i++)
             {
                 Vec4f color = isnan(triData[i])
@@ -244,11 +245,12 @@ void DataDisplay::drawVisual(const core::visual::VisualParams* vparams)
                 const Triangle& t = topology->getTriangle(i);
 
                 glMaterialfv(GL_FRONT,GL_DIFFUSE,color.ptr());
-                vparams->drawTool()->drawTriangle(
+                vparams->drawTool()->internalDrawTriangle(
                     x[ t[0] ], x[ t[1] ], x[ t[2] ],
                     m_normals[ t[0] ], m_normals[ t[1] ], m_normals[ t[2] ],
                     color, color, color);
             }
+            glEnd();
         }
         else if( !pointTriData.empty() )
         {
@@ -287,6 +289,7 @@ void DataDisplay::drawVisual(const core::visual::VisualParams* vparams)
         if( !quadData.empty() )
         {
             int nbQuads = topology->getNbQuads();
+            glBegin(GL_QUADS);
             for (int i=0; i<nbQuads; i++)
             {
                 Vec4f color = isnan(quadData[i])
@@ -294,11 +297,12 @@ void DataDisplay::drawVisual(const core::visual::VisualParams* vparams)
                     : defaulttype::RGBAColor::fromVec4(eval(quadData[i]));
                 const Quad& t = topology->getQuad(i);
                 glMaterialfv(GL_FRONT,GL_DIFFUSE,color.ptr());
-                vparams->drawTool()->drawQuad(
+                vparams->drawTool()->internalDrawQuad(
                     x[ t[0] ], x[ t[1] ], x[ t[2] ], x[ t[3] ],
                     m_normals[ t[0] ], m_normals[ t[1] ], m_normals[ t[2] ], m_normals[ t[3] ],
                     color, color, color, color);
             }
+            glEnd();
         }
         else if( !pointQuadData.empty() )
         {
@@ -345,13 +349,15 @@ void DataDisplay::drawVisual(const core::visual::VisualParams* vparams)
         helper::ColorMap::evaluator<Real> eval = colorMap->getEvaluator(min, max);
         // Just the points
         glPointSize(10);
+        glBegin(GL_POINTS);
         for (unsigned int i=0; i<x.size(); ++i)
         {
             Vec4f color = isnan(ptData[i])
                 ? f_colorNaN.getValue()
                 : defaulttype::RGBAColor::fromVec4(eval(ptData[i]));
-            vparams->drawTool()->drawPoint(x[i], color);
+            vparams->drawTool()->internalDrawPoint(x[i], color);
         }
+        glEnd();
 
     } else if (bDrawPointData) {
         helper::ColorMap::evaluator<Real> eval = colorMap->getEvaluator(min, max);
