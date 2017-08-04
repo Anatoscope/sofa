@@ -62,40 +62,40 @@ protected:
     /// Typically, all "script_*" functions call the corresponding "*" function of the script, if it exists
     /// @{
 
-    virtual void loadScript() override;
+    virtual void loadScript();
 
-    virtual void script_onLoaded(sofa::simulation::Node* node) override ;     /// called once, immediately after the script is loaded
-    virtual void script_createGraph(sofa::simulation::Node* node) override ;  /// called when the script must create its graph
-    virtual void script_initGraph(sofa::simulation::Node* node) override ;    /// called when the script must init its graph, once all the graph has been create
-    virtual void script_bwdInitGraph(sofa::simulation::Node* node) override ; /// called when the script must init its graph, once all the graph has been create
+    virtual void script_onLoaded(sofa::simulation::Node* node) ;     /// called once, immediately after the script is loaded
+    virtual void script_createGraph(sofa::simulation::Node* node) ;  /// called when the script must create its graph
+    virtual void script_initGraph(sofa::simulation::Node* node) ;    /// called when the script must init its graph, once all the graph has been create
+    virtual void script_bwdInitGraph(sofa::simulation::Node* node) ; /// called when the script must init its graph, once all the graph has been create
 
-    virtual void script_storeResetState() override;
-    virtual void script_reset() override;
+    virtual void script_storeResetState();
+    virtual void script_reset();
 
-    virtual void script_cleanup() override ;
+    virtual void script_cleanup() ;
 
     /// keyboard & mouse events
-    virtual bool script_onKeyPressed(const char c) override;
-    virtual bool script_onKeyReleased(const char c) override ;
+    virtual bool script_onKeyPressed(const char c);
+    virtual bool script_onKeyReleased(const char c) ;
 
-    virtual void script_onMouseButtonLeft(const int posX,const int posY,const bool pressed) override;
-    virtual void script_onMouseButtonRight(const int posX,const int posY,const bool pressed) override;
-    virtual void script_onMouseButtonMiddle(const int posX,const int posY,const bool pressed) override;
+    virtual void script_onMouseButtonLeft(const int posX,const int posY,const bool pressed);
+    virtual void script_onMouseButtonRight(const int posX,const int posY,const bool pressed);
+    virtual void script_onMouseButtonMiddle(const int posX,const int posY,const bool pressed);
     virtual void script_onMouseWheel(const int posX,const int posY,const int delta);
 
     /// called each frame
-    virtual void script_onBeginAnimationStep(const double dt) override ;
-    virtual void script_onEndAnimationStep(const double dt) override;
+    virtual void script_onBeginAnimationStep(const double dt) ;
+    virtual void script_onEndAnimationStep(const double dt);
 
-    virtual void script_onGUIEvent(const char* controlID, const char* valueName, const char* value) override ;
+    virtual void script_onGUIEvent(const char* controlID, const char* valueName, const char* value) ;
 
     /// Script events; user data is implementation-dependant
-    virtual void script_onScriptEvent(core::objectmodel::ScriptEvent* event) override ;
+    virtual void script_onScriptEvent(core::objectmodel::ScriptEvent* event) ;
 
     /// drawing
-    virtual void script_draw(const core::visual::VisualParams*) override ;
+    virtual void script_draw(const core::visual::VisualParams*) ;
 
-    virtual void script_onIdleEvent(const sofa::core::objectmodel::IdleEvent* event) override ;
+    virtual void script_onIdleEvent(const sofa::core::objectmodel::IdleEvent* event) ;
 
     /// @}
 
