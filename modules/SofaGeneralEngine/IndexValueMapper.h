@@ -56,9 +56,9 @@ protected:
     IndexValueMapper();
     ~IndexValueMapper() {}
 public:
-    virtual void init() override;
-    virtual void reinit() override;
-    virtual void update() override;
+    virtual void init();
+    virtual void reinit();
+    virtual void update();
 
     virtual std::string getTemplateName() const
     {
