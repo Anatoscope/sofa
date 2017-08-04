@@ -2,16 +2,15 @@
 #include <sofa/core/topology/TopologyChange.h>
 #include "PythonToSofa.inl"
 
-using namespace sofa::core::topology;
-
-
+using sofa::core::topology::PointAncestorElem ;
 
 /// getting a PointAncestorElem* from a PyObject*
 static inline PointAncestorElem* get_PointAncestorElem(PyObject* obj) {
-    return get<PointAncestorElem>( obj );
+    return sofa::py::unwrap<PointAncestorElem>( obj );
 }
 
 
+// TODO should we set error flag on setattr error ?
 // =============================================================================
 // (de)allocator
 // =============================================================================
@@ -28,14 +27,14 @@ void PointAncestorElem_PyFree(void * self)
     delete obj; // done!
 }
 
-
+// STOP USING MACROS FFS
 SP_CLASS_ATTR_GET(PointAncestorElem,type)(PyObject *self, void*)
 {
     PointAncestorElem* obj = get_PointAncestorElem( self );
     if (!obj)
     {
         PyErr_BadArgument();
-        return 0;
+        return NULL;
     }
 
     return PyLong_FromLong( obj->index );
@@ -47,7 +46,7 @@ SP_CLASS_ATTR_SET(PointAncestorElem, type)(PyObject *self, PyObject * args, void
     if (!obj)
     {
         PyErr_BadArgument();
-        return 0;
+        return -1;
     }
     obj->type = static_cast<sofa::core::topology::TopologyObjectType>( PyLong_AsLong( args ) );
 
@@ -60,7 +59,7 @@ SP_CLASS_ATTR_GET(PointAncestorElem,index)(PyObject *self, void*)
     if (!obj)
     {
         PyErr_BadArgument();
-        return 0;
+        return NULL;
     }
 
     return PyLong_FromLong( obj->index );
@@ -72,7 +71,7 @@ SP_CLASS_ATTR_SET(PointAncestorElem, index)(PyObject *self, PyObject * args, voi
     if (!obj)
     {
         PyErr_BadArgument();
-        return 0;
+        return -1;
     }
     obj->index = static_cast<unsigned int>( PyLong_AsLong( args ) );
     return 0;
@@ -84,14 +83,14 @@ SP_CLASS_ATTR_GET(PointAncestorElem, localCoords)( PyObject *self, void* )
     if (!obj)
     {
         PyErr_BadArgument();
-        return 0;
+        return NULL;
     }
 
     PyObject* pyLocalCoords = PyTuple_New( PointAncestorElem::LocalCoords::size() );
 
     for(std::size_t i=0; i<obj->localCoords.size();++i)
     {
-        PyTuple_SET_ITEM( pyLocalCoords, i, PyFloat_FromDouble(obj->localCoords[i]) ); 
+        PyTuple_SET_ITEM( pyLocalCoords, i, PyFloat_FromDouble(obj->localCoords[i]) );
     }
 
     return pyLocalCoords;
@@ -103,14 +102,13 @@ SP_CLASS_ATTR_SET(PointAncestorElem, localCoords)( PyObject* self,  PyObject * a
     if (!obj)
     {
         PyErr_BadArgument();
-        return 0;
+        return -1;
     }
 
     PointAncestorElem::LocalCoords& localCoords = obj->localCoords;
     PyArg_ParseTuple(args, "ddd",&localCoords[0],&localCoords[1],&localCoords[2]);
-    
-    return 0;
 
+    return 0;
 }
 
 SP_CLASS_METHODS_BEGIN(PointAncestorElem)

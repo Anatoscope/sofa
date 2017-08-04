@@ -19,9 +19,9 @@ using namespace sofa::defaulttype;
 
 
 
-extern "C" PyObject * EVALUATOR(BOUNDNAME,getPtrs)(PyObject * self, PyObject * /*args*/)
+static PyObject * EVALUATOR(BOUNDNAME,getPtrs)(PyObject * self, PyObject * /*args*/)
 {
-    Data<IMAGETYPE>* data = get< Data<IMAGETYPE> >( self );
+    Data<IMAGETYPE>* data = sofa::py::unwrap< Data<IMAGETYPE> >( self );
     IMAGETYPE& image = *data->beginEdit();  // where should be the endedit?
 
     IMAGETYPE::imCoord dim = image.getDimensions();
@@ -57,9 +57,9 @@ extern "C" PyObject * EVALUATOR(BOUNDNAME,getPtrs)(PyObject * self, PyObject * /
 
 
 
-extern "C" PyObject * EVALUATOR(BOUNDNAME,getDimensions)(PyObject * self, PyObject * /*args*/)
+static PyObject * EVALUATOR(BOUNDNAME,getDimensions)(PyObject * self, PyObject * /*args*/)
 {
-    Data<IMAGETYPE>* data = get< Data<IMAGETYPE> >( self );
+    Data<IMAGETYPE>* data = sofa::py::unwrap< Data<IMAGETYPE> >( self );
     const IMAGETYPE& image = data->getValue();
 
     IMAGETYPE::imCoord dim = image.getDimensions();

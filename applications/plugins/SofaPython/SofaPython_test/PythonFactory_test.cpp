@@ -7,6 +7,10 @@ using sofa::core::objectmodel::BaseObject;
 
 #include <SofaSimulationGraph/DAGSimulation.h>
 #include <sofa/simulation/Node.h>
+
+#include <sofa/core/ObjectFactory.h>
+#include <SofaPython/PythonToSofa.inl>
+
 using sofa::simulation::Node;
 
 #include <sofa/core/ObjectFactory.h>
@@ -53,9 +57,10 @@ int ExternalComponentClass = core::RegisterObject ( "An dummy External Component
 ////////////////////////////// Binding the new component in Python /////////////////////////////////
 SP_DECLARE_CLASS_TYPE(ExternalComponent)
 
-extern "C" PyObject * ExternalComponent_helloWorld(PyObject *self, PyObject * /*args*/)
+static PyObject * ExternalComponent_helloWorld(PyObject *self, PyObject * /*args*/)
 {
-    sofa::ExternalComponent* obj = down_cast<sofa::ExternalComponent>( get_baseobject(self) );
+    sofa::ExternalComponent* obj = sofa::py::unwrap<sofa::ExternalComponent>(self);
+
     obj->helloWorld();
     Py_RETURN_NONE;
 }

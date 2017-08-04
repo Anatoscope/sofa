@@ -30,17 +30,16 @@ using namespace sofa::core::objectmodel;
 
 /// getting a RegularGridTopology* from a PyObject*
 static inline RegularGridTopology* get_RegularGridTopology(PyObject* obj) {
-    return down_cast<RegularGridTopology>( get_topology(obj) );
+    return sofa::py::unwrap<RegularGridTopology>(obj);
 }
 
 
-extern "C" PyObject * RegularGridTopology_setPos(PyObject *self, PyObject * args)
+static PyObject * RegularGridTopology_setPos(PyObject *self, PyObject * args)
 {
     RegularGridTopology* obj = get_RegularGridTopology( self );
     double xmin,xmax,ymin,ymax,zmin,zmax;
     if (!PyArg_ParseTuple(args, "dddddd",&xmin,&xmax,&ymin,&ymax,&zmin,&zmax))
     {
-        PyErr_BadArgument();
         return NULL;
     }
     obj->setPos(xmin,xmax,ymin,ymax,zmin,zmax);

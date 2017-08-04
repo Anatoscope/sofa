@@ -31,11 +31,11 @@ using namespace sofa::core::objectmodel;
 
 /// getting a OBJExporter* from a PyObject*
 static inline OBJExporter* get_OBJExporter(PyObject* obj) {
-    return down_cast<OBJExporter>( get_baseobject(obj) );
+    return sofa::py::unwrap<OBJExporter>(obj);
 }
 
 
-extern "C" PyObject * OBJExporter_writeOBJ(PyObject *self, PyObject * /*args*/)
+static PyObject * OBJExporter_writeOBJ(PyObject *self, PyObject * /*args*/)
 {
     OBJExporter* obj = get_OBJExporter( self );
 	obj->writeOBJ();

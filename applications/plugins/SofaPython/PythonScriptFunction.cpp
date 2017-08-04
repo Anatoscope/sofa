@@ -92,6 +92,7 @@ void PythonScriptFunction::setCallableObject(PyObject* callableObject, bool own)
     m_own = own;
 }
 
+
 void PythonScriptFunction::onCall(const ScriptFunctionParameter* parameter, ScriptFunctionResult* result) const
 {
 	if(!m_pyCallableObject)

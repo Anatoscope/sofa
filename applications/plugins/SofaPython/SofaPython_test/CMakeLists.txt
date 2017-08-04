@@ -9,6 +9,8 @@ set(SOURCE_FILES
     memory.cpp
     PythonFactory_test.cpp
     PythonScriptControllerHelper_test.cpp
+    PythonScriptController_test.cpp
+    SofaModule_test.cpp
 )
 
 set(PYTHON_FILES
@@ -27,6 +29,7 @@ set(PYTHON_FILES
     python/test_PythonFactory.py
     python/test_PythonScriptControllerHelper.py
     python/test_Node_CreateObject.py
+    python/test_PythonScriptController.py
 )
 
 

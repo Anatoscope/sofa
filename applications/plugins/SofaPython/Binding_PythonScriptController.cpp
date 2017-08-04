@@ -31,6 +31,8 @@ using namespace sofa::component::controller;
 using namespace sofa::simulation;
 using namespace sofa::core::objectmodel;
 
+#include "PythonToSofa.inl"
+
 #include <sofa/helper/logging/Messaging.h>
 
 // These functions are empty ones: they are meant to be overriden by real python
@@ -41,9 +43,11 @@ using namespace sofa::core::objectmodel;
 // non-implemented (in the script) method is called
 
 
+#ifdef LOG_UNIMPLEMENTED_METHODS
 static inline PythonScriptController* get_controller(PyObject* obj) {
     return down_cast<PythonScriptController>( get_baseobject( obj ) );
 }
+#endif
 
 
 static PyObject * PythonScriptController_onIdle(PyObject * self, PyObject * args) {
@@ -332,7 +336,7 @@ static PyObject * PythonScriptController_onScriptEvent(PyObject * self, PyObject
         return NULL;
     }
     
-    BaseNode* senderBaseNode = get_basenode( pySenderNode );
+    BaseNode* senderBaseNode = ((PySPtr<Base>*)pySenderNode)->object->toBaseNode();
     if (!senderBaseNode) {
         // TODO this should not happen
         PyErr_SetString(PyExc_RuntimeError, "null node wtf");
@@ -371,8 +375,11 @@ static PyObject * PythonScriptController_onEvent(PyObject * /*self*/, PyObject *
 
 
 
-static PyObject * PythonScriptController_instance(PyObject * self, PyObject * /*args*/) {
-    PythonScriptController* obj = get_controller(self);
+
+
+static PyObject * PythonScriptController_instance(PyObject * self, PyObject * /*args*/)
+{
+    PythonScriptController* obj=dynamic_cast<PythonScriptController*>(((PySPtr<Base>*)self)->object.get());
     return obj->scriptControllerInstance();
 }
 
@@ -393,8 +400,9 @@ static PyObject * PythonScriptController_new(PyTypeObject * cls, PyObject * args
 
     try {
         PyObject* py_node = PyTuple_GetItem(args, 0) || error();
-        BaseContext* ctx = dynamic_cast<BaseContext*>( get_base(py_node) ) || error();
-
+        
+        BaseContext* ctx = sofa::py::unwrap<BaseContext>(py_node) || error();
+    
         using controller_type = PythonScriptController;
         controller_type::SPtr controller = New<controller_type>();
         
@@ -420,28 +428,29 @@ static PyObject * PythonScriptController_new(PyTypeObject * cls, PyObject * args
 
 
 SP_CLASS_METHODS_BEGIN(PythonScriptController)
-SP_CLASS_METHOD(PythonScriptController, onLoaded)
-SP_CLASS_METHOD(PythonScriptController, createGraph)
-SP_CLASS_METHOD(PythonScriptController, initGraph)
-SP_CLASS_METHOD(PythonScriptController, bwdInitGraph)
-SP_CLASS_METHOD(PythonScriptController, onKeyPressed)
-SP_CLASS_METHOD(PythonScriptController, onKeyReleased)
-SP_CLASS_METHOD(PythonScriptController, onMouseButtonLeft)
-SP_CLASS_METHOD(PythonScriptController, onMouseButtonRight)
-SP_CLASS_METHOD(PythonScriptController, onMouseButtonMiddle)
-SP_CLASS_METHOD(PythonScriptController, onMouseWheel)
-SP_CLASS_METHOD(PythonScriptController, onBeginAnimationStep)
-SP_CLASS_METHOD(PythonScriptController, onEndAnimationStep)
-SP_CLASS_METHOD(PythonScriptController, storeResetState)
-SP_CLASS_METHOD(PythonScriptController, reset)
-SP_CLASS_METHOD(PythonScriptController, cleanup)
-SP_CLASS_METHOD(PythonScriptController, onGUIEvent)
-SP_CLASS_METHOD(PythonScriptController, onScriptEvent)
-SP_CLASS_METHOD(PythonScriptController, draw)
+SP_CLASS_METHOD(PythonScriptController,onLoaded)
+SP_CLASS_METHOD(PythonScriptController,createGraph)
+SP_CLASS_METHOD(PythonScriptController,initGraph)
+SP_CLASS_METHOD(PythonScriptController,bwdInitGraph)
+SP_CLASS_METHOD(PythonScriptController,onKeyPressed)
+SP_CLASS_METHOD(PythonScriptController,onKeyReleased)
+SP_CLASS_METHOD(PythonScriptController,onMouseButtonLeft)
+SP_CLASS_METHOD(PythonScriptController,onMouseButtonRight)
+SP_CLASS_METHOD(PythonScriptController,onMouseButtonMiddle)
+SP_CLASS_METHOD(PythonScriptController,onMouseWheel)
+SP_CLASS_METHOD(PythonScriptController,onBeginAnimationStep)
+SP_CLASS_METHOD(PythonScriptController,onEndAnimationStep)
+SP_CLASS_METHOD(PythonScriptController,storeResetState)
+SP_CLASS_METHOD(PythonScriptController,reset)
+SP_CLASS_METHOD(PythonScriptController,cleanup)
+SP_CLASS_METHOD(PythonScriptController,onGUIEvent)
+SP_CLASS_METHOD(PythonScriptController,onScriptEvent)
+SP_CLASS_METHOD(PythonScriptController,draw)
 SP_CLASS_METHOD(PythonScriptController, onEvent)
-SP_CLASS_METHOD(PythonScriptController, onIdle)
-SP_CLASS_METHOD(PythonScriptController, instance)
-SP_CLASS_METHODS_END;
+SP_CLASS_METHOD(PythonScriptController,onIdle)
+SP_CLASS_METHOD(PythonScriptController,instance)
+SP_CLASS_METHODS_END
+
 
 namespace {
 static struct patch {

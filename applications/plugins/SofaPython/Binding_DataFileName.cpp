@@ -30,9 +30,8 @@ using namespace sofa::core::objectmodel;
 
 /// getting a DataFileName* from a PyObject*
 static inline DataFileName* get_DataFileName(PyObject* obj) {
-    return get<DataFileName>(obj);
+    return sofa::py::unwrap<DataFileName>(obj);
 }
-
 
 
 SP_CLASS_ATTR_GET(DataFileName, fullPath)(PyObject *self, void*)
@@ -65,19 +64,13 @@ SP_CLASS_ATTR_SET(DataFileName, relativePath)(PyObject */*self*/, PyObject * /*a
 }
 
 
-
-
 SP_CLASS_ATTRS_BEGIN(DataFileName)
 SP_CLASS_ATTR(DataFileName,fullPath)
 SP_CLASS_ATTR(DataFileName,relativePath)
 SP_CLASS_ATTRS_END
 
 
-
 SP_CLASS_METHODS_BEGIN(DataFileName)
 SP_CLASS_METHODS_END
 
-
-
-SP_CLASS_TYPE_PTR_ATTR(DataFileName,DataFileName,Data)
-
+SP_CLASS_TYPE_PTR_ATTR(DataFileName, BaseData, Data);
