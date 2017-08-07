@@ -534,7 +534,7 @@ class BaseScene:
         n=name
         if n is None:
             n=self.model.name
-        self.node=parentNode.createChild(self.model.name)
+        self.node=parentNode.createChild(n)
         setupUnits(self.model.units)
 
     def createChild(self, parent, childName):
