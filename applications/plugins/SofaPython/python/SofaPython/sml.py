@@ -338,7 +338,7 @@ class Model:
                         sourceFullPath = os.path.join(self.modelDir,mesh.source)
                         if os.path.exists(sourceFullPath):
                             mesh.source=sourceFullPath
-                        elif printLog:
+                        else:
                             Sofa.msg_warning("SofaPython.sml","Model: mesh not found: "+mesh.source )
                     self.meshes[m.attrib["id"]] = mesh
 
@@ -351,7 +351,7 @@ class Model:
                     sourceFullPath = os.path.join(self.modelDir,image.source)
                     if os.path.exists(sourceFullPath):
                         image.source=sourceFullPath
-                    elif printLog:
+                    else:
                         Sofa.msg_warning("SofaPython.sml","Model: image not found: "+image.source )
                     self.images[m.attrib["id"]] = image
 
