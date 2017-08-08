@@ -36,11 +36,11 @@
 #include <set>
 #include <Registration/config.h>
 
-#ifdef WIN32
-#include <process.h>
-#else
-#include <pthread.h>
-#endif
+//#ifdef WIN32
+//#include <process.h>
+//#else
+//#include <pthread.h>
+//#endif
 
 namespace sofa
 {
