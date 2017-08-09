@@ -75,6 +75,94 @@ void DataDisplay::updateVisual()
     computeNormals();
 }
 
+void DataDisplay::exportOBJ(std::string name, std::ostream *out, std::ostream *mtl, int &vindex, int &nindex, int &tindex, int &count)
+{
+    *out << "g "<<name<<"\n";
+
+    const ResizableExtVector<Coord>& vposition = m_positions.getValue();
+    const ResizableExtVector<Deriv>& vnormals = m_vnormals.getValue();
+
+    const VecCoord& x = this->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecPointData &ptData = f_pointData.getValue();
+    const VecCellData &triData = f_triangleData.getValue();
+    const VecCellData &quadData = f_quadData.getValue();
+    const VecPointData &pointTriData = f_pointTriangleData.getValue();
+    const VecPointData &pointQuadData = f_pointQuadData.getValue();
+
+    helper::ColorMap::evaluator<Real> eval = colorMap->getEvaluator(d_currentMin.getValue(), d_currentMax.getValue());
+
+    int nbv = vposition.size();
+    for (int i=0; i<nbv; i++)
+    {
+        defaulttype::RGBAColor color = isnan(ptData[i]) ? f_colorNaN.getValue() : defaulttype::RGBAColor::fromVec4(eval(ptData[i]));
+        *out << "v "<< std::fixed <<vposition[i][0]<<' '<< std::fixed <<vposition[i][1]<<' '<< std::fixed <<vposition[i][2]<<' '<< std::fixed <<color[0]<<' '<< std::fixed <<color[1]<<' '<< std::fixed <<color[2]<<'\n';
+    }
+
+    int nbn = vnormals.size();
+    for (int i=0; i<nbn; i++)
+    {
+        *out << "vn "<< std::fixed << vnormals[i][0]<<' '<< std::fixed <<vnormals[i][1]<<' '<< std::fixed <<vnormals[i][2]<<'\n';
+    }
+
+    if (topology) {
+
+//        if (topology->getNbEdges() > 0) {
+//            const sofa::helper::vector<Edge> edges = topology->getEdges();
+//            for (unsigned int i = 0; i < edges.size() ; i++)
+//            {
+//                *out << "f";
+//                for (int j=0; j<2; j++)
+//                {
+//                    int i0 = edges[i][j];
+//                    int i_p = i0;
+//                    int i_n = i0;
+//                    *out << ' ' << i_p+vindex+1 << "//" << i_n+nindex+1;
+//                }
+//                *out << '\n';
+//            }
+//        }
+
+        if (topology->getNbTriangles() > 0) {
+            const sofa::helper::vector<Triangle> triangles = topology->getTriangles();
+            for (unsigned int i = 0; i < triangles.size() ; i++)
+            {
+                *out << "f";
+                for (int j=0; j<3; j++)
+                {
+                    int i0 = triangles[i][j];
+                    int i_p = i0;
+                    int i_n = i0;
+                    *out << ' ' << i_p+vindex+1 << "//" << i_n+nindex+1;
+                }
+                *out << '\n';
+            }
+        }
+
+        if (topology->getNbQuads() > 0) {
+            const sofa::helper::vector<Quad> quads = topology->getQuads();
+            for (unsigned int i = 0; i < quads.size() ; i++)
+            {
+                *out << "f";
+                for (int j=0; j<4; j++)
+                {
+                    int i0 = quads[i][j];
+                    int i_p = i0;
+                    int i_n = i0;
+                    *out << ' ' << i_p+vindex+1 << "//" << i_n+nindex+1;
+                }
+                *out << '\n';
+            }
+        }
+
+    } else {
+        msg_warning("DataDisplay") << "Obj exported without topology";
+    }
+
+    *out << sendl;
+    vindex+=nbv;
+    nindex+=nbn;
+}
+
 void DataDisplay::drawVisual(const core::visual::VisualParams* vparams)
 {
     if (!vparams->displayFlags().getShowVisualModels()) return;
