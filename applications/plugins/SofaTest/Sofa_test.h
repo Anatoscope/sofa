@@ -336,10 +336,19 @@ typename DataTypes::Coord createCoord(const sofa::defaulttype::Vector3& pos, con
     return temp;
 }
 
-template <int N, class real>
-void EXPECT_VEC_DOUBLE_EQ(sofa::defaulttype::Vec<N, real> const& expected, sofa::defaulttype::Vec<N, real> const& actual) {
-    typedef typename sofa::defaulttype::Vec<N,real>::size_type size_type;
-    for (size_type i=0; i<expected.total_size; ++i)
+template <class VectorT>
+void EXPECT_VEC_EQ(VectorT const& expected, VectorT const& actual) {
+    typedef typename VectorT::size_type size_type;
+    ASSERT_EQ(expected.size(), actual.size());
+    for (size_type i=0; i<expected.size(); ++i)
+        EXPECT_EQ(expected[i], actual[i]);
+}
+
+template <class VectorT>
+void EXPECT_VEC_DOUBLE_EQ(VectorT const& expected, VectorT const& actual) {
+    typedef typename VectorT::size_type size_type;
+    ASSERT_EQ(expected.size(), actual.size());
+    for (size_type i=0; i<expected.size(); ++i)
         EXPECT_DOUBLE_EQ(expected[i], actual[i]);
 }
 
