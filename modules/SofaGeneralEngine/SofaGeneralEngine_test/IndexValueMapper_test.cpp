@@ -43,8 +43,8 @@ struct TestIndexValueMapper : public Sofa_test<>
         m_thisObject->findData("inputValues")->read("");
         m_thisObject->update();
 
-        EXPECT_EQ(m_thisObject->findData("inputValues")->getValueString(), "");
-        EXPECT_EQ(m_thisObject->findData("outputValues")->getValueString(), "");
+        EXPECT_EQ(0, m_thisObject->f_inputValues.getValue().size());
+        EXPECT_EQ(0, m_thisObject->f_outputValues.getValue().size());
     }
 
     void input_to_output_values()
@@ -53,8 +53,8 @@ struct TestIndexValueMapper : public Sofa_test<>
         m_thisObject->findData("inputValues")->read("1.");
         m_thisObject->update();
 
-        EXPECT_EQ(m_thisObject->findData("inputValues")->getValueString(), "1");
-        EXPECT_EQ(m_thisObject->findData("outputValues")->getValueString(), "1");
+        EXPECT_VEC_DOUBLE_EQ(sofa::helper::vector<Real>({1}), m_thisObject->f_inputValues.getValue());
+        EXPECT_VEC_DOUBLE_EQ(sofa::helper::vector<Real>({1}), m_thisObject->f_outputValues.getValue());
     }
 
     void input_to_output_float_values()
@@ -63,8 +63,8 @@ struct TestIndexValueMapper : public Sofa_test<>
         m_thisObject->findData("inputValues")->read("1.5");
         m_thisObject->update();
 
-        EXPECT_EQ(m_thisObject->findData("inputValues")->getValueString(), "1.5");
-        EXPECT_EQ(m_thisObject->findData("outputValues")->getValueString(), "1.5");
+        EXPECT_VEC_DOUBLE_EQ(sofa::helper::vector<Real>({1.5}), m_thisObject->f_inputValues.getValue());
+        EXPECT_VEC_DOUBLE_EQ(sofa::helper::vector<Real>({1.5}), m_thisObject->f_outputValues.getValue());
     }
 
     void input_to_output_negative_values()
@@ -73,8 +73,8 @@ struct TestIndexValueMapper : public Sofa_test<>
         m_thisObject->findData("inputValues")->read("-1.5");
         m_thisObject->update();
 
-        EXPECT_EQ(m_thisObject->findData("inputValues")->getValueString(), "-1.5");
-        EXPECT_EQ(m_thisObject->findData("outputValues")->getValueString(), "-1.5");
+        EXPECT_VEC_DOUBLE_EQ(sofa::helper::vector<Real>({-1.5}), m_thisObject->f_inputValues.getValue());
+        EXPECT_VEC_DOUBLE_EQ(sofa::helper::vector<Real>({-1.5}), m_thisObject->f_outputValues.getValue());
     }
 
     void resize()
@@ -86,9 +86,8 @@ struct TestIndexValueMapper : public Sofa_test<>
         m_thisObject->findData("defaultValue")->read("0");
         m_thisObject->update();
 
-        EXPECT_EQ(m_thisObject->findData("inputValues")->getValueString(), "1.5");
-        EXPECT_EQ(m_thisObject->findData("outputValues")->getValueString(), "1.5 0 0 0 2");
-
+        EXPECT_VEC_DOUBLE_EQ(sofa::helper::vector<Real>({1.5}), m_thisObject->f_inputValues.getValue());
+        EXPECT_VEC_DOUBLE_EQ(sofa::helper::vector<Real>({1.5, 0, 0, 0, 2}), m_thisObject->f_outputValues.getValue());
     }
 
     void negative_indices()
@@ -98,7 +97,9 @@ struct TestIndexValueMapper : public Sofa_test<>
         {
             EXPECT_MSG_EMIT(Warning);
             m_thisObject->findData("indices")->read("-4");
-            EXPECT_EQ(m_thisObject->findData("indices")->getValueString(), "0");
+
+            EXPECT_VEC_EQ(sofa::helper::vector<typename IndexValueMapper<T>::Index>({0}), m_thisObject->f_indices.getValue());
+//            EXPECT_EQ(m_thisObject->findData("indices")->getValueString(), "[0]");
         }
     }
 
@@ -110,16 +111,16 @@ struct TestIndexValueMapper : public Sofa_test<>
         m_thisObject->findData("value")->read("2");
         m_thisObject->update();
 
-        EXPECT_EQ(m_thisObject->findData("inputValues")->getValueString(), "1.5");
-        EXPECT_EQ(m_thisObject->findData("outputValues")->getValueString(), "2");
+        EXPECT_VEC_DOUBLE_EQ(sofa::helper::vector<Real>({1.5}), m_thisObject->f_inputValues.getValue());
+        EXPECT_VEC_DOUBLE_EQ(sofa::helper::vector<Real>({2}), m_thisObject->f_outputValues.getValue());
 
         m_thisObject->findData("inputValues")->read("1.5 2 2.5");
         m_thisObject->findData("indices")->read("2");
         m_thisObject->findData("value")->read("3");
         m_thisObject->update();
 
-        EXPECT_EQ(m_thisObject->findData("inputValues")->getValueString(), "1.5 2 2.5");
-        EXPECT_EQ(m_thisObject->findData("outputValues")->getValueString(), "1.5 2 3");
+        EXPECT_VEC_DOUBLE_EQ(sofa::helper::vector<Real>({1.5, 2, 2.5}), m_thisObject->f_inputValues.getValue());
+        EXPECT_VEC_DOUBLE_EQ(sofa::helper::vector<Real>({1.5, 2, 3}), m_thisObject->f_outputValues.getValue());
     }
 
 };
