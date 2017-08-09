@@ -346,9 +346,9 @@ void EXPECT_VEC_EQ(VectorT const& expected, VectorT const& actual) {
 
 template <class VectorT>
 void EXPECT_VEC_DOUBLE_EQ(VectorT const& expected, VectorT const& actual) {
-    typedef typename VectorT::size_type size_type;
+//    typedef typename VectorT::size_type size_type;
     ASSERT_EQ(expected.size(), actual.size());
-    for (size_type i=0; i<expected.size(); ++i)
+    for (std::size_t i=0; i<expected.size(); ++i)
         EXPECT_DOUBLE_EQ(expected[i], actual[i]);
 }
 
