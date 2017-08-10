@@ -68,7 +68,8 @@ class Model:
             self.name=None
             self.format=None
             self.source=None
-            self.group=dict() # should be groups with *s*
+            self.groups=dict()
+            self.group=self.groups # for compatibility
             if not meshXml is None:
                 self.parseXml(meshXml)
 
