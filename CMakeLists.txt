@@ -222,8 +222,16 @@ option(SOFA_WITH_EXPERIMENTAL_FEATURES "Compile sofa with exprimental features r
 option(SOFA_BUILD_TESTS "Compile the automatic tests for Sofa, along with the gtest library." ON)
 if(SOFA_BUILD_TESTS)
     # Enable testing features of cmake, like the add_test() command.
-    include(CTest) # calls enable_testing() and setup 3 targets {Experimental,Nightly,Continuous}
+
+    option(SOFA_INCLUDE_CTEST "To include CTest and setup default targets" OFF)
+    if(SOFA_INCLUDE_CTEST)
+        include(CTest) # calls enable_testing() and setup 3 targets {Experimental,Nightly,Continuous}
+    else()
+        enable_testing()
+    endif()
+
     add_subdirectory(extlibs/gtest)
+
 endif()
 
 ### Ninja build pools
