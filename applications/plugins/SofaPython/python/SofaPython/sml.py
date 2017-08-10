@@ -97,6 +97,11 @@ class Model:
             else:
                 Sofa.msg_error("SofaPython.sml","Mesh: format "+self.format+" not yet loadable")
                 return SofaPython.MeshLoader.Mesh()
+            
+        def getGroupsByTags(self, tags):
+            """ \return a list of groups which contains at least one tag from tags
+            """
+            return _getObjectsByTags(self.groups.values(), tags)
 
     class MeshAttributes:
         def __init__(self,objXml=None):
