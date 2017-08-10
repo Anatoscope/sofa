@@ -406,6 +406,12 @@ class Model:
                         surfaceLink.surfaces.append( Model.Surface() )
                     else:
                         surfaceLink.surfaces[i] = Model.Surface()
+                    if not "solid" in s.attrib: # required
+                        Sofa.msg_error("SofaPython.sml", "Missing solid attribute in surface definition - surfaceLink: "+surfaceLink.id)
+                        continue
+                    if not "mesh" in s.attrib: # required
+                        Sofa.msg_error("SofaPython.sml", "Missing mesh attribute in surface definition - surfaceLink: "+surfaceLink.id)
+                        continue
                     if s.attrib["solid"] in self.solids:
                         surfaceLink.surfaces[i].solid = self.solids[s.attrib["solid"]]
                     else:
