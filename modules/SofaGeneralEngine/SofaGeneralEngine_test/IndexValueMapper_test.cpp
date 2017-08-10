@@ -43,8 +43,8 @@ struct TestIndexValueMapper : public Sofa_test<>
         m_thisObject->findData("inputValues")->read("");
         m_thisObject->update();
 
-        EXPECT_EQ(0, m_thisObject->f_inputValues.getValue().size());
-        EXPECT_EQ(0, m_thisObject->f_outputValues.getValue().size());
+        EXPECT_EQ(0u, m_thisObject->f_inputValues.getValue().size());
+        EXPECT_EQ(0u, m_thisObject->f_outputValues.getValue().size());
     }
 
     void input_to_output_values()
