@@ -114,7 +114,7 @@ protected:
       , quadIndices(this, "quadIndices", "input quad indices", helper::DataEngineInput)
       , tetrahedronIndices(this, "tetrahedronIndices", "input tetrahedron indices", helper::DataEngineInput)
       , hexahedronIndices(this, "hexahedronIndices", "input hexahedron indices", helper::DataEngineInput)
-      , doOutputTopology(this, "doOutputTopologies", "output or not topologies for each mesh", helper::DataEngineInput)
+      , doOutputTopology(initData(&doOutputTopology, false, "doOutputTopologies", "output or not topologies for each mesh"))
       , indexPairs( initData( &indexPairs, helper::vector<unsigned>(), "indexPairs", "couples for input vertices: ROI index + index in the ROI"))
       , position(this, "position", "output vertices", helper::DataEngineOutput)
       , edges(this, "edges", "output edges", helper::DataEngineOutput)
@@ -164,6 +164,7 @@ public:
         addInput(&inputHexa);
         addInput(&nbInputs);
         addOutput(&indexPairs);
+        addOutput(&doOutputTopology);
         resizeData();
 
         setDirtyValue();
