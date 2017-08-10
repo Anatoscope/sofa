@@ -182,7 +182,7 @@ class Model:
             return getValueByTag(valuesByTag, self.tags, noDefault)
 
         def getMeshesByTags(self, tags):
-            """ \return a list of solids which contains at least one tag from tags
+            """ \return a list of meshes which contains at least one tag from tags
             """
             meshes = list()
             for ma in _getObjectsByTags(self.meshAttributes.values(), tags):
