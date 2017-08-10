@@ -56,7 +56,8 @@ class Model:
     class Mesh:
 
         class Group:
-            def __init__(self):
+            def __init__(self, id):
+                self.id=id
                 self.index=list()
                 self.data=dict()
                 self.tags=set()
@@ -81,9 +82,7 @@ class Model:
                 self.source = meshXml.find("source").text
 
             for g in meshXml.findall("group"):
-                self.group[g.attrib["id"]] = Model.Mesh.Group()
-
-
+                self.group[g.attrib["id"]] = Model.Mesh.Group(id=g.attrib["id"])
                 if not g.find("index").text:
                     Sofa.msg_warning("SofaPython.sml","Group: group '"+g.attrib["id"]+"' of mesh '"+self.name+"' is empty")
                 else:
