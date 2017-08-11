@@ -183,11 +183,11 @@ class Deformable:
             self.dofs = self.node.createObject("MechanicalObject", template = "Vec3", name="dofs")
             self.mapping = self.node.createObject("SubsetMultiMapping", name='mapping', indexPairs=concat(indexPairs), input=concat(inputs),output="@.")
 
-    def addMechanicalObject(self):
+    def addMechanicalObject(self, **kwargs):
         if self.meshLoader is None:
             Sofa.msg_error("Flexible.API.Deformable","addMechanicalObject: no loaded mesh for "+ self.name)
             return
-        self.dofs = self.node.createObject("MechanicalObject", template = "Vec3", name="dofs", src="@"+self.meshLoader.name)
+        self.dofs = self.node.createObject("MechanicalObject", template = "Vec3", name="dofs", src="@"+self.meshLoader.name, **kwargs)
 
     def addNormals(self, invert=False):
         if self.topology is None:
