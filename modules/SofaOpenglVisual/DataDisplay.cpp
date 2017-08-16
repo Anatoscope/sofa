@@ -75,19 +75,19 @@ void DataDisplay::updateVisual()
     computeNormals();
 }
 
-void DataDisplay::exportOBJ(std::string name, std::ostream *out, std::ostream *mtl, int &vindex, int &nindex, int &tindex, int &count)
+void DataDisplay::exportOBJ(std::string name, std::ostream *out, std::ostream */*mtl*/, int &vindex, int &nindex, int &/*tindex*/, int &/*count*/)
 {
     *out << "g "<<name<<"\n";
 
     const ResizableExtVector<Coord>& vposition = m_positions.getValue();
     const ResizableExtVector<Deriv>& vnormals = m_vnormals.getValue();
 
-    const VecCoord& x = this->read(sofa::core::ConstVecCoordId::position())->getValue();
+//    const VecCoord& x = this->read(sofa::core::ConstVecCoordId::position())->getValue();
     const VecPointData &ptData = f_pointData.getValue();
-    const VecCellData &triData = f_triangleData.getValue();
-    const VecCellData &quadData = f_quadData.getValue();
-    const VecPointData &pointTriData = f_pointTriangleData.getValue();
-    const VecPointData &pointQuadData = f_pointQuadData.getValue();
+//    const VecCellData &triData = f_triangleData.getValue();
+//    const VecCellData &quadData = f_quadData.getValue();
+//    const VecPointData &pointTriData = f_pointTriangleData.getValue();
+//    const VecPointData &pointQuadData = f_pointQuadData.getValue();
 
     helper::ColorMap::evaluator<Real> eval = colorMap->getEvaluator(d_currentMin.getValue(), d_currentMax.getValue());
 
