@@ -31,6 +31,7 @@
 #include <sofa/defaulttype/Vec3Types.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <sofa/helper/vectorData.h>
+#include <array>
 
 namespace sofa
 {
