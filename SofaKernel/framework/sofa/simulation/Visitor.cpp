@@ -32,7 +32,8 @@ namespace simulation
 {
 
 Visitor::Visitor(const core::ExecParams* p)
-    : canAccessSleepingNode(true)
+    : mustContainAllTags(true)
+    , canAccessSleepingNode(true)
     , params(p)
 {
     //params = core::MechanicalParams::defaultInstance();
@@ -43,6 +44,26 @@ Visitor::Visitor(const core::ExecParams* p)
 
 Visitor::~Visitor()
 {
+}
+
+bool Visitor::testTags(core::objectmodel::BaseObject* obj) const
+{
+    bool tagOk = mustContainAllTags || subsetsToManage.empty();
+    for(Tag const& tag : subsetsToManage)
+    {
+        if (!obj->hasTag(tag)) { // picking disabled for this model
+            if(mustContainAllTags) {
+                tagOk = false;
+                break;
+            }
+        }
+        else { // picking disabled for this model
+            tagOk = true;
+            if(!mustContainAllTags)
+                break;
+        }
+    }
+    return tagOk;
 }
 
 void Visitor::execute(sofa::core::objectmodel::BaseContext* c, bool precomputedOrder)

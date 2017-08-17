@@ -144,17 +144,11 @@ public:
     }
 
 
-    //method to compare the tags of the objet with the ones of the visitor
-    // return true if the object has all the tags of the visitor
-    // or if no tag is set to the visitor
-    bool testTags(core::objectmodel::BaseObject* obj)
-    {
-        if(subsetsToManage.empty())
-            return true;
-        if (obj->getTags().includes(subsetsToManage)) // all tags in subsetsToManage must be included in the list of tags of the object
-            return true;
-        return false;
-    }
+    /// method to compare the tags of the objet with the ones of the visitor
+    /// \return when mustContainAllTags is true (the default) return true if the object has all the tags of the visitor,
+    /// when mustContainAllTags is false return true if the object has at least one tag of the visitor
+    /// when no tag is set to the visitor, return true
+    bool testTags(core::objectmodel::BaseObject* obj) const;
 
 
     //template < class Visit, class Container, class Object >
@@ -197,6 +191,7 @@ public:
     typedef sofa::core::objectmodel::TagSet TagSet;
     /// list of the subsets
     TagSet subsetsToManage;
+    bool mustContainAllTags;
 
     Visitor& setTags(const TagSet& t) { subsetsToManage = t; return *this; }
     Visitor& addTag(Tag t) { subsetsToManage.insert(t); return *this; }
