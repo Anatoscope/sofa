@@ -3451,6 +3451,31 @@ bool MechanicalObject<DataTypes>::pickParticles(const core::ExecParams* /* param
         return false;
 }
 
+template <class DataTypes>
+bool MechanicalObject<DataTypes>::closestParticle(const core::ExecParams* /*params*/, defaulttype::Vector3 const& point,
+            sofa::core::behavior::BaseMechanicalState*& ms, int& index, SReal& distance)
+{
+    if (defaulttype::DataTypeInfo<Coord>::size() == 2 || defaulttype::DataTypeInfo<Coord>::size() == 3
+            || (defaulttype::DataTypeInfo<Coord>::size() == 7 && defaulttype::DataTypeInfo<Deriv>::size() == 6)) {
+        // TODO: this verification is awful and should be done by template specialization
+        // seems to be valid DOFs
+        const VecCoord& x =this->read(core::ConstVecCoordId::position())->getValue();
+        for (size_t i=0; i< vsize; ++i) {
+            defaulttype::Vec<3,Real> pos;
+            DataTypes::get(pos[0],pos[1],pos[2],x[i]);
+            SReal d = (pos-point).norm2();
+            if (d < distance) {
+                ms = this;
+                index = i;
+                distance = d;
+            }
+        }
+        return true;
+    }
+    else {
+        return false;
+    }
+}
 
 template <class DataTypes>
 bool MechanicalObject<DataTypes>::addBBox(SReal* minBBox, SReal* maxBBox)

@@ -409,6 +409,9 @@ public:
     virtual bool pickParticles(const core::ExecParams* params, double rayOx, double rayOy, double rayOz, double rayDx, double rayDy, double rayDz, double radius0, double dRadius,
             std::multimap< double, std::pair<sofa::core::behavior::BaseMechanicalState*, int> >& particles);
 
+    virtual bool closestParticle(const core::ExecParams* params, Vector3 const& point,
+            sofa::core::behavior::BaseMechanicalState*& ms, int& index, SReal& distance);
+
 
    /// if this mechanical object stores independent dofs (in opposition to mapped dofs)
    bool isIndependent() const;

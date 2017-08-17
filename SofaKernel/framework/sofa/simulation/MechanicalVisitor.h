@@ -2308,11 +2308,53 @@ public:
 	/// get the closest pickable particle
 	void getClosestParticle( core::behavior::BaseMechanicalState*& mstate, unsigned int& indexCollisionElement, defaulttype::Vector3& point, SReal& rayLength );
 
-
-
 };
 
+/** Find mechanical particle closest to a given point on dof containing one tag or all provided by a tag list
+*
+*  A mechanical particle is defined as a 2D or 3D, position or rigid DOF
+*  which is linked to the free mechanical DOFs by mechanical mappings
+*/
+class SOFA_SIMULATION_CORE_API MechanicalClosestParticleWithTagsVisitor : public BaseMechanicalVisitor
+{
+public:
+    defaulttype::Vec3d point;
+    std::list<sofa::core::objectmodel::Tag> tags;
+    bool mustContainAllTags;
+    sofa::core::behavior::BaseMechanicalState* closestMechanicalState;
+    int closestParticleIndex;
+    SReal closestDistance;
+    MechanicalClosestParticleWithTagsVisitor(const sofa::core::ExecParams* mparams, const defaulttype::Vec3d& _point, std::list<sofa::core::objectmodel::Tag> _tags = std::list<sofa::core::objectmodel::Tag>(), bool _mustContainAllTags = false)
+        : BaseMechanicalVisitor(mparams) , point(_point), tags(_tags)
+    {
+        mustContainAllTags = _mustContainAllTags;
+        for (sofa::core::objectmodel::Tag const& tag: _tags)
+            addTag(tag);
+        reset();
+    }
 
+    virtual Result fwdMechanicalState(simulation::Node* node, core::behavior::BaseMechanicalState* mm);
+    virtual Result fwdMappedMechanicalState(simulation::Node* node, core::behavior::BaseMechanicalState* mm);
+    virtual Result fwdMechanicalMapping(simulation::Node* node, core::BaseMapping* map);
+
+    /// Return a class name for this visitor
+    /// Only used for debugging / profiling purposes
+    virtual const char* getClassName() const { return "MechanicalClosestParticleWithTagsVisitor"; }
+
+    // reset the search result, call it before a new search
+    void reset() {
+        closestMechanicalState = nullptr;
+        closestParticleIndex = -1;
+        closestDistance  =std::numeric_limits<SReal>::infinity();
+    }
+
+#ifdef SOFA_DUMP_VISITOR_INFO
+    void setReadWriteVectors()
+    {
+    }
+#endif
+
+};
 
 /** Get vector size */
 class SOFA_SIMULATION_CORE_API MechanicalVSizeVisitor : public BaseMechanicalVisitor

@@ -1687,7 +1687,48 @@ void MechanicalPickParticlesWithTagsVisitor::getClosestParticle( core::behavior:
 	}
 }
 
+Visitor::Result MechanicalClosestParticleWithTagsVisitor::fwdMechanicalState(simulation::Node* /*node*/, core::behavior::BaseMechanicalState* mm)
+{
+    if(!testTags(mm))
+        return RESULT_CONTINUE;
 
+    //We deactivate the Picking with static objects (not simulated)
+    core::CollisionModel *c;
+    mm->getContext()->get(c, core::objectmodel::BaseContext::Local);
+    if (c && !c->isSimulated()) //If it is an obstacle, we don't try to pick
+    {
+        return RESULT_CONTINUE;
+    }
+    mm->closestParticle(this->params, point, closestMechanicalState, closestParticleIndex, closestDistance);
+
+    return RESULT_CONTINUE;
+}
+
+Visitor::Result MechanicalClosestParticleWithTagsVisitor::fwdMappedMechanicalState(simulation::Node* node, core::behavior::BaseMechanicalState* mm)
+{
+    if (node->mechanicalMapping  && !node->mechanicalMapping->isMechanical())
+        return RESULT_PRUNE;
+
+    if(!testTags(mm))
+        return RESULT_CONTINUE;
+
+    //We deactivate the Picking with static objects (not simulated)
+    core::CollisionModel *c;
+    mm->getContext()->get(c, core::objectmodel::BaseContext::Local);
+    if (c && !c->isSimulated()) //If it is an obstacle, we don't try to pick
+        return RESULT_CONTINUE;
+
+    mm->closestParticle(this->params, point, closestMechanicalState, closestParticleIndex, closestDistance);
+
+    return RESULT_CONTINUE;
+}
+
+Visitor::Result MechanicalClosestParticleWithTagsVisitor::fwdMechanicalMapping(simulation::Node* /*node*/, core::BaseMapping* map)
+{
+    if (!map->isMechanical())
+        return RESULT_PRUNE;
+    return RESULT_CONTINUE;
+}
 
 Visitor::Result MechanicalVSizeVisitor::fwdMechanicalState(simulation::Node* /*node*/, core::behavior::BaseMechanicalState* mm)
 {
