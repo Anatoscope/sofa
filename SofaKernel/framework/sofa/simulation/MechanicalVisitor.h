@@ -2319,13 +2319,17 @@ class SOFA_SIMULATION_CORE_API MechanicalClosestParticleWithTagsVisitor : public
 {
 public:
     defaulttype::Vec3d point;
-    std::list<sofa::core::objectmodel::Tag> tags;
+    defaulttype::Vec3d origin;
+    SReal radius0;
+    SReal dRadius;
     bool mustContainAllTags;
     sofa::core::behavior::BaseMechanicalState* closestMechanicalState;
     int closestParticleIndex;
     SReal closestDistance;
-    MechanicalClosestParticleWithTagsVisitor(const sofa::core::ExecParams* mparams, const defaulttype::Vec3d& _point, std::list<sofa::core::objectmodel::Tag> _tags = std::list<sofa::core::objectmodel::Tag>(), bool _mustContainAllTags = false)
-        : BaseMechanicalVisitor(mparams) , point(_point), tags(_tags)
+    MechanicalClosestParticleWithTagsVisitor(const sofa::core::ExecParams* mparams, const defaulttype::Vec3d& _point,
+                                             const defaulttype::Vec3d& _origin, SReal _radius0, SReal _dRadius,
+                                             std::list<sofa::core::objectmodel::Tag> _tags = std::list<sofa::core::objectmodel::Tag>(), bool _mustContainAllTags = false)
+        : BaseMechanicalVisitor(mparams) , point(_point), origin(_origin), radius0(_radius0),  dRadius(_dRadius)
     {
         mustContainAllTags = _mustContainAllTags;
         for (sofa::core::objectmodel::Tag const& tag: _tags)

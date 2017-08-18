@@ -3453,6 +3453,7 @@ bool MechanicalObject<DataTypes>::pickParticles(const core::ExecParams* /* param
 
 template <class DataTypes>
 bool MechanicalObject<DataTypes>::closestParticle(const core::ExecParams* /*params*/, defaulttype::Vector3 const& point,
+            defaulttype::Vector3 const& origin, double radius0, double dRadius,
             sofa::core::behavior::BaseMechanicalState*& ms, int& index, SReal& distance)
 {
     if (defaulttype::DataTypeInfo<Coord>::size() == 2 || defaulttype::DataTypeInfo<Coord>::size() == 3
@@ -3463,7 +3464,9 @@ bool MechanicalObject<DataTypes>::closestParticle(const core::ExecParams* /*para
         for (size_t i=0; i< vsize; ++i) {
             defaulttype::Vec<3,Real> pos;
             DataTypes::get(pos[0],pos[1],pos[2],x[i]);
-            SReal d = (pos-point).norm2();
+            SReal d = (pos-point).norm();
+            if (d>radius0+(pos-origin).norm()*dRadius) // points too far away are ignored
+                continue;
             if (d < distance) {
                 ms = this;
                 index = i;

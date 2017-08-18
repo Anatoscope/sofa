@@ -1699,7 +1699,7 @@ Visitor::Result MechanicalClosestParticleWithTagsVisitor::fwdMechanicalState(sim
     {
         return RESULT_CONTINUE;
     }
-    mm->closestParticle(this->params, point, closestMechanicalState, closestParticleIndex, closestDistance);
+    mm->closestParticle(this->params, point, origin, radius0, dRadius, closestMechanicalState, closestParticleIndex, closestDistance);
 
     return RESULT_CONTINUE;
 }
@@ -1718,7 +1718,7 @@ Visitor::Result MechanicalClosestParticleWithTagsVisitor::fwdMappedMechanicalSta
     if (c && !c->isSimulated()) //If it is an obstacle, we don't try to pick
         return RESULT_CONTINUE;
 
-    mm->closestParticle(this->params, point, closestMechanicalState, closestParticleIndex, closestDistance);
+    mm->closestParticle(this->params, point, origin, radius0, dRadius, closestMechanicalState, closestParticleIndex, closestDistance);
 
     return RESULT_CONTINUE;
 }

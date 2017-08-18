@@ -410,6 +410,7 @@ public:
             std::multimap< double, std::pair<sofa::core::behavior::BaseMechanicalState*, int> >& particles);
 
     virtual bool closestParticle(const core::ExecParams* params, Vector3 const& point,
+            defaulttype::Vector3 const& origin, double radius0, double dRadius,
             sofa::core::behavior::BaseMechanicalState*& ms, int& index, SReal& distance);
 
 
