@@ -171,8 +171,6 @@ class SceneSkinningRigidScale(SofaPython.sml.BaseScene):
 
         self.rigidScales = dict()
         self.joints = dict()
-        self.collisions = dict()
-        self.visuals = dict()
 
         ## params
         # the set of tags simulated as rigids
@@ -266,17 +264,3 @@ class SceneSkinningRigidScale(SofaPython.sml.BaseScene):
                         deformable.loadVisual(mesh.source, initRestPositions = True)
                         deformable.node.createObject("RigidMapping", mapForces=False, mapConstraints=False, mapMasses=False, globalToLocalCoords=True)
                         self.visuals[solidModel.id][mesh.id] = deformable
-
-
-
-
-    def addMeshExporters(self, dir, ExportAtEnd=False):
-        """ add obj Exporters for each visual model of the scene
-        """
-        if not os.path.exists(dir):
-            os.makedirs(dir)
-        for k,visuals in self.visuals.iteritems():
-            for mid,visual in visuals.iteritems():
-                filename = os.path.join(dir, os.path.basename(self.model.meshes[mid].source))
-                e = visual.node.createObject('ObjExporter', name='objExporter', filename=filename, printLog=True, exportAtEnd=ExportAtEnd)
-                self.meshExporters.append(e)
