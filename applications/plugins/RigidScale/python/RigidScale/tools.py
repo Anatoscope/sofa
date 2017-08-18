@@ -76,10 +76,45 @@ class Armature:
                 else:
                     self.children[solid.parent] = [solid.id]
 
-                position = np.array(self.scene.rigidScales[solid.id].rigidDofs.position).view(dtype=Types.Rigid3)[0]
-                parentPosition = np.array(self.scene.rigidScales[solid.parent].rigidDofs.position).view(dtype=Types.Rigid3)[0]
+                position = np.array(solid.position).view(dtype=Types.Rigid3)
+                parentPosition = np.array(model.solids[solid.parent].position).view(dtype=Types.Rigid3)
                 self.localCoordinates[solid.id] = parentPosition.inv() * position   
                 self.initialLocalCoordinates[solid.id] = self.localCoordinates[solid.id]
+
+
+    def updateRelativePositions(self, bones):
+        for bone in bones:
+            solid = self.model.solids[bone]
+            if solid.parent:
+                position = np.array(self.scene.rigidScales[solid.id].rigidDofs.position).view(dtype=Types.Rigid3)[0]
+                parentPosition = np.array(self.scene.rigidScales[solid.parent].rigidDofs.position).view(dtype=Types.Rigid3)[0]
+                local = (self.localCoordinates[solid.id]).view(dtype=Types.Rigid3)
+                local.center = np.array(parentPosition.inv() * position).view(dtype=Types.Rigid3).center
+                self.localCoordinates[solid.id] = local
+                self.initialLocalCoordinates[solid.id] = local
+
+
+    def updateRelativeRotations(self, bones):
+        for bone in bones:
+            solid = self.model.solids[bone]
+            if solid.parent:
+                position = np.array(self.scene.rigidScales[solid.id].rigidDofs.position).view(dtype=Types.Rigid3)[0]
+                parentPosition = np.array(self.scene.rigidScales[solid.parent].rigidDofs.position).view(dtype=Types.Rigid3)[0]
+                local = (self.localCoordinates[solid.id]).view(dtype=Types.Rigid3)
+                local.orient = np.array(parentPosition.inv() * position).view(dtype=Types.Rigid3).orient
+                self.localCoordinates[solid.id] = local
+                self.initialLocalCoordinates[solid.id] = local
+
+    
+    def updateRelativeCoordinates(self, bones):
+        for bone in bones:
+            solid = self.model.solids[bone]
+            if solid.parent:
+                position = np.array(self.scene.rigidScales[solid.id].rigidDofs.position).view(dtype=Types.Rigid3)[0]
+                parentPosition = np.array(self.scene.rigidScales[solid.parent].rigidDofs.position).view(dtype=Types.Rigid3)[0]
+                local = np.array(parentPosition.inv() * position).view(dtype=Types.Rigid3)
+                self.localCoordinates[solid.id] = local
+                self.initialLocalCoordinates[solid.id] = local
 
 
     def updateChildren(self, bone):
@@ -104,7 +139,7 @@ class Armature:
             parentPosition = np.array(self.scene.rigidScales[self.model.solids[bone].parent].rigidDofs.position).view(dtype=Types.Rigid3)[0]
             initPosition = parentPosition * self.initialLocalCoordinates[bone];
         else:
-            initPosition = np.array(self.scene.rigidScales[bone].rigidDofs.reset_position).view(dtype=Types.Rigid3)[0]
+            initPosition = np.array(self.scene.rigidScales[bone].rigidDofs.rest_position).view(dtype=Types.Rigid3)[0]
 
         position = SofaNumpy.numpy_data(self.scene.rigidScales[bone].rigidDofs,"position").view(dtype=Types.Rigid3)[0]
         position.center = initPosition.center + translation
