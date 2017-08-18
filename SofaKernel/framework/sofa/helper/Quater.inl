@@ -253,14 +253,13 @@ void Quater<Real>::fromFrame(defaulttype::Vec<3,Real>& x, defaulttype::Vec<3,Rea
 template<class Real>
 void Quater<Real>::fromMatrix(const defaulttype::Matrix3 &m)
 {
-    Real tr, s;
-
-    tr = (Real)(m.x().x() + m.y().y() + m.z().z());
+    Real tr = (Real)(m.x().x() + m.y().y() + m.z().z());
+    Real s;
 
     // check the diagonal
     if (tr > 0)
     {
-        s = (float)sqrt (tr + 1);
+        s = sqrt(tr + 1);
         _q[3] = s * 0.5f; // w OK
         s = 0.5f / s;
         _q[0] = (Real)((m.z().y() - m.y().z()) * s); // x OK

@@ -308,6 +308,13 @@ inline T rsin(const T& a)
     return (T)sin((double)a);
 }
 
+template<class T>
+inline T radianToDegree(T a) { return a*180/R_PI; }
+
+template<class T>
+inline T degreeToRadian(T a) { return a*R_PI/180.0; }
+
+
 } // namespace helper
 
 } // namespace sofa
