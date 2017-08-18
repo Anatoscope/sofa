@@ -147,7 +147,8 @@ class Model:
             self.tags = set()
             self.position = [0,0,0,0,0,0,1]
             self.keyPositions = {} # optional animated keyframed positions {name(string):position(6 floats)}, note 'name' can represent a time (that would need to be casted as a float in your sml moulinette)
-            self.mesh = list() # list of meshes TODO: should be self.meshes to be consistent
+            self.meshes = list()
+            self.mesh = self.meshes # alias for compatibility
             self.meshAttributes = dict() # attributes associated with each mesh
             self.image = list() # list of images
             self.offsets = list()  # list of rigid offsets
@@ -170,7 +171,7 @@ class Model:
             return self.massInfo
 
         def addMesh(self, mesh, attr=None):
-            self.mesh.append(mesh)
+            self.meshes.append(mesh)
             if not attr is None:
                 self.meshAttributes[mesh.id]=attr
             else:
