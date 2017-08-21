@@ -477,7 +477,13 @@ class Model:
                     Sofa.msg_error("SofaPython.sml","Model: in joint {0}, unknown solid {1} referenced".format(joint.name, o.attrib["id"]))
             self.genericJoints[joint.id]=joint
 
-    def setMeshDirectoryPath(self, path, solidId=None):
+    def _setMeshDirectory(self, path, mesh):
+        if not mesh.source is None:
+            mesh.source = os.path.join(path, os.path.basename(mesh.source))
+            if not os.path.exists(mesh.source):
+                Sofa.msg_warning("SofaPython.sml","Model: mesh not found: "+mesh.source)
+
+    def setMeshDirectoryPath(self, path, solidId=None, solidTags=None, meshTags=None):
         """ Change all the meshes directory path to be path. If solidId is given, only meshes part of this solid get their path updated
         If path is not absolute, model directory is appended to it
         """
@@ -486,12 +492,18 @@ class Model:
             _path = path
         else:
             _path = os.path.join(self.modelDir, path)
-        meshesIter = self.meshes.itervalues() if solidId is None else self.solids[solidId].meshes
-        for mesh in meshesIter:
-            if not mesh.source is None:
-                mesh.source = os.path.join(_path, os.path.basename(mesh.source))
-                if not os.path.exists(mesh.source):
-                    Sofa.msg_warning("SofaPython.sml","Model: mesh not found: "+mesh.source)
+        meshesIter = None
+
+        if not solidId is None:
+            for mesh in self.solids[solidId].getMeshesByTags(meshTags):
+                self._setMeshDirectory(_path, mesh)
+        elif not solidTags is None or not meshTags is None:
+            for solid in self.getSolidsByTags(solidTags):
+                for mesh in solid.getMeshesByTags(meshTags):
+                    self._setMeshDirectory(_path, mesh)
+        else:
+            for mesh in self.meshes.itervalues():
+                self._setMeshDirectory(_path, mesh)
 
     def getSolidsByTags(self, tags):
         """ \return a list of solids which contains at least one tag from tags
