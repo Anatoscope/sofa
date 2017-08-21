@@ -24,19 +24,9 @@
 
 #include <SofaMiscMapping/CatmullRomSplineMapping.h>
 #include <sofa/core/visual/VisualParams.h>
-#include <SofaBaseTopology/TriangleSetTopologyContainer.h>
-#include <sofa/core/behavior/MechanicalState.h>
-#include <sofa/helper/gl/Axis.h>
-#include <sofa/helper/gl/Color.h>
-#include <sofa/helper/gl/glText.inl>
+#include <SofaBaseTopology/EdgeSetTopologyModifier.h>
 #include <sofa/helper/gl/template.h>
-#include <sofa/helper/io/Mesh.h>
-#include <limits>
-#include <sofa/simulation/Simulation.h>
-#include <sofa/defaulttype/Vec.h>
 
-#include <string>
-#include <iostream>
 
 namespace sofa
 {
@@ -50,10 +40,10 @@ namespace mapping
 template <class TIn, class TOut>
 CatmullRomSplineMapping<TIn, TOut>::CatmullRomSplineMapping ( )
     : Inherit ( )
-    , SplittingLevel(initData(&SplittingLevel, (unsigned int) 0,"SplittingLevel","Number of recursive splits"))
-    //, Radius(initData(&Radius,(Real)0.0,"Radius","Radius of the beam (generate triangle mesh if not null, a polyline otherwise)"))
+    , d_splittingLevel(initData(&d_splittingLevel, (unsigned int) 0, "splittingLevel", "Number of recursive splits"))
 {
-
+    this->addAlias(&d_splittingLevel,"SplittingLevel"); // backward compatibility
+    m_jacobians.push_back(&m_jacobian);
 }
 
 
@@ -71,7 +61,7 @@ void CatmullRomSplineMapping<TIn, TOut>::init()
     sourceMesh=this->getFromModel()->getContext()->getMeshTopology();
     targetMesh=this->getToModel()->getContext()->getMeshTopology() ;
 
-    unsigned int k = SplittingLevel.getValue();
+    unsigned int k = d_splittingLevel.getValue();
     unsigned int P = sourceMesh->getNbPoints();
     unsigned int E = sourceMesh->getNbEdges();
     const SeqEdges& Edges = sourceMesh->getEdges();
@@ -85,15 +75,15 @@ void CatmullRomSplineMapping<TIn, TOut>::init()
     unsigned int targetP =  P + E * ( k2 - 1 ) ;
     unsigned int targetE =  E * k2 ;
 
-    sofa::helper::ReadAccessor<Data<InVecCoord> >		xfrom = *this->fromModel->read(core::ConstVecCoordId::restPosition());
-    sofa::helper::WriteAccessor<Data<OutVecCoord> >	xto0 = *this->toModel->write(core::VecCoordId::restPosition());
-    sofa::helper::WriteAccessor<Data<OutVecCoord> >	xto = *this->toModel->write(core::VecCoordId::position());
-    sofa::helper::WriteAccessor<Data<OutVecCoord> >	xtoReset = *this->toModel->write(core::VecCoordId::resetPosition());
+    sofa::helper::ReadAccessor<Data<InVecCoord> >   xfrom = *this->fromModel->read(core::ConstVecCoordId::restPosition());
+    sofa::helper::WriteOnlyAccessor<Data<OutVecCoord> >	xto0 = *this->toModel->write(core::VecCoordId::restPosition());
+    sofa::helper::WriteOnlyAccessor<Data<OutVecCoord> >	xto = *this->toModel->write(core::VecCoordId::position());
+    sofa::helper::WriteOnlyAccessor<Data<OutVecCoord> >	xtoReset = *this->toModel->write(core::VecCoordId::resetPosition());
 
     this->toModel->resize(targetP);
     targetMesh->setNbPoints(targetP);
-    m_weight.resize(targetP);
-    m_index.resize(targetP);
+
+    m_jacobian.resizeBlocks( targetP, P );
 
     unsigned int count=0;
     sofa::defaulttype::Vec<4,ID> id(0,0,0,0); helper::vector<ID> n1,n2;
@@ -101,9 +91,9 @@ void CatmullRomSplineMapping<TIn, TOut>::init()
     for ( unsigned int i=0; i<P; i++ ) // initial points
     {
         xto0[count] = xfrom[i]; xto[count] = xto0[count]; xtoReset[count] = xto0[count];
-        m_index[count][0] = m_index[count][1] = m_index[count][2] = m_index[count][3] = i;
-        m_weight[count][0] = 1;
-        m_weight[count][1] = m_weight[count][2] = m_weight[count][3] = 0;
+
+        m_jacobian.addScalarBlock( count, i, 1 );
+
         count++;
     }
     for ( unsigned int i=0; i<E; i++ ) // interpolated points
@@ -119,15 +109,24 @@ void CatmullRomSplineMapping<TIn, TOut>::init()
             t=((OutReal)1.0+(OutReal)j)/(OutReal)k2; t2=t*t; t3=t2*t;
             xto0[count] = xfrom[id[1]]*t + xfrom[id[2]]*(1.0-t);
             xto[count] = xto0[count]; xtoReset[count] = xto0[count];
-            m_index[count] = id;
-            m_weight[count][0] = (InReal)(-t3 + 2*t2 - t)/2.0f;
-            m_weight[count][1] = (InReal)(3*t3 - 5*t2 + 2)/2.0f;
-            m_weight[count][2] = (InReal)(-3*t3 + 4*t2 + t)/2.0f;
-            m_weight[count][3] = (InReal)(t3 - t2)/2.0f;
+
+            InReal w0 = (InReal)(-t3 + 2*t2 - t)/2.0f;
+            InReal w1 = (InReal)(3*t3 - 5*t2 + 2)/2.0f;
+            InReal w2 = (InReal)(-3*t3 + 4*t2 + t)/2.0f;
+            InReal w3 = (InReal)(t3 - t2)/2.0f;
+
+            m_jacobian.addScalarBlock( count, id[0], w0 );
+            m_jacobian.addScalarBlock( count, id[1], w1 );
+            m_jacobian.addScalarBlock( count, id[2], w2 );
+            m_jacobian.addScalarBlock( count, id[3], w3 );
 
             count++;
         }
     }
+
+    m_jacobian.compress();
+    m_jacobian.finalize();
+//    serr<<m_jacobian<<sendl;
 
 
     sofa::component::topology::EdgeSetTopologyModifier *to_estm;
@@ -165,128 +164,36 @@ void CatmullRomSplineMapping<TIn, TOut>::init()
 }
 
 
-template <class TIn, class TOut>
-void CatmullRomSplineMapping<TIn, TOut>::apply( const sofa::core::MechanicalParams* mparams, OutDataVecCoord& outData, const InDataVecCoord& inData)
-{
-    OutVecCoord& out = *outData.beginEdit(mparams);
-    const InVecCoord& in = inData.getValue();
-
-    for ( unsigned int i = 0 ; i < out.size(); i++ )
-    {
-        out[i] = OutCoord ();
-        for ( unsigned int j=0; j<4 ; j++ )	out[i] += in[m_index[i][j]] * m_weight[i][j] ;
-    }
-
-    outData.endEdit(mparams);
-}
 
 
-template <class TIn, class TOut>
-void CatmullRomSplineMapping<TIn, TOut>::applyJ( const sofa::core::MechanicalParams* mparams, OutDataVecDeriv& outData, const InDataVecDeriv& inData)
-{
-    OutVecDeriv& out = *outData.beginWriteOnly(mparams);
-    const InVecDeriv& in = inData.getValue();
+//template <class TIn, class TOut>
+//void CatmullRomSplineMapping<TIn, TOut>::applyJT ( const sofa::core::ConstraintParams* cparams, InDataMatrixDeriv& outData, const OutDataMatrixDeriv& inData)
+//{
+//    InMatrixDeriv& parentJacobians = *outData.beginEdit(cparams);
+//    const OutMatrixDeriv& childJacobians = inData.getValue();
 
-    for( size_t i = 0 ; i<this->maskTo->size() ; ++i )
-    {
-        if( !this->maskTo->isActivated() || this->maskTo->getEntry(i) )
-        {
-            out[i] = OutDeriv();
-            for ( unsigned int j=0; j<4 ; j++ )  out[i] += in[m_index[i][j]] * m_weight[i][j] ;
-        }
-    }
+//    for (typename Out::MatrixDeriv::RowConstIterator childJacobian = childJacobians.begin(); childJacobian != childJacobians.end(); ++childJacobian)
+//    {
+//        typename In::MatrixDeriv::RowIterator parentJacobian = parentJacobians.writeLine(childJacobian.index());
 
-    outData.endEdit(mparams);
-}
+//        for (typename Out::MatrixDeriv::ColConstIterator childParticle = childJacobian.begin(); childParticle != childJacobian.end(); ++childParticle)
+//        {
+//            unsigned int childIndex = childParticle.index();
+//            const OutDeriv& childJacobianVec = childParticle.val();
 
+//            for ( unsigned int j=0; j<4 ; j++ )
+//            {
+//                InDeriv parentJacobianVec;
+//                parentJacobianVec  += childJacobianVec * m_weight[childIndex][j];
+//                parentJacobian.addCol(m_index[childIndex][j],parentJacobianVec);
+//            }
+//        }
+//    }
 
-
-template <class TIn, class TOut>
-void CatmullRomSplineMapping<TIn, TOut>::applyJT( const sofa::core::MechanicalParams* mparams, InDataVecDeriv& outData, const OutDataVecDeriv& inData)
-{
-    InVecDeriv& out = *outData.beginEdit(mparams);
-    const OutVecDeriv& in = inData.getValue();
-
-    ForceMask &mask = *this->maskFrom;
-
-    for( size_t i = 0 ; i<this->maskTo->size() ; ++i )
-    {
-        if( this->maskTo->getEntry(i) )
-        {
-            for ( unsigned int j=0; j<4 ; j++ )
-            {
-                out[m_index[i][j]]  += in[i] * m_weight[i][j];
-                mask.insertEntry(m_index[i][j]);
-            }
-        }
-    }
+//    outData.endEdit(cparams);
+//}
 
 
-    outData.endEdit(mparams);
-}
-
-
-
-template <class TIn, class TOut>
-void CatmullRomSplineMapping<TIn, TOut>::applyJT ( const sofa::core::ConstraintParams* cparams, InDataMatrixDeriv& outData, const OutDataMatrixDeriv& inData)
-{
-    InMatrixDeriv& parentJacobians = *outData.beginEdit(cparams);
-    const OutMatrixDeriv& childJacobians = inData.getValue();
-
-    for (typename Out::MatrixDeriv::RowConstIterator childJacobian = childJacobians.begin(); childJacobian != childJacobians.end(); ++childJacobian)
-    {
-        typename In::MatrixDeriv::RowIterator parentJacobian = parentJacobians.writeLine(childJacobian.index());
-
-        for (typename Out::MatrixDeriv::ColConstIterator childParticle = childJacobian.begin(); childParticle != childJacobian.end(); ++childParticle)
-        {
-            unsigned int childIndex = childParticle.index();
-            const OutDeriv& childJacobianVec = childParticle.val();
-
-            for ( unsigned int j=0; j<4 ; j++ )
-            {
-                InDeriv parentJacobianVec;
-                parentJacobianVec  += childJacobianVec * m_weight[childIndex][j];
-                parentJacobian.addCol(m_index[childIndex][j],parentJacobianVec);
-            }
-        }
-    }
-
-    outData.endEdit(cparams);
-}
-
-
-
-template <class TIn, class TOut>
-void CatmullRomSplineMapping<TIn, TOut>::draw(const core::visual::VisualParams* vparams)
-{
-#ifndef SOFA_NO_OPENGL
-    if (!vparams->displayFlags().getShowMappings()) return;
-
-    const typename Out::VecCoord& xto = this->toModel->read(core::ConstVecCoordId::position())->getValue();
-    const typename In::VecCoord& xfrom = this->fromModel->read(core::ConstVecCoordId::position())->getValue();
-
-    glPushAttrib( GL_LIGHTING_BIT | GL_COLOR_BUFFER_BIT | GL_ENABLE_BIT);
-    glDisable ( GL_LIGHTING );
-
-    // Display mapping links between in and out elements
-    glPointSize ( 1 );
-    glBegin ( GL_LINES );
-
-    for ( unsigned int i=0; i<xto.size(); i++ )
-    {
-        for ( unsigned int m=0 ; m<4 ; m++ )
-        {
-            if(m_weight[i][m]<0) glColor4d ( -m_weight[i][m]*4.0,0.5,0,1 );
-            else glColor4d ( 0,0.5, m_weight[i][m],1 );
-            helper::gl::glVertexT ( xfrom[m_index[i][m]] );
-            helper::gl::glVertexT ( xto[i] );
-        }
-    }
-    glEnd();
-
-    glPopAttrib();
-#endif /* SOFA_NO_OPENGL */
-}
 
 
 
