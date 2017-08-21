@@ -6,8 +6,6 @@ set(HEADER_FILES
     ArticulatedHierarchyContainer.inl
     ArticulatedSystemMapping.h
     ArticulatedSystemMapping.inl
-    LaparoscopicRigidMapping.h
-    LaparoscopicRigidMapping.inl
     LineSetSkinningMapping.h
     LineSetSkinningMapping.inl
     SkinningMapping.h
@@ -19,7 +17,6 @@ set(HEADER_FILES
 set(SOURCE_FILES
     ArticulatedHierarchyContainer.cpp
     ArticulatedSystemMapping.cpp
-    LaparoscopicRigidMapping.cpp
     LineSetSkinningMapping.cpp
     SkinningMapping.cpp
     initGeneralRigid.cpp

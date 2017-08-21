@@ -32,7 +32,6 @@
 #include <sofa/defaulttype/Quat.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
-#include <sofa/defaulttype/LaparoscopicRigidTypes.h>
 
 #include <vector>
 #include <fstream>
@@ -520,8 +519,6 @@ void MechanicalObject<defaulttype::Rigid3dTypes>::draw(const core::visual::Visua
 template<> SOFA_BASE_MECHANICS_API
 void MechanicalObject<defaulttype::Rigid3fTypes>::draw(const core::visual::VisualParams* vparams);
 #endif
-template<> SOFA_BASE_MECHANICS_API
-void MechanicalObject<defaulttype::LaparoscopicRigid3Types>::draw(const core::visual::VisualParams* vparams);
 
 
 
@@ -542,7 +539,6 @@ extern template class SOFA_BASE_MECHANICS_API MechanicalObject<defaulttype::Vec6
 extern template class SOFA_BASE_MECHANICS_API MechanicalObject<defaulttype::Rigid3fTypes>;
 extern template class SOFA_BASE_MECHANICS_API MechanicalObject<defaulttype::Rigid2fTypes>;
 #endif
-extern template class SOFA_BASE_MECHANICS_API MechanicalObject<defaulttype::LaparoscopicRigid3Types>;
 #endif
 
 } // namespace container
