@@ -678,6 +678,13 @@ class BaseScene:
             if "showVisual" in displayFlags:
                 visual.node.propagatePositionAndVelocity()
 
+    def setVisualColors(self, color, solidId=None, solidTags=set(), meshTags=set()):
+        """ set colors of selected visual models,
+        selection is done by solidTags and meshTags, empty set means all solids or meshes
+        """
+        for visual in self.getVisualsByTags(solidId, solidTags, meshTags):
+            visual.visual.setColor(color[0],color[1],color[2],color[3])
+
     def exportMeshes(self):
         for e in self.meshExporters:
             e.writeOBJ()
