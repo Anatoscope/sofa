@@ -43,6 +43,8 @@ def _getObjectsByTags(objects, tags):
     """ internal function to return a list of objects with given tags
     \todo add an explicit option atLeastOneTag, allTags,...
     """
+    if tags is None:
+        return objects
     taggedObjects = list()
     for obj in objects:
         if len(obj.tags & tags) > 0:
