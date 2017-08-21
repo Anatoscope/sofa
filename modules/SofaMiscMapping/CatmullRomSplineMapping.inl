@@ -52,14 +52,22 @@ CatmullRomSplineMapping<TIn, TOut>::~CatmullRomSplineMapping ()
 {
 }
 
-
-
 template <class TIn, class TOut>
 void CatmullRomSplineMapping<TIn, TOut>::init()
 {
+    reinit();
+    Inherit::init();
+}
 
-    sourceMesh=this->getFromModel()->getContext()->getMeshTopology();
-    targetMesh=this->getToModel()->getContext()->getMeshTopology() ;
+template <class TIn, class TOut>
+void CatmullRomSplineMapping<TIn, TOut>::reinit()
+{
+    BaseMeshTopology* sourceMesh = this->getFromModel()->getContext()->getMeshTopology();
+    if( !sourceMesh )
+    {
+        serr<<"EdgeSetTopology defining the control curve expected in the parent context"<<sendl;
+        return;
+    }
 
     unsigned int k = d_splittingLevel.getValue();
     unsigned int P = sourceMesh->getNbPoints();
@@ -81,7 +89,6 @@ void CatmullRomSplineMapping<TIn, TOut>::init()
     sofa::helper::WriteOnlyAccessor<Data<OutVecCoord> >	xtoReset = *this->toModel->write(core::VecCoordId::resetPosition());
 
     this->toModel->resize(targetP);
-    targetMesh->setNbPoints(targetP);
 
     m_jacobian.resizeBlocks( targetP, P );
 
@@ -129,14 +136,22 @@ void CatmullRomSplineMapping<TIn, TOut>::init()
 //    serr<<m_jacobian<<sendl;
 
 
+
+
+    /////////// creating the interpolated topology
+
+    BaseMeshTopology* targetMesh = this->getToModel()->getContext()->getMeshTopology() ;
     sofa::component::topology::EdgeSetTopologyModifier *to_estm;
     this->toModel->getContext()->get(to_estm);
-    if(to_estm == NULL)
+    if( !targetMesh || !to_estm)
     {
-        serr<<"EdgeSetTopologyModifier expected in the same context of CatmullRomSplineMapping"<<sendl;
+        serr<<"EdgeSetTopology defining the resulting, interpolated curve with its EdgeSetTopologyModifier expected in the same context of CatmullRomSplineMapping"<<sendl;
     }
     else
     {
+        targetMesh->clear();
+
+        targetMesh->setNbPoints(targetP);
         helper::vector< Edge >         edges_to_create  ; edges_to_create.resize (targetE);
         helper::vector< unsigned int > edgesIndexList   ; edgesIndexList.resize  (targetE); for ( unsigned int i=0; i<targetE; i++ ) edgesIndexList[i]=i;
         count=0;
@@ -160,7 +175,7 @@ void CatmullRomSplineMapping<TIn, TOut>::init()
         to_estm->addEdgesWarning(edges_to_create.size(), edges_to_create, edgesIndexList) ;
     }
 
-    Inherit::init();
+    Inherit::reinit();
 }
 
 

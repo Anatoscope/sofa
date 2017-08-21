@@ -105,18 +105,16 @@ protected:
     CatmullRomSplineMapping ();
     virtual ~CatmullRomSplineMapping();
 
-    Data<unsigned int> d_splittingLevel;
-
-    //Both mesh topology must be Edge Mesh
-    BaseMeshTopology* sourceMesh;
-    BaseMeshTopology* targetMesh;
-
 
     Jacobian m_jacobian;
     helper::vector<defaulttype::BaseMatrix*> m_jacobians; ///< Jacobian of the mapping, in a vector
 
 public:
-    void init();
+
+    Data<unsigned int> d_splittingLevel;
+
+    virtual void init();
+    virtual void reinit();
 
     virtual void apply( const sofa::core::MechanicalParams* /*mparams*/, OutDataVecCoord& out, const InDataVecCoord& in)
     {
