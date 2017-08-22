@@ -54,6 +54,8 @@ public:
     static const int nbLines = L;
     static const int nbCols  = C;
 
+    static constexpr SReal s_determinantThreshold=1.0e-100;
+
     Mat()
     {
         clear();
@@ -371,14 +373,28 @@ public:
 
     bool isSymmetric() const
     {
+        if( L!=C ) return false;
         for (int i=0; i<L; i++)
             for (int j=i+1; j<C; j++)
                 if( fabs( this->elems[i][j] - this->elems[j][i] ) > EQUALITY_THRESHOLD ) return false;
         return true;
     }
 
+    bool isSkewSymmetric() const
+    {
+        if( L!=C ) return false;
+        for (int i=0; i<L; i++)
+        {
+            if( fabs( this->elems[i][i] ) > EQUALITY_THRESHOLD ) return false;
+            for (int j=i+1; j<C; j++)
+                if( fabs( this->elems[i][j] + this->elems[j][i] ) > EQUALITY_THRESHOLD ) return false;
+        }
+        return true;
+    }
+
     bool isDiagonal() const
     {
+        if( L!=C ) return false;
         for (int i=0; i<L; i++)
         {
             for (int j=0; j<i-1; j++)
@@ -791,7 +807,7 @@ inline Vec<N,real> diagonal(const Mat<N,N,real>& m)
     return v;
 }
 
-#define MIN_DETERMINANT  1.0e-100
+
 
 /// Matrix inversion (general case).
 template<int S, class real>
@@ -826,7 +842,7 @@ bool invertMatrix(Mat<S,S,real>& dest, const Mat<S,S,real>& from)
             }
         }
 
-        if (pivot <= (real) MIN_DETERMINANT)
+        if (pivot <= (real)Mat<S,S,real>::s_determinantThreshold)
         {
             msg_error("Mat") << "invertMatrix finds too small determinant, matrix = "<<from;
             return false;
@@ -868,7 +884,7 @@ bool invertMatrix(Mat<3,3,real>& dest, const Mat<3,3,real>& from)
 {
     real det=determinant(from);
 
-    if ( -(real) MIN_DETERMINANT<=det && det<=(real) MIN_DETERMINANT)
+    if ( std::abs( det ) <= (real)Mat<3,3,real>::s_determinantThreshold )
     {
         msg_error("Mat") << "invertMatrix finds too small determinant, matrix = "<<from;
         return false;
@@ -893,7 +909,7 @@ bool invertMatrix(Mat<2,2,real>& dest, const Mat<2,2,real>& from)
 {
     real det=determinant(from);
 
-    if ( -(real) MIN_DETERMINANT<=det && det<=(real) MIN_DETERMINANT)
+    if ( std::abs( det ) <= (real)Mat<2,2,real>::s_determinantThreshold )
     {
         msg_error("Mat") << "invertMatrix finds too small determinant, matrix = "<<from;
         return false;
@@ -906,7 +922,6 @@ bool invertMatrix(Mat<2,2,real>& dest, const Mat<2,2,real>& from)
 
     return true;
 }
-#undef MIN_DETERMINANT
 
 /// Inverse Matrix considering the matrix as a transformation.
 template<int S, class real>
