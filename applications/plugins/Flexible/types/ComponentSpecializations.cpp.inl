@@ -1,56 +1,53 @@
 
-
 #include <Flexible/config.h>
-
 
 #include "ComponentSpecializationsDefines.h"
 
-#include <SofaBoundaryCondition/ProjectToPointConstraint.inl>
-#include <SofaBoundaryCondition/ProjectToLineConstraint.inl>
-#include <SofaBoundaryCondition/ProjectToPlaneConstraint.inl>
-#include <SofaBoundaryCondition/ProjectDirectionConstraint.inl>
-
 #include <sofa/core/ObjectFactory.h>
-
 #include <sofa/simulation/Node.h>
 
-#include <sofa/core/State.inl>
-#include <SofaBaseMechanics/MechanicalObject.inl>
 
-#include <SofaBoundaryCondition/FixedConstraint.inl>
-#include <SofaBoundaryCondition/PartialFixedConstraint.inl>
-#include <sofa/core/behavior/ProjectiveConstraintSet.inl>
+#include <SofaBoundaryCondition/ProjectToPointConstraint.h>
+#include <SofaBoundaryCondition/ProjectToLineConstraint.h>
+#include <SofaBoundaryCondition/ProjectToPlaneConstraint.h>
+#include <SofaBoundaryCondition/ProjectDirectionConstraint.h>
 
-#include <SofaEngine/BoxROI.inl>
+#include <sofa/core/State.h>
+#include <SofaBaseMechanics/MechanicalObject.h>
 
+#include <SofaBoundaryCondition/FixedConstraint.h>
+#include <SofaBoundaryCondition/PartialFixedConstraint.h>
+#include <sofa/core/behavior/ProjectiveConstraintSet.h>
 
-#include <SofaBaseMechanics/UniformMass.inl>
+#include <SofaEngine/BoxROI.h>
 
-#include <SofaValidation/Monitor.inl>
-#include <SofaValidation/ExtraMonitor.inl>
+#include <SofaBaseMechanics/UniformMass.h>
 
-#include <SofaConstraint/UncoupledConstraintCorrection.inl>
+#include <SofaValidation/Monitor.h>
+#include <SofaValidation/ExtraMonitor.h>
 
-#include <SofaBaseMechanics/IdentityMapping.inl>
-#include <SofaMiscMapping/SubsetMultiMapping.inl>
+#include <SofaConstraint/UncoupledConstraintCorrection.h>
 
-#include <sofa/core/behavior/ForceField.inl>
-#include <sofa/core/behavior/Mass.inl>
-#include <sofa/core/behavior/ConstraintCorrection.inl>
-#include <SofaDeformable/RestShapeSpringsForceField.inl>
-#include <SofaBoundaryCondition/ConstantForceField.inl>
-#include <SofaBoundaryCondition/UniformVelocityDampingForceField.inl>
+#include <SofaBaseMechanics/IdentityMapping.h>
+#include <SofaMiscMapping/SubsetMultiMapping.h>
+
+#include <sofa/core/behavior/ForceField.h>
+#include <sofa/core/behavior/Mass.h>
+#include <sofa/core/behavior/ConstraintCorrection.h>
+#include <SofaDeformable/RestShapeSpringsForceField.h>
+#include <SofaBoundaryCondition/ConstantForceField.h>
+#include <SofaBoundaryCondition/UniformVelocityDampingForceField.h>
 
 
 #ifdef SOFA_HAVE_IMAGE
-#include "../mass/ImageDensityMass.inl"
+#include "../mass/ImageDensityMass.h"
 #endif
 
+#include <sofa/core/Mapping.h>
+#include <sofa/core/MultiMapping.h>
 
-#include <sofa/core/Mapping.inl>
-#include <sofa/core/MultiMapping.inl>
+// dear fucking god wtf is this
 
-// dear fucking god wtf is this horror
 namespace sofa {
 namespace component
 {
