@@ -95,8 +95,9 @@ struct BilateralInteractionConstraint_test : public Sofa_test<typename _DataType
         /// I'm using '\n' so that the XML parser correctly report the line number
         /// in case of problems.
         std::stringstream scene;
-        typename DataTypes::Coord coord;
-        DataTypes::setCPos(coord, {1, 2, 3});
+        
+        typename DataTypes::VecCoord coord(1);
+        DataTypes::setCPos(coord[0], {1, 2, 3});
 
         scene << "<?xml version='1.0'?>                                       \n"
                  "<Node 	name='Root' gravity='0 0 0' time='0' animate='0'   > \n"
@@ -156,9 +157,8 @@ void BilateralInteractionConstraint_test<Rigid3fTypes>::checkRigid3fFixForBackwa
     /// in case of problems.
     std::stringstream scene;
 
-    DataTypes::Coord coord;
-    DataTypes::setCPos(coord, {1, 2, 3});
-
+    DataTypes::VecCoord coord(1);
+    DataTypes::setCPos(coord[0], {1, 2, 3});
     
     scene << "<?xml version='1.0'?>                                       \n"
              "<Node 	name='Root' gravity='0 0 0' time='0' animate='0'   > \n"
