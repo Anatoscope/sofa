@@ -7,7 +7,7 @@
 
 #include <sofa/core/ObjectFactory.h>
 
-
+#include <sofa/core/Mapping.inl>
 #include <SofaBaseMechanics/IdentityMapping.inl>
 #include <SofaMiscMapping/SubsetMultiMapping.inl>
 
