@@ -90,16 +90,20 @@ struct BilateralInteractionConstraint_test : public Sofa_test<typename _DataType
     /// of a component and rise warning/errors when some are removed.
     /// If you remove/renamed a data field please add a deprecation
     /// message as well as update this test.
+    
     void attributesTests(){
         /// I'm using '\n' so that the XML parser correctly report the line number
         /// in case of problems.
         std::stringstream scene;
+        typename DataTypes::Coord coord;
+        DataTypes::setCPos(coord, {1, 2, 3});
+
         scene << "<?xml version='1.0'?>                                       \n"
                  "<Node 	name='Root' gravity='0 0 0' time='0' animate='0'   > \n"
-                 "   <MechanicalObject name='o1' template='"<< DataTypes::Name() << "' position='1 2 3'/>   \n"
-                 "   <MechanicalObject name='o2' template='"<< DataTypes::Name() << "' position='1 2 3'/>   \n"
-                 "   <BilateralInteractionConstraint template='"<< DataTypes::Name() << "' object1='@./o1' object2='@./o2'/>     \n"
-                 "</Node>                                                     \n" ;
+                 "   <MechanicalObject name='o1' template='"<< DataTypes::Name() << "' position='" << coord << "'/>   \n"
+                 "   <MechanicalObject name='o2' template='"<< DataTypes::Name() << "' position='" << coord << "'/>   \n"
+            "   <BilateralInteractionConstraint template='"<< DataTypes::Name() << "' object1='@./o1' object2='@./o2'/>     \n"
+            "</Node>                                                     \n" ;
 
         Node::SPtr root = SceneLoaderXML::loadFromMemory ("testscene",
                                                           scene.str().c_str(),
@@ -151,13 +155,18 @@ void BilateralInteractionConstraint_test<Rigid3fTypes>::checkRigid3fFixForBackwa
     /// I'm using '\n' so that the XML parser correctly report the line number
     /// in case of problems.
     std::stringstream scene;
+
+    DataTypes::Coord coord;
+    DataTypes::setCPos(coord, {1, 2, 3});
+
+    
     scene << "<?xml version='1.0'?>                                       \n"
              "<Node 	name='Root' gravity='0 0 0' time='0' animate='0'   > \n"
-             "   <MechanicalObject name='o1' template='"<< DataTypes::Name() << "' position='1 2 3'/>   \n"
-             "   <MechanicalObject name='o2' template='"<< DataTypes::Name() << "' position='1 2 3'/>   \n"
+        "   <MechanicalObject name='o1' template='"<< DataTypes::Name() << "' position='" << coord << "'/>   \n"
+        "   <MechanicalObject name='o2' template='"<< DataTypes::Name() << "' position='" << coord << "'/>   \n"
              "   <BilateralInteractionConstraint template='"<< DataTypes::Name() << "' object1='@./o1' object2='@./o2'/>     \n"
              "</Node>                                                     \n" ;
-
+    
     Node::SPtr root = SceneLoaderXML::loadFromMemory ("testscene",
                                                       scene.str().c_str(),
                                                       scene.str().size()) ;
