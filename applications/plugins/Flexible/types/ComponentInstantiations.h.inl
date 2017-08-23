@@ -6,13 +6,12 @@
 #include <SofaBaseMechanics/MechanicalObject.h>
 
 
-#include <SofaBaseMechanics/AddMToMatrixFunctor.h>
 #include <SofaBaseMechanics/UniformMass.h>
 
 #include <sofa/core/behavior/ForceField.h>
 #include <sofa/core/behavior/Mass.h>
-#include <sofa/core/behavior/ProjectiveConstraintSet.inl>
-#include <sofa/core/behavior/ConstraintCorrection.inl>
+#include <sofa/core/behavior/ProjectiveConstraintSet.h>
+#include <sofa/core/behavior/ConstraintCorrection.h>
 #include <sofa/core/Mapping.h>
 
 
@@ -39,14 +38,6 @@ namespace component
 namespace container
 {
 
-#ifndef SOFA_FLOAT
-template <> SOFA_Flexible_API
-void MechanicalObject<defaulttype::TYPEABSTRACTNAME3dTypes>::draw(const core::visual::VisualParams* vparams);
-#endif
-#ifndef SOFA_DOUBLE
-template <> SOFA_Flexible_API
-void MechanicalObject<defaulttype::TYPEABSTRACTNAME3fTypes>::draw(const core::visual::VisualParams* vparams);
-#endif
 
 #if defined(SOFA_EXTERN_TEMPLATE) && !defined(FLEXIBLE_COMPILING_CPP)
 #ifndef SOFA_FLOAT

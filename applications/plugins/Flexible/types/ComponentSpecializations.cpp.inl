@@ -3,50 +3,18 @@
 
 #include "ComponentSpecializationsDefines.h"
 
-#include <sofa/core/ObjectFactory.h>
-#include <sofa/simulation/Node.h>
-
-
 #include <SofaBoundaryCondition/ProjectToPointConstraint.h>
 #include <SofaBoundaryCondition/ProjectToLineConstraint.h>
 #include <SofaBoundaryCondition/ProjectToPlaneConstraint.h>
 #include <SofaBoundaryCondition/ProjectDirectionConstraint.h>
 
-#include <sofa/core/State.h>
-#include <SofaBaseMechanics/MechanicalObject.h>
-
 #include <SofaBoundaryCondition/FixedConstraint.h>
 #include <SofaBoundaryCondition/PartialFixedConstraint.h>
-#include <sofa/core/behavior/ProjectiveConstraintSet.h>
-
-#include <SofaEngine/BoxROI.h>
-
-#include <SofaBaseMechanics/UniformMass.h>
-
-#include <SofaValidation/Monitor.h>
-#include <SofaValidation/ExtraMonitor.h>
 
 #include <SofaConstraint/UncoupledConstraintCorrection.h>
 
-#include <SofaBaseMechanics/IdentityMapping.h>
-#include <SofaMiscMapping/SubsetMultiMapping.h>
+#include <sofa/core/visual/VisualParams.h>
 
-#include <sofa/core/behavior/ForceField.h>
-#include <sofa/core/behavior/Mass.h>
-#include <sofa/core/behavior/ConstraintCorrection.h>
-#include <SofaDeformable/RestShapeSpringsForceField.h>
-#include <SofaBoundaryCondition/ConstantForceField.h>
-#include <SofaBoundaryCondition/UniformVelocityDampingForceField.h>
-
-
-#ifdef SOFA_HAVE_IMAGE
-#include "../mass/ImageDensityMass.h"
-#endif
-
-#include <sofa/core/Mapping.h>
-#include <sofa/core/MultiMapping.h>
-
-// dear fucking god wtf is this
 
 namespace sofa {
 namespace component
@@ -713,31 +681,10 @@ void UncoupledConstraintCorrection< defaulttype::TYPEABSTRACTNAME3fTypes >::init
 #endif
 
 
-
-
 } // namespace constraintset
 
-namespace mapping
-{
-
-
-} // namespace mapping
-
-
-namespace engine
-{
-
-
-} // namespace engine
-
-namespace forcefield
-{
-
-
-} // namespace forcefield
 
 } // namespace component
-
 
 
 } // namespace sofa

@@ -5,21 +5,8 @@
 
 #include <SofaBaseMechanics/MechanicalObject.h>
 
-
 #include <SofaBaseMechanics/AddMToMatrixFunctor.h>
 #include <SofaBaseMechanics/UniformMass.h>
-
-#include <sofa/core/behavior/ForceField.h>
-#include <sofa/core/behavior/Mass.h>
-#include <sofa/core/behavior/ProjectiveConstraintSet.inl>
-#include <sofa/core/behavior/ConstraintCorrection.inl>
-#include <sofa/core/Mapping.h>
-
-
-#ifdef SOFA_HAVE_IMAGE
-#include "../mass/ImageDensityMass.h"
-#endif
-
 
 #include "ComponentSpecializationsDefines.h"
 
