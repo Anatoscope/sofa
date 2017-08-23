@@ -8,6 +8,7 @@
 #include <SofaBaseMechanics/AddMToMatrixFunctor.h>
 #include <SofaBaseMechanics/UniformMass.h>
 
+
 #include "ComponentSpecializationsDefines.h"
 
 
@@ -111,5 +112,7 @@ namespace behavior
 
 } // namespace sofa
 
-#include "ComponentSpecializationsUndef.h"
 
+#ifndef DONT_UNDEF_FFS
+#include "ComponentSpecializationsUndef.h"
+#endif

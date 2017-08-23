@@ -19,8 +19,14 @@
 #include "../mass/ImageDensityMass.h"
 #endif
 
+// working around this macro hell
 
 #include "ComponentSpecializationsDefines.h"
+
+#define DONT_UNDEF_FFS
+#include "ComponentSpecializations.h.inl"
+#undef DONT_UNDEF_FFS
+
 
 
 
