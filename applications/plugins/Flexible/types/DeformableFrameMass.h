@@ -4,6 +4,7 @@
 
 #include <sofa/defaulttype/Vec.h>
 #include <sofa/defaulttype/Mat.h>
+#include <sofa/helper/logging/Messaging.h>
 
 namespace sofa
 {
@@ -124,6 +125,7 @@ namespace defaulttype
         // mtournier: this is a *very* stupid idea. the correct way is to use traits.
         operator const Real() const
         {
+            msg_warning("DeformableFrameMass")<<"cast to scalar is not implemented";
             return (*this)(0,0);
         }
 
