@@ -122,7 +122,6 @@ namespace defaulttype
 
 
         /// operator to cast to const Real, supposing the mass is uniform (and so diagonal)
-        // mtournier: this is a *very* stupid idea. the correct way is to use traits.
         operator const Real() const
         {
             msg_warning("DeformableFrameMass")<<"cast to scalar is not implemented";
@@ -137,6 +136,8 @@ namespace defaulttype
         // addtranspose
        //subtranspose
 
+
+
     protected:
 
         mutable MassMatrix *m_invMassMatrix; ///< a pointer to the inverse of the mass matrix
@@ -147,7 +148,6 @@ namespace defaulttype
         {
             if( m_invMassMatrix ) m_invMassMatrix->invert( *this );
         }
-
     };
 
     template<class Deriv,int _spatial_dimensions,int _dim,typename _Real>

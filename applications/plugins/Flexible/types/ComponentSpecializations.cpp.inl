@@ -1,21 +1,56 @@
 
+
 #include <Flexible/config.h>
+
 
 #include "ComponentSpecializationsDefines.h"
 
-#include <SofaBoundaryCondition/ProjectToPointConstraint.h>
-#include <SofaBoundaryCondition/ProjectToLineConstraint.h>
-#include <SofaBoundaryCondition/ProjectToPlaneConstraint.h>
-#include <SofaBoundaryCondition/ProjectDirectionConstraint.h>
+#include <SofaBoundaryCondition/ProjectToPointConstraint.inl>
+#include <SofaBoundaryCondition/ProjectToLineConstraint.inl>
+#include <SofaBoundaryCondition/ProjectToPlaneConstraint.inl>
+#include <SofaBoundaryCondition/ProjectDirectionConstraint.inl>
 
-#include <SofaBoundaryCondition/FixedConstraint.h>
-#include <SofaBoundaryCondition/PartialFixedConstraint.h>
+#include <sofa/core/ObjectFactory.h>
 
-#include <SofaConstraint/UncoupledConstraintCorrection.h>
+#include <sofa/simulation/Node.h>
 
-#include <sofa/core/visual/VisualParams.h>
+#include <sofa/core/State.inl>
+#include <SofaBaseMechanics/MechanicalObject.inl>
+
+#include <SofaBoundaryCondition/FixedConstraint.inl>
+#include <SofaBoundaryCondition/PartialFixedConstraint.inl>
+#include <sofa/core/behavior/ProjectiveConstraintSet.inl>
+
+#include <SofaEngine/BoxROI.inl>
 
 
+#include <SofaBaseMechanics/UniformMass.inl>
+
+#include <SofaValidation/Monitor.inl>
+#include <SofaValidation/ExtraMonitor.inl>
+
+#include <SofaConstraint/UncoupledConstraintCorrection.inl>
+
+#include <SofaBaseMechanics/IdentityMapping.inl>
+#include <SofaMiscMapping/SubsetMultiMapping.inl>
+
+#include <sofa/core/behavior/ForceField.inl>
+#include <sofa/core/behavior/Mass.inl>
+#include <sofa/core/behavior/ConstraintCorrection.inl>
+#include <SofaDeformable/RestShapeSpringsForceField.inl>
+#include <SofaBoundaryCondition/ConstantForceField.inl>
+#include <SofaBoundaryCondition/UniformVelocityDampingForceField.inl>
+
+
+#ifdef SOFA_HAVE_IMAGE
+#include "../mass/ImageDensityMass.inl"
+#endif
+
+
+#include <sofa/core/Mapping.inl>
+#include <sofa/core/MultiMapping.inl>
+
+// dear fucking god wtf is this horror
 namespace sofa {
 namespace component
 {

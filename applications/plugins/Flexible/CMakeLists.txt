@@ -97,8 +97,6 @@ set(HEADER_FILES
     strainMapping/LinearStrainJacobianBlock.h
     strainMapping/LinearStrainMapping.h
     types/AffineComponents.h
-    types/AffineComponents2.h
-    
     types/AffineTypes.h
 
     types/ComponentSpecializations.cpp.inl
@@ -174,10 +172,8 @@ set(SOURCE_FILES
     strainMapping/RelativeStrainMapping.cpp
     strainMapping/LinearStrainMapping.cpp
     types/AffineComponents.cpp
-    types/AffineComponents2.cpp    
     types/DeformationGradientTypes.cpp
     types/QuadraticComponents.cpp
-    types/QuadraticComponents2.cpp    
     types/RigidConstraint.cpp
     types/StrainTypes.cpp
 )

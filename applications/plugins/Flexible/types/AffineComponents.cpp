@@ -4,3 +4,6 @@
 
 #define TYPEABSTRACTNAME Affine
 #include "ComponentSpecializations.cpp.inl"
+
+#define TYPEABSTRACTNAME Affine
+#include "ComponentInstantiations.cpp.inl"

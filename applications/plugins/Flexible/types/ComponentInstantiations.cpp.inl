@@ -49,7 +49,6 @@
 #include <sofa/core/MultiMapping.inl>
 
 
-
 namespace sofa
 {
 
