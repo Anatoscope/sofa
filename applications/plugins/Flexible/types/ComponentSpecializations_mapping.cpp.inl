@@ -7,11 +7,12 @@
 
 #include <sofa/core/ObjectFactory.h>
 
-#include <sofa/core/Mapping.inl>
 #include <SofaBaseMechanics/IdentityMapping.inl>
 #include <SofaMiscMapping/SubsetMultiMapping.inl>
 
 
+// note: if you lack instantiation of core classes, put them in
+// ComponentSpecializations_core.cpp.inl
 
 namespace sofa
 {
