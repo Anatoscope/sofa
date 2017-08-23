@@ -159,7 +159,7 @@ namespace defaulttype
     template<class Deriv,int _spatial_dimensions,int _dim,typename _Real>
     Deriv operator*(const DeformableFrameMass<_spatial_dimensions, _dim,_Real>& m,const Deriv& d)
     {
-        return d * m;
+        return m*d;
     }
 
 

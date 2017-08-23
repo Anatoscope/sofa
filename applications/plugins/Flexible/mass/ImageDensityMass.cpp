@@ -70,19 +70,27 @@ int ImageDensityMassClass = core::RegisterObject("Define a global mass matrix in
 #ifndef SOFA_FLOAT
         .add< ImageDensityMass<Vec3dTypes,core::behavior::ShapeFunctiond,Mat3x3d> >( true )
 //        .add< ImageDensityMass<Rigid3dTypes,core::behavior::ShapeFunctiond,Rigid3dMass> >()
+        .add< ImageDensityMass<Affine3dTypes,core::behavior::ShapeFunctiond,Affine3dMass> >()
+        .add< ImageDensityMass<Quadratic3dTypes,core::behavior::ShapeFunctiond,Quadratic3dMass> >()
 #endif
 #ifndef SOFA_DOUBLE
         .add< ImageDensityMass<Vec3fTypes,core::behavior::ShapeFunctionf,Mat3x3f> >()
 //        .add< ImageDensityMass<Rigid3fTypes,core::behavior::ShapeFunctionf,Rigid3fMass> >()
+        .add< ImageDensityMass<Affine3fTypes,core::behavior::ShapeFunctionf,Affine3fMass> >()
+        .add< ImageDensityMass<Quadratic3fTypes,core::behavior::ShapeFunctionf,Quadratic3fMass> >()
 #endif
         ;
 #ifndef SOFA_FLOAT
 template class SOFA_Flexible_API ImageDensityMass<Vec3dTypes,core::behavior::ShapeFunctiond,Mat3x3d>;
 //template class SOFA_Flexible_API ImageDensityMass<Rigid3dTypes,core::behavior::ShapeFunctiond,Rigid3dMass>;
+template class SOFA_Flexible_API ImageDensityMass<Affine3dTypes,core::behavior::ShapeFunctiond,Affine3dMass>;
+template class SOFA_Flexible_API ImageDensityMass<Quadratic3dTypes,core::behavior::ShapeFunctiond,Quadratic3dMass>;
 #endif
 #ifndef SOFA_DOUBLE
 template class SOFA_Flexible_API ImageDensityMass<Vec3fTypes,core::behavior::ShapeFunctionf,Mat3x3f>;
 //template class SOFA_Flexible_API ImageDensityMass<Rigid3fTypes,core::behavior::ShapeFunctionf,Rigid3fMass>;
+template class SOFA_Flexible_API ImageDensityMass<Affine3fTypes,core::behavior::ShapeFunctionf,Affine3fMass>;
+template class SOFA_Flexible_API ImageDensityMass<Quadratic3fTypes,core::behavior::ShapeFunctionf,Quadratic3fMass>;
 #endif
 
 

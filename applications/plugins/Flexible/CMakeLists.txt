@@ -98,7 +98,11 @@ set(HEADER_FILES
     strainMapping/LinearStrainMapping.h
     types/AffineComponents.h
     types/AffineTypes.h
-    types/ComponentSpecializations.cpp.inl
+    types/ComponentSpecializations_constraint.cpp.inl
+    types/ComponentSpecializations_core.cpp.inl
+    types/ComponentSpecializations_forcefield.cpp.inl
+    types/ComponentSpecializations_mapping.cpp.inl
+    types/ComponentSpecializations_misc.cpp.inl
     types/ComponentSpecializations.h.inl
     types/ComponentSpecializationsDefines.h
     types/ComponentSpecializationsUndef.h
@@ -167,9 +171,17 @@ set(SOURCE_FILES
     strainMapping/PrincipalStretchesMapping.cpp
     strainMapping/RelativeStrainMapping.cpp
     strainMapping/LinearStrainMapping.cpp
-    types/AffineComponents.cpp
+    types/AffineComponents_constraint.cpp
+    types/AffineComponents_core.cpp
+    types/AffineComponents_forcefield.cpp
+    types/AffineComponents_mapping.cpp
+    types/AffineComponents_misc.cpp
     types/DeformationGradientTypes.cpp
-    types/QuadraticComponents.cpp
+    types/QuadraticComponents_constraint.cpp
+    types/QuadraticComponents_core.cpp
+    types/QuadraticComponents_forcefield.cpp
+    types/QuadraticComponents_mapping.cpp
+    types/QuadraticComponents_misc.cpp
     types/RigidConstraint.cpp
     types/StrainTypes.cpp
 )

@@ -2,6 +2,14 @@
 
 #include <Flexible/config.h>
 
+#include <sofa/core/Mapping.h>
+#include <sofa/core/MultiMapping.h>
+#include <sofa/core/behavior/ForceField.h>
+#include <sofa/core/behavior/Mass.h>
+#include <sofa/core/behavior/ConstraintCorrection.h>
+#include <sofa/core/behavior/ProjectiveConstraintSet.h>
+
+
 
 #include <SofaBaseMechanics/MechanicalObject.h>
 
@@ -9,7 +17,19 @@
 #include <SofaBaseMechanics/UniformMass.h>
 
 
+
+
 #include "ComponentSpecializationsDefines.h"
+
+
+
+
+//////////////////////
+/// HERE SHOULD BE DESCRIBED specializations and instanciations that can be useful in other files
+/// than where the instanciations are really compiled.
+/// @warning extern instanciations must be protected by the right preprocessor variable.
+//////////////
+
 
 
 
@@ -36,7 +56,7 @@ template <> SOFA_Flexible_API
 void MechanicalObject<defaulttype::TYPEABSTRACTNAME3fTypes>::draw(const core::visual::VisualParams* vparams);
 #endif
 
-#if defined(SOFA_EXTERN_TEMPLATE) && !defined(FLEXIBLE_COMPILING_CPP)
+#if defined(SOFA_EXTERN_TEMPLATE) && !defined(FLEXIBLE_COMPILING_MISC_CPP)
 #ifndef SOFA_FLOAT
 extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::TYPEABSTRACTNAME3dTypes>;
 extern template class SOFA_Flexible_API MechanicalObject<defaulttype::TYPEABSTRACTNAME3dTypes>;
@@ -100,19 +120,12 @@ SReal UniformMass<defaulttype::TYPEABSTRACTNAME3fTypes, defaulttype::TYPEABSTRAC
 
 
 
-#if defined(SOFA_EXTERN_TEMPLATE) && !defined(FLEXIBLE_COMPILING_CPP)
+#if defined(SOFA_EXTERN_TEMPLATE) && !defined(FLEXIBLE_COMPILING_FORCEFIELD_CPP)
 
     #ifndef SOFA_FLOAT
-        #ifdef SOFA_HAVE_IMAGE
-            extern template class SOFA_Flexible_API ImageDensityMass<defaulttype::TYPEABSTRACTNAME3dTypes,core::behavior::ShapeFunctiond,defaulttype::TYPEABSTRACTNAME3dMass>;
-        #endif
         extern template class SOFA_Flexible_API UniformMass<defaulttype::TYPEABSTRACTNAME3dTypes,defaulttype::TYPEABSTRACTNAME3dMass>;
     #endif
-
     #ifndef SOFA_DOUBLE
-        #ifdef SOFA_HAVE_IMAGE
-            extern template class SOFA_Flexible_API ImageDensityMass<defaulttype::TYPEABSTRACTNAME3fTypes,core::behavior::ShapeFunctionf,defaulttype::TYPEABSTRACTNAME3fMass>;
-        #endif
         extern template class SOFA_Flexible_API UniformMass<defaulttype::TYPEABSTRACTNAME3fTypes,defaulttype::TYPEABSTRACTNAME3fMass>;
     #endif
 
@@ -134,7 +147,7 @@ namespace core
 namespace behavior
 {
 
-#if defined(SOFA_EXTERN_TEMPLATE) && !defined(FLEXIBLE_COMPILING_CPP)
+#if defined(SOFA_EXTERN_TEMPLATE) && !defined(FLEXIBLE_COMPILING_CORE_CPP)
 #ifndef SOFA_FLOAT
 extern template class SOFA_Flexible_API ForceField<defaulttype::TYPEABSTRACTNAME3dTypes>;
 extern template class SOFA_Flexible_API Mass<defaulttype::TYPEABSTRACTNAME3dTypes>;
@@ -154,12 +167,18 @@ extern template class SOFA_Flexible_API ProjectiveConstraintSet<defaulttype::TYP
 
 
 
-#if defined(SOFA_EXTERN_TEMPLATE) && !defined(FLEXIBLE_COMPILING_CPP)
+#if defined(SOFA_EXTERN_TEMPLATE) && !defined(FLEXIBLE_COMPILING_CORE_CPP)
 #ifndef SOFA_FLOAT
+extern template class SOFA_Flexible_API State< defaulttype::TYPEABSTRACTNAME3dTypes >;
+extern template class SOFA_Flexible_API Mapping< defaulttype::TYPEABSTRACTNAME3dTypes, defaulttype::Vec3dTypes >;
 extern template class SOFA_Flexible_API Mapping<defaulttype::TYPEABSTRACTNAME3dTypes,defaulttype::Rigid3dTypes>;
+extern template class SOFA_Flexible_API MultiMapping< defaulttype::TYPEABSTRACTNAME3dTypes, defaulttype::TYPEABSTRACTNAME3dTypes >;
 #endif
 #ifndef SOFA_DOUBLE
-extern template class SOFA_Flexible_API Mapping<defaulttype::TYPEABSTRACTNAME3fTypes,defaulttype::Rigid3fTypes>;
+extern template class SOFA_Flexible_API State< defaulttype::TYPEABSTRACTNAME3fTypes >;
+extern template class SOFA_Flexible_API Mapping< defaulttype::TYPEABSTRACTNAME3fTypes, defaulttype::Vec3fTypes >;
+extern template class SOFA_Flexible_API Mapping< defaulttype::TYPEABSTRACTNAME3fTypes, defaulttype::Rigid3fTypes >;
+extern template class SOFA_Flexible_API MultiMapping< defaulttype::TYPEABSTRACTNAME3fTypes, defaulttype::TYPEABSTRACTNAME3fTypes >;
 #endif
 #endif
 
@@ -172,7 +191,5 @@ extern template class SOFA_Flexible_API Mapping<defaulttype::TYPEABSTRACTNAME3fT
 }// namespace sofa
 
 
-
-#ifndef DONT_UNDEF_FFS
 #include "ComponentSpecializationsUndef.h"
-#endif
+
