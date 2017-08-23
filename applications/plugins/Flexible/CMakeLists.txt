@@ -98,12 +98,8 @@ set(HEADER_FILES
     strainMapping/LinearStrainMapping.h
     types/AffineComponents.h
     types/AffineTypes.h
-
     types/ComponentSpecializations.cpp.inl
     types/ComponentSpecializations.h.inl
-    types/ComponentInstantiations.cpp.inl
-    types/ComponentInstantiations.h.inl
-    
     types/ComponentSpecializationsDefines.h
     types/ComponentSpecializationsUndef.h
     types/DeformableFrameMass.h

@@ -4,8 +4,3 @@
 
 #define TYPEABSTRACTNAME Quadratic
 #include "ComponentSpecializations.cpp.inl"
-
-
-#define TYPEABSTRACTNAME Quadratic
-#include "ComponentInstantiations.cpp.inl"
-
