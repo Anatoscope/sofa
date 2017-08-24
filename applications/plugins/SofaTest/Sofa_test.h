@@ -336,23 +336,32 @@ typename DataTypes::Coord createCoord(const sofa::defaulttype::Vector3& pos, con
     return temp;
 }
 
-template <int N, class real>
-void EXPECT_VEC_DOUBLE_EQ(sofa::defaulttype::Vec<N, real> const& expected, sofa::defaulttype::Vec<N, real> const& actual) {
-    typedef typename sofa::defaulttype::Vec<N,real>::size_type size_type;
-    for (size_type i=0; i<expected.total_size; ++i)
+template <class VectorT>
+void EXPECT_VEC_EQ(VectorT const& expected, VectorT const& actual) {
+    typedef typename VectorT::size_type size_type;
+    ASSERT_EQ(expected.size(), actual.size());
+    for (size_type i=0; i<expected.size(); ++i)
+        EXPECT_EQ(expected[i], actual[i]);
+}
+
+template <class VectorT, class VectorT2>
+void EXPECT_VEC_DOUBLE_EQ(VectorT const& expected, VectorT2 const& actual) {
+//    typedef typename VectorT::size_type size_type;
+    ASSERT_EQ(expected.size(), actual.size());
+    for (std::size_t i=0; i<expected.size(); ++i)
         EXPECT_DOUBLE_EQ(expected[i], actual[i]);
 }
 
-template <int L, int C, class real>
-void EXPECT_MAT_DOUBLE_EQ(sofa::defaulttype::Mat<L,C,real> const& expected, sofa::defaulttype::Mat<L,C,real> const& actual) {
+template <int L, int C, class real, class real2>
+void EXPECT_MAT_DOUBLE_EQ(sofa::defaulttype::Mat<L,C,real> const& expected, sofa::defaulttype::Mat<L,C,real2> const& actual) {
     typedef typename sofa::defaulttype::Mat<L,C,real>::size_type size_type;
     for (size_type i=0; i<expected.nbLines; ++i)
         for (size_type j=0; j<expected.nbCols; ++j)
             EXPECT_DOUBLE_EQ(expected(i,j), actual(i,j));
 }
 
-template <int L, int C, class real>
-void EXPECT_MAT_NEAR(sofa::defaulttype::Mat<L,C,real> const& expected, sofa::defaulttype::Mat<L,C,real> const& actual, real abs_error) {
+template <int L, int C, class real, class real2>
+void EXPECT_MAT_NEAR(sofa::defaulttype::Mat<L,C,real> const& expected, sofa::defaulttype::Mat<L,C,real2> const& actual, real abs_error) {
     typedef typename sofa::defaulttype::Mat<L,C,real>::size_type size_type;
     for (size_type i=0; i<expected.nbLines; ++i)
         for (size_type j=0; j<expected.nbCols; ++j)

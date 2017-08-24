@@ -124,32 +124,33 @@ public:
     sofa::core::objectmodel::Data<bool>         m_doOnEvent;
 
 protected:
-    sofa::helper::system::FileEventListener* m_filelistener ;
+    sofa::helper::system::FileEventListener* m_filelistener {nullptr} ;
 
-    PyObject *m_ScriptControllerClass {nullptr};      // class implemented in the script to use to instanciate the python controller
-    PyObject *m_ScriptControllerInstance {nullptr};   // instance of m_ScriptControllerClass
+    PyObject *m_ScriptControllerClass      {nullptr} ;   // class implemented in the script to use
+                                                         // to instanciate the python controller
+    PyObject *m_ScriptControllerInstance   {nullptr} ;   // instance of m_ScriptControllerClass
 
     // optionnal script entry points:
-    PyObject *m_Func_onKeyPressed {nullptr} ;
-    PyObject *m_Func_onKeyReleased {nullptr} ;
-    PyObject *m_Func_onMouseButtonLeft {nullptr} ;
-    PyObject *m_Func_onMouseButtonRight{nullptr} ;
-    PyObject *m_Func_onMouseButtonMiddle {nullptr} ;
-    PyObject *m_Func_onMouseWheel {nullptr} ;
-    PyObject *m_Func_onGUIEvent {nullptr} ;
-    PyObject *m_Func_onScriptEvent {nullptr} ;
-    PyObject* m_Func_onEvent {nullptr} ;
-    PyObject *m_Func_onBeginAnimationStep {nullptr} ;
-    PyObject *m_Func_onEndAnimationStep {nullptr} ;
-    PyObject *m_Func_onLoaded {nullptr} ;
-    PyObject *m_Func_createGraph {nullptr} ;
-    PyObject *m_Func_initGraph {nullptr} ;
-    PyObject *m_Func_bwdInitGraph {nullptr} ;
-    PyObject *m_Func_storeResetState {nullptr} ;
-    PyObject *m_Func_reset {nullptr} ;
-    PyObject *m_Func_cleanup {nullptr} ;
-    PyObject *m_Func_draw {nullptr} ;
-    PyObject *m_Func_onIdle {nullptr} ;
+    PyObject *m_Func_onKeyPressed          {nullptr} ;
+    PyObject *m_Func_onKeyReleased         {nullptr} ;
+    PyObject *m_Func_onMouseButtonLeft     {nullptr} ;
+    PyObject *m_Func_onMouseButtonRight    {nullptr} ;
+    PyObject *m_Func_onMouseButtonMiddle   {nullptr} ;
+    PyObject *m_Func_onMouseWheel          {nullptr} ;
+    PyObject *m_Func_onGUIEvent            {nullptr} ;
+    PyObject *m_Func_onScriptEvent         {nullptr} ;
+    PyObject* m_Func_onEvent               {nullptr} ;
+    PyObject *m_Func_onBeginAnimationStep  {nullptr} ;
+    PyObject *m_Func_onEndAnimationStep    {nullptr} ;
+    PyObject *m_Func_onLoaded              {nullptr} ;
+    PyObject *m_Func_createGraph           {nullptr} ;
+    PyObject *m_Func_initGraph             {nullptr} ;
+    PyObject *m_Func_bwdInitGraph          {nullptr} ;
+    PyObject *m_Func_storeResetState       {nullptr} ;
+    PyObject *m_Func_reset                 {nullptr} ;
+    PyObject *m_Func_cleanup               {nullptr} ;
+    PyObject *m_Func_draw                  {nullptr} ;
+    PyObject *m_Func_onIdle                {nullptr} ;
 };
 
 

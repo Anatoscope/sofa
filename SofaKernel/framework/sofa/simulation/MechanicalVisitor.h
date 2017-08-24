@@ -2281,13 +2281,14 @@ class SOFA_SIMULATION_CORE_API MechanicalPickParticlesWithTagsVisitor : public B
 public:
 	defaulttype::Vec3d rayOrigin, rayDirection;
 	double radius0, dRadius;
-	std::list<sofa::core::objectmodel::Tag> tags;
-	bool mustContainAllTags;
 	typedef std::multimap< double, std::pair<sofa::core::behavior::BaseMechanicalState*, int> > Particles;
 	Particles particles;
 	MechanicalPickParticlesWithTagsVisitor(const sofa::core::ExecParams* mparams, const defaulttype::Vec3d& origin, const defaulttype::Vec3d& direction, double r0=0.001, double dr=0.0, std::list<sofa::core::objectmodel::Tag> _tags = std::list<sofa::core::objectmodel::Tag>(), bool _mustContainAllTags = false)
-		: BaseMechanicalVisitor(mparams) , rayOrigin(origin), rayDirection(direction), radius0(r0), dRadius(dr), tags(_tags), mustContainAllTags(_mustContainAllTags)
+        : BaseMechanicalVisitor(mparams) , rayOrigin(origin), rayDirection(direction), radius0(r0), dRadius(dr)
 	{
+        mustContainAllTags = _mustContainAllTags;
+        for (sofa::core::objectmodel::Tag const& tag: _tags)
+            addTag(tag);
 	}
 
 	virtual Result fwdMechanicalState(simulation::Node* /*node*/, core::behavior::BaseMechanicalState* mm);
@@ -2307,14 +2308,57 @@ public:
 	/// get the closest pickable particle
 	void getClosestParticle( core::behavior::BaseMechanicalState*& mstate, unsigned int& indexCollisionElement, defaulttype::Vector3& point, SReal& rayLength );
 
-private:
-
-    // this function checks if the component must be included in the pick process according to its tags
-    bool isComponentTagIncluded(const core::behavior::BaseMechanicalState* mm);
-
 };
 
+/** Find mechanical particle closest to a given point on dof containing one tag or all provided by a tag list
+*
+*  A mechanical particle is defined as a 2D or 3D, position or rigid DOF
+*  which is linked to the free mechanical DOFs by mechanical mappings
+*/
+class SOFA_SIMULATION_CORE_API MechanicalClosestParticleWithTagsVisitor : public BaseMechanicalVisitor
+{
+public:
+    defaulttype::Vec3d point;
+    defaulttype::Vec3d origin;
+    SReal radius0;
+    SReal dRadius;
+    bool mustContainAllTags;
+    sofa::core::behavior::BaseMechanicalState* closestMechanicalState;
+    int closestParticleIndex;
+    SReal closestDistance;
+    MechanicalClosestParticleWithTagsVisitor(const sofa::core::ExecParams* mparams, const defaulttype::Vec3d& _point,
+                                             const defaulttype::Vec3d& _origin, SReal _radius0, SReal _dRadius,
+                                             std::list<sofa::core::objectmodel::Tag> _tags = std::list<sofa::core::objectmodel::Tag>(), bool _mustContainAllTags = false)
+        : BaseMechanicalVisitor(mparams) , point(_point), origin(_origin), radius0(_radius0),  dRadius(_dRadius)
+    {
+        mustContainAllTags = _mustContainAllTags;
+        for (sofa::core::objectmodel::Tag const& tag: _tags)
+            addTag(tag);
+        reset();
+    }
 
+    virtual Result fwdMechanicalState(simulation::Node* node, core::behavior::BaseMechanicalState* mm);
+    virtual Result fwdMappedMechanicalState(simulation::Node* node, core::behavior::BaseMechanicalState* mm);
+    virtual Result fwdMechanicalMapping(simulation::Node* node, core::BaseMapping* map);
+
+    /// Return a class name for this visitor
+    /// Only used for debugging / profiling purposes
+    virtual const char* getClassName() const { return "MechanicalClosestParticleWithTagsVisitor"; }
+
+    // reset the search result, call it before a new search
+    void reset() {
+        closestMechanicalState = nullptr;
+        closestParticleIndex = -1;
+        closestDistance  =std::numeric_limits<SReal>::infinity();
+    }
+
+#ifdef SOFA_DUMP_VISITOR_INFO
+    void setReadWriteVectors()
+    {
+    }
+#endif
+
+};
 
 /** Get vector size */
 class SOFA_SIMULATION_CORE_API MechanicalVSizeVisitor : public BaseMechanicalVisitor

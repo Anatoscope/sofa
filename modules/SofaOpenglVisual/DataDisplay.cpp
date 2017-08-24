@@ -75,6 +75,94 @@ void DataDisplay::updateVisual()
     computeNormals();
 }
 
+void DataDisplay::exportOBJ(std::string name, std::ostream *out, std::ostream */*mtl*/, int &vindex, int &nindex, int &/*tindex*/, int &/*count*/)
+{
+    *out << "g "<<name<<"\n";
+
+    const ResizableExtVector<Coord>& vposition = m_positions.getValue();
+    const ResizableExtVector<Deriv>& vnormals = m_vnormals.getValue();
+
+//    const VecCoord& x = this->read(sofa::core::ConstVecCoordId::position())->getValue();
+    const VecPointData &ptData = f_pointData.getValue();
+//    const VecCellData &triData = f_triangleData.getValue();
+//    const VecCellData &quadData = f_quadData.getValue();
+//    const VecPointData &pointTriData = f_pointTriangleData.getValue();
+//    const VecPointData &pointQuadData = f_pointQuadData.getValue();
+
+    helper::ColorMap::evaluator<Real> eval = colorMap->getEvaluator(d_currentMin.getValue(), d_currentMax.getValue());
+
+    int nbv = vposition.size();
+    for (int i=0; i<nbv; i++)
+    {
+        defaulttype::RGBAColor color = isnan(ptData[i]) ? f_colorNaN.getValue() : defaulttype::RGBAColor::fromVec4(eval(ptData[i]));
+        *out << "v "<< std::fixed <<vposition[i][0]<<' '<< std::fixed <<vposition[i][1]<<' '<< std::fixed <<vposition[i][2]<<' '<< std::fixed <<color[0]<<' '<< std::fixed <<color[1]<<' '<< std::fixed <<color[2]<<'\n';
+    }
+
+    int nbn = vnormals.size();
+    for (int i=0; i<nbn; i++)
+    {
+        *out << "vn "<< std::fixed << vnormals[i][0]<<' '<< std::fixed <<vnormals[i][1]<<' '<< std::fixed <<vnormals[i][2]<<'\n';
+    }
+
+    if (topology) {
+
+//        if (topology->getNbEdges() > 0) {
+//            const sofa::helper::vector<Edge> edges = topology->getEdges();
+//            for (unsigned int i = 0; i < edges.size() ; i++)
+//            {
+//                *out << "f";
+//                for (int j=0; j<2; j++)
+//                {
+//                    int i0 = edges[i][j];
+//                    int i_p = i0;
+//                    int i_n = i0;
+//                    *out << ' ' << i_p+vindex+1 << "//" << i_n+nindex+1;
+//                }
+//                *out << '\n';
+//            }
+//        }
+
+        if (topology->getNbTriangles() > 0) {
+            const sofa::helper::vector<Triangle> triangles = topology->getTriangles();
+            for (unsigned int i = 0; i < triangles.size() ; i++)
+            {
+                *out << "f";
+                for (int j=0; j<3; j++)
+                {
+                    int i0 = triangles[i][j];
+                    int i_p = i0;
+                    int i_n = i0;
+                    *out << ' ' << i_p+vindex+1 << "//" << i_n+nindex+1;
+                }
+                *out << '\n';
+            }
+        }
+
+        if (topology->getNbQuads() > 0) {
+            const sofa::helper::vector<Quad> quads = topology->getQuads();
+            for (unsigned int i = 0; i < quads.size() ; i++)
+            {
+                *out << "f";
+                for (int j=0; j<4; j++)
+                {
+                    int i0 = quads[i][j];
+                    int i_p = i0;
+                    int i_n = i0;
+                    *out << ' ' << i_p+vindex+1 << "//" << i_n+nindex+1;
+                }
+                *out << '\n';
+            }
+        }
+
+    } else {
+        msg_warning("DataDisplay") << "Obj exported without topology";
+    }
+
+    *out << sendl;
+    vindex+=nbv;
+    nindex+=nbn;
+}
+
 void DataDisplay::drawVisual(const core::visual::VisualParams* vparams)
 {
     if (!vparams->displayFlags().getShowVisualModels()) return;
@@ -236,6 +324,7 @@ void DataDisplay::drawVisual(const core::visual::VisualParams* vparams)
         {
             // Triangles
             int nbTriangles = topology->getNbTriangles();
+            glBegin(GL_TRIANGLES);
             for (int i=0; i<nbTriangles; i++)
             {
                 Vec4f color = isnan(triData[i])
@@ -244,11 +333,12 @@ void DataDisplay::drawVisual(const core::visual::VisualParams* vparams)
                 const Triangle& t = topology->getTriangle(i);
 
                 glMaterialfv(GL_FRONT,GL_DIFFUSE,color.ptr());
-                vparams->drawTool()->drawTriangle(
+                vparams->drawTool()->internalDrawTriangle(
                     x[ t[0] ], x[ t[1] ], x[ t[2] ],
                     m_normals[ t[0] ], m_normals[ t[1] ], m_normals[ t[2] ],
                     color, color, color);
             }
+            glEnd();
         }
         else if( !pointTriData.empty() )
         {
@@ -287,6 +377,7 @@ void DataDisplay::drawVisual(const core::visual::VisualParams* vparams)
         if( !quadData.empty() )
         {
             int nbQuads = topology->getNbQuads();
+            glBegin(GL_QUADS);
             for (int i=0; i<nbQuads; i++)
             {
                 Vec4f color = isnan(quadData[i])
@@ -294,11 +385,12 @@ void DataDisplay::drawVisual(const core::visual::VisualParams* vparams)
                     : defaulttype::RGBAColor::fromVec4(eval(quadData[i]));
                 const Quad& t = topology->getQuad(i);
                 glMaterialfv(GL_FRONT,GL_DIFFUSE,color.ptr());
-                vparams->drawTool()->drawQuad(
+                vparams->drawTool()->internalDrawQuad(
                     x[ t[0] ], x[ t[1] ], x[ t[2] ], x[ t[3] ],
                     m_normals[ t[0] ], m_normals[ t[1] ], m_normals[ t[2] ], m_normals[ t[3] ],
                     color, color, color, color);
             }
+            glEnd();
         }
         else if( !pointQuadData.empty() )
         {
@@ -345,13 +437,15 @@ void DataDisplay::drawVisual(const core::visual::VisualParams* vparams)
         helper::ColorMap::evaluator<Real> eval = colorMap->getEvaluator(min, max);
         // Just the points
         glPointSize(10);
+        glBegin(GL_POINTS);
         for (unsigned int i=0; i<x.size(); ++i)
         {
             Vec4f color = isnan(ptData[i])
                 ? f_colorNaN.getValue()
                 : defaulttype::RGBAColor::fromVec4(eval(ptData[i]));
-            vparams->drawTool()->drawPoint(x[i], color);
+            vparams->drawTool()->internalDrawPoint(x[i], color);
         }
+        glEnd();
 
     } else if (bDrawPointData) {
         helper::ColorMap::evaluator<Real> eval = colorMap->getEvaluator(min, max);

@@ -55,6 +55,13 @@ template <class DataTypes>
 void MeshSplittingEngine<DataTypes>::update()
 {
     updateAllInputsIfDirty();
+
+    SeqEdges const& inEdges = inputEdges.getValue();
+    SeqTriangles const& inTriangles = inputTriangles.getValue();
+    SeqQuads const& inQuads = inputQuads.getValue();
+    SeqTetrahedra const& inTets = inputTets.getValue();
+    SeqHexahedra const& inHexa = inputHexa.getValue();
+
     cleanDirty();
 
     helper::ReadAccessor<Data< SeqPositions > > i_pos(this->inputPosition);
@@ -68,11 +75,11 @@ void MeshSplittingEngine<DataTypes>::update()
     for(int i=nb-1;i>=0;--i) // use reverse order to prioritize the first ROIs
     {
         parseIndices(indPairs.wref(), indices[i]->getValue(), i);
-        parseIndices(indPairs.wref(), edgeIndices[i]->getValue(), inputEdges.getValue(), i);
-        parseIndices(indPairs.wref(), triangleIndices[i]->getValue(), inputTriangles.getValue(), i);
-        parseIndices(indPairs.wref(), quadIndices[i]->getValue(), inputQuads.getValue(), i);
-        parseIndices(indPairs.wref(), tetrahedronIndices[i]->getValue(), inputTets.getValue(), i);
-        parseIndices(indPairs.wref(), hexahedronIndices[i]->getValue(), inputHexa.getValue(), i);
+        parseIndices(indPairs.wref(), edgeIndices[i]->getValue(), inEdges, i);
+        parseIndices(indPairs.wref(), triangleIndices[i]->getValue(), inTriangles, i);
+        parseIndices(indPairs.wref(), quadIndices[i]->getValue(), inQuads, i);
+        parseIndices(indPairs.wref(), tetrahedronIndices[i]->getValue(), inTets, i);
+        parseIndices(indPairs.wref(), hexahedronIndices[i]->getValue(), inHexa, i);
     }
 
     // add positions
@@ -85,6 +92,38 @@ void MeshSplittingEngine<DataTypes>::update()
         o_pos[indPairs[2*i]]->push_back(i_pos[i]);
     }
     for(size_t i=0;i<nb+1;++i) position[i]->endEdit();
+
+    if (doOutputTopology.getValue()) {
+        // add topology
+
+        // map to convert from mesh indices to sub mesh indices
+        std::vector<IndexToIndexMap> meshToSub(nb+1);
+        for (std::size_t i=0; i_pos.size();++i)
+            meshToSub[indPairs[2*i]][i] = indPairs[2*i+1];
+
+        std::vector<SeqEdges*> o_edges(nb+1);
+        std::vector<SeqTriangles*> o_triangles(nb+1);
+        std::vector<SeqQuads*> o_quads(nb+1);
+        for(size_t i=0;i<nb+1;++i) {
+            o_edges[i]=edges[i]->beginWriteOnly();
+            o_edges[i]->clear();
+            o_triangles[i]=triangles[i]->beginWriteOnly();
+            o_triangles[i]->clear();
+            o_quads[i]=quads[i]->beginWriteOnly();
+            o_quads[i]->clear();
+        }
+
+        for(size_t i=0;i<nb+1;++i) {
+            fillTopology(*(o_edges[i]), inEdges, meshToSub[i]);
+//            fillTopology(o_edges[i], inputEdges, meshToSub[i]);
+        }
+
+        for(size_t i=0;i<nb+1;++i) {
+            edges[i]->endEdit();
+            triangles[i]->endEdit();
+            quads[i]->endEdit();
+        }
+    }
 
     msg_info() <<this->name<<":"<<"updated" ;
 }

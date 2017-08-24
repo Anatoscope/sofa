@@ -18,12 +18,14 @@ namespace mapping
 
 
 /**
- Maps two dofs to their spatial position Addition:
+ Maps two dofs to their spatial position (weighted) Addition:
 
- (p1, p2) -> p1.t + p2.t
+ (p1, p2) -> w1*p1.t + w2*p2.t
  (with .t the translation obtained by DataTypes::getCPos)
+ (with w1,w2, user specified weights, =1 by default)
 
- This is used to compute a vector end position from its start position and its direction.
+ This is used to compute a vector end position from its start position and its direction
+ or to map linearly interpolated particles.
 
  @author Matthieu Nesme
  @date 2016
@@ -41,6 +43,8 @@ class SOFA_Compliant_API AdditionMapping : public ConstantAssembledMapping<TIn, 
     typedef helper::vector< index_pair > pairs_type;
 
     Data< pairs_type > pairs;
+    Data< SReal > d_w1;
+    Data< SReal > d_w2;
     Data< SReal > d_showObjectScale; ///< drawing size
     Data< defaulttype::RGBAColor > d_color; ///< drawing color
 
@@ -49,6 +53,8 @@ class SOFA_Compliant_API AdditionMapping : public ConstantAssembledMapping<TIn, 
 
     AdditionMapping()
         : pairs( initData(&pairs, "pairs", "index pairs for computing additions") )
+        , d_w1(initData(&d_w1, SReal(1), "w1", "weight of the first dof in pairs"))
+        , d_w2(initData(&d_w2, SReal(1), "w2", "weight of the second dof in pairs"))
         , d_showObjectScale(initData(&d_showObjectScale, SReal(-1), "showObjectScale", "Scale for object display"))
         , d_color(initData(&d_color, defaulttype::RGBAColor(1,1,0,1), "showColor", "Color for object display. (default=[1.0,1.0,0.0,1.0])"))
     {}
@@ -74,9 +80,10 @@ class SOFA_Compliant_API AdditionMapping : public ConstantAssembledMapping<TIn, 
         const pairs_type& p = pairs.getValue();
         assert( !p.empty() );
 
+        SReal w1 = d_w1.getValue() , w2 = d_w2.getValue();
         for( unsigned j = 0, m = p.size(); j < m; ++j)
         {
-            out[j] = TIn::getCPos( in[p[j][0]] ) + TIn::getCPos( in[p[j][1]] );
+            out[j] = TIn::getCPos( in[p[j][0]] )*w1 + TIn::getCPos( in[p[j][1]] )*w2;
         }
     }
 
@@ -86,6 +93,7 @@ class SOFA_Compliant_API AdditionMapping : public ConstantAssembledMapping<TIn, 
         assert( !p.empty() );
 
         typename self::jacobian_type::CompressedMatrix& J = this->jacobian.compressedMatrix;
+        SReal w1 = d_w1.getValue() , w2 = d_w2.getValue();
 
         J.resize( Nout * p.size(), Nin * in.size());
         J.reserve( p.size()*Nout*2 );
@@ -100,17 +108,17 @@ class SOFA_Compliant_API AdditionMapping : public ConstantAssembledMapping<TIn, 
                 // needs to be inserted in the right order in the eigen matrix
                 if(p[k][1] == p[k][0])
                 {
-                    J.insertBack(row, p[k][0] * Nin + i ) = 2;
+                    J.insertBack(row, p[k][0] * Nin + i ) = w1+w2;
                 }
                 else if( p[k][1] < p[k][0] )
                 {
-                    J.insertBack(row, p[k][1] * Nin + i ) = 1;
-                    J.insertBack(row, p[k][0] * Nin + i ) = 1;
+                    J.insertBack(row, p[k][1] * Nin + i ) = w2;
+                    J.insertBack(row, p[k][0] * Nin + i ) = w1;
                 }
                 else
                 {
-                    J.insertBack(row, p[k][0] * Nin + i ) = 1;
-                    J.insertBack(row, p[k][1] * Nin + i ) = 1;
+                    J.insertBack(row, p[k][0] * Nin + i ) = w1;
+                    J.insertBack(row, p[k][1] * Nin + i ) = w2;
                 }
             }
         }
@@ -252,8 +260,9 @@ class SOFA_Compliant_API AdditionMapping : public ConstantAssembledMapping<TIn, 
             const pairs_type& p = pairs.getValue();
             assert( !p.empty() );
 
+            SReal w1 = d_w1.getValue() , w2 = d_w2.getValue();
             for( unsigned j = 0, m = p.size(); j < m; ++j) {
-                out[j] = TIn::getCPos( in[1] [p[j][1]] ) + TIn::getCPos( in[0] [p[j][0]] );
+                out[j] = TIn::getCPos( in[1] [p[j][1]] )*w2 + TIn::getCPos( in[0] [p[j][0]] )*w1;
             }
 
         }
@@ -263,19 +272,23 @@ class SOFA_Compliant_API AdditionMapping : public ConstantAssembledMapping<TIn, 
         typedef helper::vector< index_pair > pairs_type;
 
         Data< pairs_type > pairs;
+        Data< SReal > d_w1;
+        Data< SReal > d_w2;
 
     protected:
 
         AdditionMultiMapping()
-            : pairs( initData(&pairs, "pairs", "index pairs for computing deltas") ) {
-
+            : pairs( initData(&pairs, "pairs", "index pairs for computing additions") )
+            , d_w1(initData(&d_w1, SReal(1), "w1", "weight of the first dof in pairs"))
+            , d_w2(initData(&d_w2, SReal(1), "w2", "weight of the second dof in pairs")) {
         }
 
         void assemble(const helper::vector<typename self::in_pos_type>& in ) {
-
             const pairs_type& p = pairs.getValue();
+            assert( in.size() == 2 );
             assert( !p.empty() );
 
+            SReal w[2] = {d_w1.getValue() , d_w2.getValue()};
             for(unsigned i = 0, n = in.size(); i < n; ++i) {
 
                 typename Inherit1::jacobian_type::CompressedMatrix& J = this->jacobian(i).compressedMatrix;
@@ -284,7 +297,7 @@ class SOFA_Compliant_API AdditionMapping : public ConstantAssembledMapping<TIn, 
                 J.reserve( p.size()*Nout );
 
                 for(unsigned k = 0, n = p.size(); k < n; ++k) {
-                    write_block(J, k, p[k][i], 1);
+                    write_block(J, k, p[k][i], w[i]);
                 }
 
                 J.finalize();

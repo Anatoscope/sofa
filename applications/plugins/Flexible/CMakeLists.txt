@@ -98,7 +98,11 @@ set(HEADER_FILES
     strainMapping/LinearStrainMapping.h
     types/AffineComponents.h
     types/AffineTypes.h
-    types/ComponentSpecializations.cpp.inl
+    types/ComponentSpecializations_constraint.cpp.inl
+    types/ComponentSpecializations_core.cpp.inl
+    types/ComponentSpecializations_forcefield.cpp.inl
+    types/ComponentSpecializations_mapping.cpp.inl
+    types/ComponentSpecializations_misc.cpp.inl
     types/ComponentSpecializations.h.inl
     types/ComponentSpecializationsDefines.h
     types/ComponentSpecializationsUndef.h
@@ -167,9 +171,17 @@ set(SOURCE_FILES
     strainMapping/PrincipalStretchesMapping.cpp
     strainMapping/RelativeStrainMapping.cpp
     strainMapping/LinearStrainMapping.cpp
-    types/AffineComponents.cpp
+    types/AffineComponents_constraint.cpp
+    types/AffineComponents_core.cpp
+    types/AffineComponents_forcefield.cpp
+    types/AffineComponents_mapping.cpp
+    types/AffineComponents_misc.cpp
     types/DeformationGradientTypes.cpp
-    types/QuadraticComponents.cpp
+    types/QuadraticComponents_constraint.cpp
+    types/QuadraticComponents_core.cpp
+    types/QuadraticComponents_forcefield.cpp
+    types/QuadraticComponents_mapping.cpp
+    types/QuadraticComponents_misc.cpp
     types/RigidConstraint.cpp
     types/StrainTypes.cpp
 )
@@ -279,9 +291,6 @@ if (SOFA_NINJA_BUILD_POOLS)
     set_property(TARGET ${PROJECT_NAME} PROPERTY JOB_POOL_COMPILE flexible_pool)
 endif()
 
-#if(UNIX)
-#    target_link_libraries(${PROJECT_NAME} pthread)
-#endif()
 target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>")
 target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>")
 target_include_directories(${PROJECT_NAME} PUBLIC "$<INSTALL_INTERFACE:include>")

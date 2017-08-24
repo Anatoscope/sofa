@@ -624,16 +624,16 @@ bool SceneColladaLoader::readDAE (std::ifstream &/*file*/, const char* /*filenam
                             Node::SPtr labelNode = currentSubNode->createChild("label");
                             engine::MeshToImageEngine<defaulttype::ImageB>::SPtr M2I = sofa::core::objectmodel::New<engine::MeshToImageEngine<defaulttype::ImageB> >();
                             M2I->setName( "rasterizer" );
-                            M2I->voxelSize.setValue( helper::vector<SReal>(1,vsize) );
-                            M2I->padSize.setValue(2);
-                            M2I->rotateImage.setValue(false);
-                            M2I->f_nbMeshes.setValue(1);
+                            M2I->d_voxelSize.setValue( helper::vector<SReal>(1,vsize) );
+                            M2I->d_padSize.setValue( helper::vector<unsigned int>(1,2) );
+                            M2I->d_rotateImage.setValue(false);
+                            M2I->d_nbMeshes.setValue(1);
 //                            M2I->createInputMeshesData();
-                            M2I->backgroundValue.setValue(0);
+                            M2I->d_backgroundValue.setValue(0);
                             engine::MeshToImageEngine<defaulttype::ImageB>::SeqValues values(1,1);
-                            (*M2I->vf_values[0]).setValue(values);
-                            (*M2I->vf_positions[0]).setParent( &currentMechanicalObject->x );
-                            (*M2I->vf_triangles[0]).setParent( &currentMeshTopology->seqTriangles );
+                            (*M2I->vd_values[0]).setValue(values);
+                            (*M2I->vd_positions[0]).setParent( &currentMechanicalObject->x );
+                            (*M2I->vd_triangles[0]).setParent( &currentMeshTopology->seqTriangles );
                             labelNode->addObject(M2I);
 
                             ImageContainer<defaulttype::ImageB>::SPtr IC0 = sofa::core::objectmodel::New<ImageContainer<defaulttype::ImageB> >();
@@ -659,10 +659,10 @@ bool SceneColladaLoader::readDAE (std::ifstream &/*file*/, const char* /*filenam
 
                                 engine::MeshToImageEngine<defaulttype::ImageD>::SPtr M2I = sofa::core::objectmodel::New<engine::MeshToImageEngine<defaulttype::ImageD> >();
                                 M2I->setName( "rasterizer" );
-                                M2I->voxelSize.setValue( helper::vector<SReal>(1,vsize) );
-                                M2I->padSize.setValue(2);
-                                M2I->rotateImage.setValue(false);
-                                M2I->f_nbMeshes.setValue(1);
+                                M2I->d_voxelSize.setValue( helper::vector<SReal>(1,vsize) );
+                                M2I->d_padSize.setValue( helper::vector<unsigned int>(1,2) );
+                                M2I->d_rotateImage.setValue(false);
+                                M2I->d_nbMeshes.setValue(1);
 //                                M2I->createInputMeshesData();
 
                                 std::stringstream nameStream(meshName);
@@ -695,10 +695,10 @@ bool SceneColladaLoader::readDAE (std::ifstream &/*file*/, const char* /*filenam
 
 
 
-                                (*M2I->vf_values[0]).setValue(values);
-                                M2I->backgroundValue.setValue(-1);
-                                (*M2I->vf_positions[0]).setParent( &currentMechanicalObject->x );
-                                (*M2I->vf_triangles[0]).setParent( &currentMeshTopology->seqTriangles );
+                                (*M2I->vd_values[0]).setValue(values);
+                                M2I->d_backgroundValue.setValue(-1);
+                                (*M2I->vd_positions[0]).setParent( &currentMechanicalObject->x );
+                                (*M2I->vd_triangles[0]).setParent( &currentMeshTopology->seqTriangles );
 
 
                                 dofNode->addObject(M2I);

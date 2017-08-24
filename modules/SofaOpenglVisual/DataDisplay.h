@@ -45,8 +45,9 @@ class SOFA_OPENGL_VISUAL_API DataDisplay : public core::visual::VisualModel, pub
 public:
     SOFA_CLASS2(DataDisplay, core::visual::VisualModel, ExtVec3fState);
 
+    typedef core::topology::BaseMeshTopology::Edge Edge;
     typedef core::topology::BaseMeshTopology::Triangle Triangle;
-    typedef core::topology::BaseMeshTopology::Quad     Quad;
+    typedef core::topology::BaseMeshTopology::Quad Quad;
 
     typedef helper::vector<Real> VecPointData;
     typedef helper::vector<Real> VecCellData;
@@ -70,6 +71,8 @@ public:
     void init();
     void drawVisual(const core::visual::VisualParams* vparams);
     void updateVisual();
+
+    virtual void exportOBJ(std::string name, std::ostream* out, std::ostream* mtl, int& vindex, int& nindex, int& tindex, int& count);
 
     virtual bool insertInNode( core::objectmodel::BaseNode* node ) { Inherit1::insertInNode(node); Inherit2::insertInNode(node); return true; }
     virtual bool removeInNode( core::objectmodel::BaseNode* node ) { Inherit1::removeInNode(node); Inherit2::removeInNode(node); return true; }

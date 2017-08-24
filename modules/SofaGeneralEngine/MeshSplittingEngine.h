@@ -23,12 +23,15 @@
 #define SOFA_COMPONENT_ENGINE_MeshSplittingEngine_H
 #include "config.h"
 
+#include <map>
+
 #include <sofa/core/DataEngine.h>
 #include <sofa/core/objectmodel/BaseObject.h>
 #include <sofa/defaulttype/Vec.h>
 #include <sofa/defaulttype/Vec3Types.h>
 #include <sofa/core/topology/BaseMeshTopology.h>
 #include <sofa/helper/vectorData.h>
+#include <array>
 
 namespace sofa
 {
@@ -54,6 +57,7 @@ public:
     typedef typename DataTypes::Coord Coord;
     typedef typename DataTypes::VecCoord VecCoord;
     typedef VecCoord SeqPositions;
+    typedef typename core::topology::BaseMeshTopology::index_type index_type;
     typedef typename core::topology::BaseMeshTopology::Edge Edge;
     typedef typename core::topology::BaseMeshTopology::SeqEdges SeqEdges;
     typedef typename core::topology::BaseMeshTopology::Triangle Triangle;
@@ -66,6 +70,8 @@ public:
     typedef typename core::topology::BaseMeshTopology::SeqHexahedra SeqHexahedra;
     typedef typename core::topology::BaseMeshTopology::PointID PointID;
     typedef typename core::topology::BaseMeshTopology::SetIndices SetIndices;
+
+    typedef std::map<index_type, index_type> IndexToIndexMap;
 
     /// inputs
     Data< SeqPositions > inputPosition;
@@ -81,10 +87,14 @@ public:
     helper::vectorData<SetIndices> quadIndices;
     helper::vectorData<SetIndices> tetrahedronIndices;
     helper::vectorData<SetIndices> hexahedronIndices;
+    Data< bool > doOutputTopology;
 
     /// outputs
-    Data< helper::vector<unsigned int> > indexPairs;
+    Data< helper::vector<index_type> > indexPairs;
     helper::vectorData<SeqPositions> position;
+    helper::vectorData<SeqEdges> edges;
+    helper::vectorData<SeqTriangles> triangles;
+    helper::vectorData<SeqQuads> quads;
 
     virtual std::string getTemplateName() const    { return templateName(this);    }
     static std::string templateName(const MeshSplittingEngine<DataTypes>* = NULL) { return DataTypes::Name();    }
@@ -105,8 +115,12 @@ protected:
       , quadIndices(this, "quadIndices", "input quad indices", helper::DataEngineInput)
       , tetrahedronIndices(this, "tetrahedronIndices", "input tetrahedron indices", helper::DataEngineInput)
       , hexahedronIndices(this, "hexahedronIndices", "input hexahedron indices", helper::DataEngineInput)
+      , doOutputTopology(initData(&doOutputTopology, false, "doOutputTopologies", "output or not topologies for each mesh"))
       , indexPairs( initData( &indexPairs, helper::vector<unsigned>(), "indexPairs", "couples for input vertices: ROI index + index in the ROI"))
       , position(this, "position", "output vertices", helper::DataEngineOutput)
+      , edges(this, "edges", "output edges", helper::DataEngineOutput)
+      , triangles(this, "triangles", "output triangles", helper::DataEngineOutput)
+      , quads(this, "quads", "output quads", helper::DataEngineOutput)
     {
         resizeData();
     }
@@ -114,6 +128,29 @@ protected:
     virtual ~MeshSplittingEngine()
     {
 
+    }
+
+    template <class Shape>
+    void fillTopology(helper::vector<Shape>& output,
+                      helper::vector<Shape> const& input, IndexToIndexMap const& indexMap)
+    {
+        std::array<IndexToIndexMap::const_iterator,Shape::static_size> shapeIndices;
+        bool shapeInSubMesh;
+        for (Shape const& shape: input) {
+            shapeInSubMesh=true;
+            for (index_type i=0; i<Shape::static_size; ++i) {
+                shapeIndices[i] = indexMap.find(shape[i]);
+                if (indexMap.end() == shapeIndices[i]) {
+                    shapeInSubMesh=false;
+                    break;
+                }
+            }
+            if (!shapeInSubMesh)
+                continue;
+            output.push_back(Shape());
+            for (index_type i=0; i<Shape::static_size; ++i)
+                output.back()[i] = shapeIndices[i]->second;
+        }
     }
 
 
@@ -128,6 +165,7 @@ public:
         addInput(&inputHexa);
         addInput(&nbInputs);
         addOutput(&indexPairs);
+        addOutput(&doOutputTopology);
         resizeData();
 
         setDirtyValue();
@@ -172,6 +210,11 @@ protected:
         tetrahedronIndices.resize(nbInputs.getValue());
         hexahedronIndices.resize(nbInputs.getValue());
         position.resize(nbInputs.getValue()+1); // one more to store the remaining sub mesh
+        if (doOutputTopology.getValue()) {
+            edges.resize(nbInputs.getValue()+1);
+            triangles.resize(nbInputs.getValue()+1);
+            quads.resize(nbInputs.getValue()+1);
+        }
     }
 
 };

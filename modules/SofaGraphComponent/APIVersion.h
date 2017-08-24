@@ -15,18 +15,17 @@
 * You should have received a copy of the GNU Lesser General Public License    *
 * along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *******************************************************************************
-* Authors: The SOFA Team and external contributors (see Authors.txt)          *
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#define SOFA_COMPONENT_MAPPING_LAPAROSCOPICRIGIDMAPPING_CPP
-#include <SofaGeneralRigid/LaparoscopicRigidMapping.inl>
+/******************************************************************************
+*  Contributors:                                                              *
+*  - damien.marchal@univ-lille1.fr                                            *
+******************************************************************************/
+#include <sofa/core/objectmodel/BaseObject.h>
+using sofa::core::objectmodel::BaseObject ;
 
-#include <sofa/core/ObjectFactory.h>
-
-#include <sofa/defaulttype/RigidTypes.h>
-#include <sofa/defaulttype/LaparoscopicRigidTypes.h>
-
+#include "config.h"
 
 namespace sofa
 {
@@ -34,23 +33,30 @@ namespace sofa
 namespace component
 {
 
-namespace mapping
+namespace _apiversion_
 {
 
-SOFA_DECL_CLASS(LaparoscopicRigidMapping)
+class SOFA_GRAPH_COMPONENT_API APIVersion : public BaseObject
+{
 
-using namespace sofa::defaulttype;
+public:
+    SOFA_CLASS(APIVersion, BaseObject);
 
-// Register in the Factory
-int LaparoscopicRigidMappingClass = core::RegisterObject("TODO-LaparoscopicRigidMappingClass")
-        .add< LaparoscopicRigidMapping< LaparoscopicRigidTypes, RigidTypes > >()
-        ;
+    const std::string& getApiLevel() ;
+    virtual void init();
 
-template class SOFA_GENERAL_RIGID_API LaparoscopicRigidMapping< LaparoscopicRigidTypes, RigidTypes >;
+protected:
+    APIVersion() ;
+    virtual ~APIVersion() ;
+    void checkInputData() ;
+private:
+    Data<std::string>  d_level ;
+};
 
-} // namespace mapping
+} // namespace _apiversion_
+
+using _apiversion_::APIVersion ;
 
 } // namespace component
 
 } // namespace sofa
-

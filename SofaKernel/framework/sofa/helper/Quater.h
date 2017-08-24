@@ -181,6 +181,7 @@ public:
 
     defaulttype::Vec<3,Real> quatToRotationVector() const;
 
+    /// (rad)
     defaulttype::Vec<3,Real> toEulerVector() const;
 
 
@@ -228,7 +229,7 @@ public:
         }
     }
 
-    /// Create a quaternion from Euler angles
+    /// Create a quaternion from Euler angles (rad)
     static Quater createQuaterFromEuler( defaulttype::Vec<3,Real> v)
     {
         Real quat[4];      Real a0 = v.elems[0];
@@ -243,7 +244,7 @@ public:
     }
 
 
-    /// Create a quaternion from Euler angles
+    /// Create a quaternion from Euler angles (rad)
     static Quater fromEuler( Real alpha, Real beta, Real gamma ){
         return createQuaterFromEuler( defaulttype::Vec<3,Real>(alpha, beta, gamma) );
     }

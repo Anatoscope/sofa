@@ -175,6 +175,15 @@ public:
                 this->add( r + row*Nout, c + col*Nin, b[r][c] );
     }
 
+    /// Schedule the addition of the block at the given place. Scheduled additions must be finalized using function compress().
+    /// The block is a scalar matrix (a multiple of Identity)
+    void addScalarBlock( unsigned row, unsigned col, const Real& b )
+    {
+        assert( Nout==Nin ); // only valid for square blocks
+        for( unsigned r=0; r<Nout; r++ )
+                this->add( r + row*Nout, r + col*Nin, b );
+    }
+
     /// Insert ASAP in the compressed matrix. There must be no value at this place already.
     /// @warning basically works only if there is only one block on the row
     /// @warning empty rows should be created with a call to beginBlockRow + endSortedBlockRow

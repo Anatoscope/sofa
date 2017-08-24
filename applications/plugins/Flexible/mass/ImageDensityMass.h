@@ -184,10 +184,14 @@ protected:
 #ifndef SOFA_FLOAT
 extern template class SOFA_Flexible_API ImageDensityMass<defaulttype::Vec3dTypes,core::behavior::ShapeFunctiond,defaulttype::Mat3x3d>; // volume FEM (tetra, hexa)
 //extern template class SOFA_Flexible_API ImageDensityMass<defaulttype::Rigid3dTypes,core::behavior::ShapeFunctiond,defaulttype::Rigid3dMass>; // rigid frame
+extern template class SOFA_Flexible_API ImageDensityMass<defaulttype::Affine3dTypes,core::behavior::ShapeFunctiond,defaulttype::Affine3dMass>;
+extern template class SOFA_Flexible_API ImageDensityMass<defaulttype::Quadratic3dTypes,core::behavior::ShapeFunctiond,defaulttype::Quadratic3dMass>;
 #endif
 #ifndef SOFA_DOUBLE
 extern template class SOFA_Flexible_API ImageDensityMass<defaulttype::Vec3fTypes,core::behavior::ShapeFunctionf,defaulttype::Mat3x3f>;
 //extern template class SOFA_Flexible_API ImageDensityMass<defaulttype::Rigid3fTypes,core::behavior::ShapeFunctionf,defaulttype::Rigid3fMass>; // rigid frame
+extern template class SOFA_Flexible_API ImageDensityMass<defaulttype::Affine3fTypes,core::behavior::ShapeFunctionf,defaulttype::Affine3fMass>;
+extern template class SOFA_Flexible_API ImageDensityMass<defaulttype::Quadratic3fTypes,core::behavior::ShapeFunctionf,defaulttype::Quadratic3fMass>;
 #endif
 #endif
 

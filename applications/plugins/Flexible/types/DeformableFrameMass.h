@@ -4,6 +4,7 @@
 
 #include <sofa/defaulttype/Vec.h>
 #include <sofa/defaulttype/Mat.h>
+#include <sofa/helper/logging/Messaging.h>
 
 namespace sofa
 {
@@ -123,6 +124,7 @@ namespace defaulttype
         /// operator to cast to const Real, supposing the mass is uniform (and so diagonal)
         operator const Real() const
         {
+            msg_warning("DeformableFrameMass")<<"cast to scalar is not implemented";
             return (*this)(0,0);
         }
 
@@ -157,7 +159,7 @@ namespace defaulttype
     template<class Deriv,int _spatial_dimensions,int _dim,typename _Real>
     Deriv operator*(const DeformableFrameMass<_spatial_dimensions, _dim,_Real>& m,const Deriv& d)
     {
-        return d * m;
+        return m*d;
     }
 
 

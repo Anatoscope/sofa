@@ -29,9 +29,12 @@ using namespace sofa;
 using namespace sofa::core;
 using namespace sofa::core::objectmodel;
 
+static BaseMapping* get_basemapping(PyObject* self) {
+    return sofa::py::unwrap<BaseMapping>(self);
+}
 
 
-extern "C" PyObject * BaseMapping_getFrom(PyObject * self, PyObject * /*args*/)
+static PyObject * BaseMapping_getFrom(PyObject * self, PyObject * /*args*/)
 {
     BaseMapping* mapping  = get_basemapping( self );
 
@@ -45,7 +48,7 @@ extern "C" PyObject * BaseMapping_getFrom(PyObject * self, PyObject * /*args*/)
     return list;
 }
 
-extern "C" PyObject * BaseMapping_getTo(PyObject * self, PyObject * /*args*/)
+static PyObject * BaseMapping_getTo(PyObject * self, PyObject * /*args*/)
 {
     BaseMapping* mapping  = get_basemapping( self );
 
@@ -61,22 +64,20 @@ extern "C" PyObject * BaseMapping_getTo(PyObject * self, PyObject * /*args*/)
 
 
 
-extern "C" PyObject * BaseMapping_setFrom(PyObject * self, PyObject * args)
+static PyObject * BaseMapping_setFrom(PyObject * self, PyObject * args)
 {
     BaseMapping* mapping  = get_basemapping( self );
 
     PyObject* pyFrom;
     if (!PyArg_ParseTuple(args, "O",&pyFrom))
     {
-        SP_MESSAGE_ERROR( "BaseMapping_setFrom: a BaseState* is required" );
-        Py_RETURN_NONE;
+        return NULL;
     }
 
-    BaseState* from = get_basestate( pyFrom );
+    BaseState* from = sofa::py::unwrap<BaseState>( pyFrom );
     if (!from)
     {
-        SP_MESSAGE_ERROR( "BaseMapping_setFrom: is not a BaseState*" );
-        PyErr_BadArgument();
+        PyErr_SetString(PyExc_TypeError, "Invalid argument, a BaseState* object is expected. " ) ;
         return NULL;
     }
 
@@ -85,18 +86,19 @@ extern "C" PyObject * BaseMapping_setFrom(PyObject * self, PyObject * args)
     Py_RETURN_NONE;
 }
 
-extern "C" PyObject * BaseMapping_setTo(PyObject * self, PyObject * args)
+static PyObject * BaseMapping_setTo(PyObject * self, PyObject * args)
 {
     BaseMapping* mapping  = get_basemapping( self );
 
     PyObject* pyTo;
-    if (!PyArg_ParseTuple(args, "O",&pyTo))
-        Py_RETURN_NONE;
+    if (!PyArg_ParseTuple(args, "O",&pyTo)) {
+        return NULL;
+    }
 
-    BaseState* to = get_basestate( pyTo );
+    BaseState* to = sofa::py::unwrap<BaseState>( pyTo );
     if (!to)
     {
-        PyErr_BadArgument();
+        PyErr_SetString(PyExc_TypeError, "Invalid argument, a BaseState* object is expected. " ) ;
         return NULL;
     }
 
@@ -105,7 +107,7 @@ extern "C" PyObject * BaseMapping_setTo(PyObject * self, PyObject * args)
     Py_RETURN_NONE;
 }
 
-extern "C" PyObject * BaseMapping_apply(PyObject * self, PyObject * /*args*/)
+static PyObject * BaseMapping_apply(PyObject * self, PyObject * /*args*/)
 {
     BaseMapping* mapping  = get_basemapping( self );
 
@@ -114,7 +116,7 @@ extern "C" PyObject * BaseMapping_apply(PyObject * self, PyObject * /*args*/)
     Py_RETURN_NONE;
 }
 
-extern "C" PyObject * BaseMapping_applyJ(PyObject * self, PyObject * /*args*/)
+static PyObject * BaseMapping_applyJ(PyObject * self, PyObject * /*args*/)
 {
     BaseMapping* mapping  = get_basemapping( self );
 
@@ -124,35 +126,31 @@ extern "C" PyObject * BaseMapping_applyJ(PyObject * self, PyObject * /*args*/)
 }
 
 
-extern "C" PyObject * BaseMapping_applyJT(PyObject * self, PyObject * /*args*/)
+static PyObject * BaseMapping_applyJT(PyObject * self, PyObject * /*args*/)
 {
     BaseMapping* mapping  = get_basemapping( self );
 
     mapping->applyJT(MechanicalParams::defaultInstance(),VecDerivId::force(),ConstVecDerivId::force());
-    
+
     Py_RETURN_NONE;
 }
 
 
-extern "C" PyObject * BaseMapping_applyDJT(PyObject * self, PyObject * /*args*/)
+static PyObject * BaseMapping_applyDJT(PyObject * self, PyObject * /*args*/)
 {
     BaseMapping* mapping  = get_basemapping( self );
 
     // note: the position delta must be set in dx beforehand
     mapping->applyJT(MechanicalParams::defaultInstance(),VecDerivId::force(),ConstVecDerivId::force());
-    
+
     Py_RETURN_NONE;
 }
 
-
-
-
 // TODO inefficient
 // have a look to how to directly bind Eigen sparse matrices
-extern "C" PyObject * BaseMapping_getJs(PyObject * self, PyObject * /*args*/)
+static PyObject * BaseMapping_getJs(PyObject * self, PyObject * /*args*/)
 {
     BaseMapping* mapping  = get_basemapping( self );
-
     const helper::vector<sofa::defaulttype::BaseMatrix*>* Js = mapping->getJs();
 
     PyObject* Jspython = PyList_New(Js->size());
@@ -168,14 +166,10 @@ extern "C" PyObject * BaseMapping_getJs(PyObject * self, PyObject * /*args*/)
             for( sofa::defaulttype::BaseMatrix::Index col=0 ; col<J->cols() ; ++col )
                 PyList_SetItem( Jrowpython, col, PyFloat_FromDouble( J->element(row,col) ) );
 
-
             PyList_SetItem( Jpython, row, Jrowpython );
-
         }
-
         PyList_SetItem( Jspython, i, Jpython );
     }
-
     return Jspython;
 }
 

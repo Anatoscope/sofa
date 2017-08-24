@@ -36,16 +36,16 @@ namespace core
 
 using namespace defaulttype;
 
-template class SOFA_Flexible_API Mapping< Affine3Types, Vec3Types >;
-template class SOFA_Flexible_API Mapping< Affine3Types, ExtVec3fTypes >;
-#ifndef SOFA_FLOAT
-template class SOFA_Flexible_API Mapping< Affine3Types, ExtVec3dTypes >;
-#endif
+//template class SOFA_Flexible_API Mapping< Affine3Types, Vec3Types >;
+//template class SOFA_Flexible_API Mapping< Affine3Types, ExtVec3fTypes >;
+//#ifndef SOFA_FLOAT
+//template class SOFA_Flexible_API Mapping< Affine3Types, ExtVec3dTypes >;
+//#endif
 template class SOFA_Flexible_API Mapping< Affine3Types, F331Types >;
 template class SOFA_Flexible_API Mapping< Affine3Types, F332Types >;
 template class SOFA_Flexible_API Mapping< Affine3Types, F321Types >;
 template class SOFA_Flexible_API Mapping< Affine3Types, F311Types >;
-template class SOFA_Flexible_API Mapping< Affine3Types, Affine3Types >;
+//template class SOFA_Flexible_API Mapping< Affine3Types, Affine3Types >;
 
 //template class SOFA_Flexible_API Mapping< Vec3Types, Vec3Types >;
 //template class SOFA_Flexible_API Mapping< Vec3Types, ExtVec3fTypes >;
@@ -57,13 +57,17 @@ template class SOFA_Flexible_API Mapping< Vec3Types, F311Types >;
 template class SOFA_Flexible_API Mapping< Vec2Types, F221Types >;
 template class SOFA_Flexible_API Mapping< Vec3Types, Affine3Types >;
 
-template class SOFA_Flexible_API Mapping< Quadratic3Types, Vec3Types >;
-template class SOFA_Flexible_API Mapping< Quadratic3Types, ExtVec3fTypes >;
+//template class SOFA_Flexible_API Mapping< Quadratic3Types, Vec3Types >;
+//template class SOFA_Flexible_API Mapping< Quadratic3Types, ExtVec3fTypes >;
+//#ifndef SOFA_FLOAT
+//template class SOFA_Flexible_API Mapping< Quadratic3Types, ExtVec3dTypes >;
+//#endif
 template class SOFA_Flexible_API Mapping< Quadratic3Types, F331Types >;
 template class SOFA_Flexible_API Mapping< Quadratic3Types, F321Types >;
 template class SOFA_Flexible_API Mapping< Quadratic3Types, F311Types >;
 template class SOFA_Flexible_API Mapping< Quadratic3Types, F332Types >;
 template class SOFA_Flexible_API Mapping< Quadratic3Types, Affine3Types >;
+//template class SOFA_Flexible_API Mapping< Quadratic3Types, Quadratic3Types >;
 
 //template class SOFA_Flexible_API Mapping< Rigid3Types, Vec3Types >;
 //template class SOFA_Flexible_API Mapping< Rigid3Types, ExtVec3fTypes >;

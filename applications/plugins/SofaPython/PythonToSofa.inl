@@ -1,153 +1,135 @@
+#ifndef PYTHON_TO_SOFA_INL
+#define PYTHON_TO_SOFA_INL
 
+#include <SofaPython/PythonMacros.h>
+#include <type_traits>
+
+namespace sofa {
+namespace py {
 
 /// casting PyObject* to Sofa types
 /// contains only inlined functions and must be included at the right place (!)
+template<class T, class = void>
+struct wrap_traits {
+    using wrapped_type = PyPtr<T>;
+};
 
 
+namespace detail {
+template<class T, class Base>
+using requires_derived = typename std::enable_if< std::is_base_of<Base, T>::value>::type;
+}
 
 
-/// getting a T::SPtr from a PyObject*
-/// @warning for T inherited from Base
+// all base children are wrapped in a base
 template<class T>
-inline typename T::SPtr get_sptr(PyObject* obj) {
-    return ((PySPtr<T>*)obj)->object;
-}
+struct wrap_traits<T, detail::requires_derived<T, sofa::core::objectmodel::Base> > {
+    using wrapped_type = PySPtr<sofa::core::objectmodel::Base>;
+};
 
 
-
-/// getting a T* from a PyObject*
-/// @warning not to use for T inherited from Base
+// all data childen are wrapped in a basedata
 template<class T>
-inline T* get(PyObject* obj) {
-    return ((PyPtr<T>*)obj)->object;
+struct wrap_traits<T, detail::requires_derived<T, sofa::core::objectmodel::BaseData> > {
+    using wrapped_type = PyPtr<sofa::core::objectmodel::BaseData>;
+};
+
+// all link childen are wrapped in a baselink
+template<class T>
+struct wrap_traits<T, detail::requires_derived<T, sofa::core::objectmodel::BaseLink> > {
+    using wrapped_type = PyPtr<sofa::core::objectmodel::BaseLink>;
+};
+
+
+
+
+
+
+namespace detail {
+
+
+template<class W>
+static inline W* unwrap(PyPtr<W>* obj) {
+    return obj->object;
+}
+
+
+template<class W>
+static inline W* unwrap(PySPtr<W>* obj) {
+    return obj->object.get();
 }
 
 
 
-
-
-/// getting a Base::SPtr from a PyObject*
-inline sofa::core::objectmodel::Base::SPtr get_basesptr(PyObject* obj) {
-    return get_sptr<sofa::core::objectmodel::Base>( obj );
+/// wrap a T* in a pyobject (via PySPtr, based on traits)
+template<class W, class T>
+static inline void wrap(PySPtr<W>* py_obj, T* obj) {
+    py_obj->object = obj;
 }
 
-/// getting a BaseObject* from a PyObject*
-inline sofa::core::objectmodel::BaseObject* get_baseobject(PyObject* obj) {
-    return get_basesptr( obj )->toBaseObject();
-}
 
-/// getting a Base* from a PyObject*
-inline sofa::core::objectmodel::Base* get_base(PyObject* obj) {
-    return get_basesptr( obj ).get();
-}
-
-/// getting a BaseContext* from a PyObject*
-inline sofa::core::objectmodel::BaseContext* get_basecontext(PyObject* obj) {
-    return get_basesptr( obj )->toBaseContext();
-}
-
-/// getting a BaseNode* from a PyObject*
-inline sofa::core::objectmodel::BaseNode* get_basenode(PyObject* obj) {
-    return get_basesptr( obj )->toBaseNode();
+template<class W, class T>
+static inline void wrap(PyPtr<W>* py_obj, T* obj, bool deletable) {
+    py_obj->object = obj;
+    py_obj->deletable = deletable;
 }
 
 
 
-/// getting a Node* from a PyObject*
-inline sofa::simulation::Node* get_node(PyObject* obj) {
-    return down_cast<sofa::simulation::Node>(get_basesptr( obj )->toBaseNode());
+/// unwrap a T* wrapped in a pyobject (via PyPtr, based on traits)
+template<class T>
+static inline typename std::enable_if< !wrap_traits<T>::use_sptr, PyObject*>::type
+wrap(T* obj, PyTypeObject *pto, bool deletable) {
+    using wrapped_type = typename wrap_traits<T>::wrapped_type;
+
+    PyPtr<wrapped_type>* py_obj = (PyPtr<wrapped_type>*) PyType_GenericAlloc(pto, 0);
+    py_obj->object = obj;
+    py_obj->deletable = deletable;
+    return (PyObject*)py_obj;
+}
+
 }
 
 
-
-
-
-/// getting a BaseMapping* from a PyObject*
-inline sofa::core::BaseMapping* get_basemapping(PyObject* obj) {
-    return get_basesptr( obj )->toBaseMapping();
+// unwrap a python pointer for an argument
+template<class T>
+static inline T* unwrap(PyObject* obj) {
+    using wrapped_type = typename wrap_traits<T>::wrapped_type;
+    wrapped_type* wrapped = reinterpret_cast<wrapped_type*>(obj);
+    return dynamic_cast<T*>(detail::unwrap(wrapped));
 }
 
 
-/// getting a BaseState* from a PyObject*
-inline sofa::core::BaseState* get_basestate(PyObject* obj) {
-    return get_basesptr( obj )->toBaseState();
-}
-
-/// getting a DataEngine* from a PyObject*
-inline sofa::core::DataEngine* get_dataengine(PyObject* obj) {
-    return get_basesptr( obj )->toDataEngine();
+template<class T>
+static inline T* unwrap_self(PyObject* obj) {
+    using wrapped_type = typename wrap_traits<T>::wrapped_type;
+    wrapped_type* wrapped = reinterpret_cast<wrapped_type*>(obj);
+    return static_cast<T*>(detail::unwrap(wrapped));
 }
 
 
+// wrap a python object into a python object of type pto. you may need to pass
+// extra boolean 'deletable' to specify python ownership (true = python may
+// delete) depending on the wrapping type
+template<class T, class ... Args>
+static inline PyObject* wrap(T* obj, PyTypeObject *pto, Args&& ... args) {
+    using wrapped_type = typename wrap_traits<T>::wrapped_type;
+
+    // alloc object
+    wrapped_type* py_obj = reinterpret_cast<wrapped_type*>( PyType_GenericAlloc(pto, 0) );
+
+    // setup wrapper
+    detail::wrap(py_obj, obj, std::forward<Args>(args)...);
+
+    return reinterpret_cast<PyObject*>(py_obj);
+};
 
 
 
-/// getting a BaseLoader* from a PyObject*
-inline sofa::core::loader::BaseLoader* get_baseloader(PyObject* obj) {
-    return get_basesptr( obj )->toBaseLoader();
+
+
+
+}
 }
 
-
-
-
-
-/// getting a BaseMechanicalState* from a PyObject*
-inline sofa::core::behavior::BaseMechanicalState* get_basemechanicalstate(PyObject* obj) {
-    return get_basesptr( obj )->toBaseMechanicalState();
-}
-
-/// getting a OdeSolver* from a PyObject*
-inline sofa::core::behavior::OdeSolver* get_odesolver(PyObject* obj) {
-    return get_basesptr( obj )->toOdeSolver();
-}
-
-
-
-/// getting a Topology* from a PyObject*
-inline sofa::core::topology::Topology* get_topology(PyObject* obj) {
-    return get_basesptr( obj )->toTopology();
-}
-
-/// getting a BaseMeshTopology* from a PyObject*
-inline sofa::core::topology::BaseMeshTopology* get_basemeshtopology(PyObject* obj) {
-    return get_basesptr( obj )->toBaseMeshTopology();
-}
-
-
-/// getting a VisualModel* from a PyObject*
-inline sofa::core::visual::VisualModel* get_visualmodel(PyObject* obj) {
-    return get_basesptr( obj )->toVisualModel();
-}
-
-
-
-
-
-/// getting a BaseData* from a PyObject*
-inline sofa::core::objectmodel::BaseData* get_basedata(PyObject* obj) {
-    return get<sofa::core::objectmodel::BaseData>(obj);
-}
-
-/// getting a DataFileName* from a PyObject*
-inline sofa::core::objectmodel::DataFileName* get_datafilename(PyObject* obj) {
-    return down_cast<sofa::core::objectmodel::DataFileName>( get_basedata( obj ) );
-}
-
-/// getting a DataFileNameVector* from a PyObject*
-inline sofa::core::objectmodel::DataFileNameVector* get_datafilenamevector(PyObject* obj) {
-    return down_cast<sofa::core::objectmodel::DataFileNameVector>( get_basedata( obj ) );
-}
-
-
-/// getting a BaseLink* from a PyObject*
-inline sofa::core::objectmodel::BaseLink* get_baselink(PyObject* obj) {
-    return get<sofa::core::objectmodel::BaseLink>(obj);
-}
-
-
-
-/// getting a Vector3* from a PyObject*
-inline sofa::defaulttype::Vector3* get_vector3(PyObject* obj) {
-    return get<sofa::defaulttype::Vector3>(obj);
-}
-
+#endif

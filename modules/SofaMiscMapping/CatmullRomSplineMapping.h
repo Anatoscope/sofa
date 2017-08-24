@@ -27,7 +27,7 @@
 #include <sofa/defaulttype/VecTypes.h>
 
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <SofaBaseTopology/EdgeSetTopologyModifier.h>
+#include <SofaEigen2Solver/EigenSparseMatrix.h>
 
 #include <vector>
 
@@ -41,7 +41,16 @@ namespace mapping
 {
 
 /**
- *  \brief CatmullRomSplineMapping ....  TODO!!
+ *  \brief CatmullRomSplineMapping
+ *
+ *
+ * Interpolate points between control nodes using centripetal catmull-rom spline
+ * https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline
+ *
+ *
+ * The polyline defined with control points must be stored in a EdgeTopology.
+ * A resulting EdgeTopology must be present at the mapped point level, and will be filled automatically with the fine interpolated curve segments.
+ * (fot that a EdgeSetTopologyModifier is also needed at the mapped point level)
  *
  */
 
@@ -88,37 +97,46 @@ public:
 
     typedef typename Inherit::ForceMask ForceMask;
 
+    enum {Nin = In::deriv_total_size, Nout = Out::deriv_total_size };
+    typedef linearsolver::EigenSparseMatrix<In,Out> Jacobian;
+
 protected:
 
     CatmullRomSplineMapping ();
     virtual ~CatmullRomSplineMapping();
 
-    Data<unsigned int> SplittingLevel;
-    //Data<Real> Radius;
 
-    //Both mesh topology must be Edge Mesh
-    BaseMeshTopology* sourceMesh;
-    BaseMeshTopology* targetMesh;
-
-    helper::vector<defaulttype::Vec<4,ID> > m_index; // indices of primitives influencing each point.
-    helper::vector<defaulttype::Vec<4,InReal> > m_weight;
+    Jacobian m_jacobian;
+    helper::vector<defaulttype::BaseMatrix*> m_jacobians; ///< Jacobian of the mapping, in a vector
 
 public:
-    void init();
 
-    virtual void apply( const sofa::core::MechanicalParams* mparams, OutDataVecCoord& out, const InDataVecCoord& in);
-    //void apply( typename Out::VecCoord& out, const typename In::VecCoord& in );
+    Data<unsigned int> d_splittingLevel;
 
-    virtual void applyJ( const sofa::core::MechanicalParams* mparams, OutDataVecDeriv& out, const InDataVecDeriv& in);
-    //void applyJ( typename Out::VecDeriv& out, const typename In::VecDeriv& in );
+    virtual void init();
+    virtual void reinit();
 
-    virtual void applyJT( const sofa::core::MechanicalParams* mparams, InDataVecDeriv& out, const OutDataVecDeriv& in);
-    //void applyJT( typename In::VecDeriv& out, const typename Out::VecDeriv& in );
+    virtual void apply( const sofa::core::MechanicalParams* /*mparams*/, OutDataVecCoord& out, const InDataVecCoord& in)
+    {
+        if( m_jacobian.rows() )
+            m_jacobian.mult(out, in);
+    }
 
-    virtual void applyJT( const sofa::core::ConstraintParams* cparams, InDataMatrixDeriv& out, const OutDataMatrixDeriv& in);
-    //void applyJT( typename In::MatrixDeriv& out, const typename Out::MatrixDeriv& in );
+    virtual void applyJ(const core::MechanicalParams*, OutDataVecDeriv& outDeriv, const InDataVecDeriv& inDeriv)
+    {
+        if( m_jacobian.rows() )
+            m_jacobian.mult(outDeriv, inDeriv);
+    }
+    virtual void applyJT(const core::MechanicalParams*, InDataVecDeriv& outDeriv , const OutDataVecDeriv& inDeriv )
+    {
+        if( m_jacobian.rows() )
+            m_jacobian.addMultTranspose(outDeriv, inDeriv);
+    }
 
-    void draw(const core::visual::VisualParams* vparams);
+//    virtual void applyJT( const sofa::core::ConstraintParams* cparams, InDataMatrixDeriv& out, const OutDataMatrixDeriv& in);
+
+
+    virtual const helper::vector<sofa::defaulttype::BaseMatrix*>* getJs() { return &m_jacobians; }
 
 };
 

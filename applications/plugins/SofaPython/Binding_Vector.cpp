@@ -24,7 +24,11 @@
 #include <sofa/defaulttype/Vec.h>
 #include "PythonToSofa.inl"
 
-using namespace sofa::defaulttype;
+using sofa::defaulttype::Vector3 ;
+
+static inline Vector3* get_vector3(PyObject* obj) {
+    return sofa::py::unwrap<Vector3>(obj);
+}
 
 
 SP_CLASS_ATTR_GET(Vector3,x)(PyObject *self, void*)
@@ -37,6 +41,8 @@ SP_CLASS_ATTR_GET(Vector3,x)(PyObject *self, void*)
     }
     return PyFloat_FromDouble(obj->x());
 }
+
+
 SP_CLASS_ATTR_SET(Vector3,x)(PyObject *self, PyObject * args, void*)
 {
     Vector3* obj = get_vector3( self );
@@ -49,6 +55,7 @@ SP_CLASS_ATTR_SET(Vector3,x)(PyObject *self, PyObject * args, void*)
     return 0;
 }
 
+
 SP_CLASS_ATTR_GET(Vector3,y)(PyObject *self, void*)
 {
     Vector3* obj = get_vector3( self );
@@ -59,6 +66,8 @@ SP_CLASS_ATTR_GET(Vector3,y)(PyObject *self, void*)
     }
     return PyFloat_FromDouble(obj->y());
 }
+
+
 SP_CLASS_ATTR_SET(Vector3,y)(PyObject *self, PyObject * args, void*)
 {
     Vector3* obj = get_vector3( self );
@@ -71,6 +80,7 @@ SP_CLASS_ATTR_SET(Vector3,y)(PyObject *self, PyObject * args, void*)
     return 0;
 }
 
+
 SP_CLASS_ATTR_GET(Vector3,z)(PyObject *self, void*)
 {
     Vector3* obj = get_vector3( self );
@@ -81,6 +91,8 @@ SP_CLASS_ATTR_GET(Vector3,z)(PyObject *self, void*)
     }
     return PyFloat_FromDouble(obj->z());
 }
+
+
 SP_CLASS_ATTR_SET(Vector3,z)(PyObject *self, PyObject * args, void*)
 {
     Vector3* obj = get_vector3( self );
@@ -108,6 +120,7 @@ PyObject * Vector3_PyNew(PyTypeObject * /*type*/, PyObject *args, PyObject * /*k
     obj->z()=z;
     return SP_BUILD_PYPTR(Vector3,Vector3,obj,true); // "true", because I manage the deletion myself (below)
 }
+
 void Vector3_PyFree(void * self)
 {
     if (!((PyPtr<Vector3>*)self)->deletable) return;

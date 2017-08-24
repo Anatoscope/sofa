@@ -311,6 +311,17 @@ public:
         return false;
     }
 
+    /// \brief Find mechanical particles closest to \a point
+    ///
+    /// A mechanical particle is defined as a 2D or 3D, position or rigid DOF
+    /// Returns false if this object does not support picking
+    virtual bool closestParticle(const core::ExecParams* /*params*/, defaulttype::Vector3 const& /*point*/,
+            defaulttype::Vector3 const& /*origin*/, double /*distanceToPoint*/, double /*distanceToPointGrowth*/,
+            sofa::core::behavior::BaseMechanicalState*& /*ms*/, int& /*index*/, SReal& /*distance*/)
+    {
+        return false;
+    }
+
     /// @}
 
     /// @name Mask-based optimized computations (by only updating a subset of the DOFs)

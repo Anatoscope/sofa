@@ -87,7 +87,7 @@ class SOFA_Compliant_API AssembledRigidRigidMapping : public AssembledMapping<TI
         std::size_t index;
 
         friend std::ostream& operator<<(std::ostream& out, const source_type& self) {
-            return out << self.index << ' ' << self.coord;
+            return out << "[" << self.index << ", " << self.coord << "]";
         }
 
         friend std::istream& operator>>(std::istream& in, source_type& self) {

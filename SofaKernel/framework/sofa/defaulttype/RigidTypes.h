@@ -207,16 +207,20 @@ public:
     }
 
     /// write to an output stream
-    inline friend std::ostream& operator << ( std::ostream& out, const RigidDeriv<3,real>& v )
+    inline friend std::ostream& operator << ( std::ostream& out, const RigidDeriv& self )
     {
-        out<<v.vCenter<<" "<<v.vOrientation;
-        return out;
+        using Vec6 = Vec<6, real>;
+        // make sure we don't go too far in UB territory
+        static_assert(sizeof(Vec6) == sizeof(RigidDeriv), "invalid size");
+        return out << reinterpret_cast<const Vec6&>(self);
     }
     /// read from an input stream
-    inline friend std::istream& operator >> ( std::istream& in, RigidDeriv<3,real>& v )
+    inline friend std::istream& operator >> ( std::istream& in, RigidDeriv& self )
     {
-        in>>v.vCenter>>v.vOrientation;
-        return in;
+        using Vec6 = Vec<6, real>;
+        // make sure we don't go too far in UB territory        
+        static_assert(sizeof(Vec6) == sizeof(RigidDeriv), "invalid size");
+        return in >> reinterpret_cast<Vec6&>(self);
     }
 
     /// Compile-time constant specifying the number of scalars within this vector (equivalent to the size() method)
@@ -635,17 +639,23 @@ public:
 
 
     /// write to an output stream
-    inline friend std::ostream& operator << ( std::ostream& out, const RigidCoord<3,real>& v )
+    inline friend std::ostream& operator << ( std::ostream& out, const RigidCoord& self )
     {
-        out<<v.center<<" "<<v.orientation;
-        return out;
+        using Vec7 = Vec<7, real>;
+        // make sure we don't go too far in UB territory
+        static_assert(sizeof(Vec7) == sizeof(RigidCoord), "invalid size");
+        return out << reinterpret_cast<const Vec7&>(self);
     }
+    
     /// read from an input stream
-    inline friend std::istream& operator >> ( std::istream& in, RigidCoord<3,real>& v )
+    inline friend std::istream& operator >> ( std::istream& in, RigidCoord& self )
     {
-        in>>v.center>>v.orientation;
-        return in;
+        using Vec7 = Vec<7, real>;
+        // make sure we don't go too far in UB territory
+        static_assert(sizeof(Vec7) == sizeof(RigidCoord), "invalid size");
+        return in >> reinterpret_cast<Vec7&>(self);
     }
+    
     static int max_size()
     {
         return 3;

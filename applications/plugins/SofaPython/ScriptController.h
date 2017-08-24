@@ -91,9 +91,6 @@ public:
     /// Initialization method called at graph creation and modification, during bottom-up traversal.
     virtual void bwdInit();
 
-    /// Update method called when variables used in precomputation are modified.
-//    virtual void reinit();
-
     /// Save the initial state for later uses in reset()
     virtual void storeResetState();
 

@@ -35,10 +35,11 @@ void printPythonExceptions()
 
 
 void handle_python_error(const char* message) {
+    SOFA_UNUSED(message) ;
     if(PyErr_ExceptionMatches(PyExc_SystemExit))  {
         PyErr_Clear();
         throw sofa::simulation::PythonEnvironment::system_exit();
     }
-    SP_MESSAGE_EXCEPTION(message);
+    // SP_MESSAGE_EXCEPTION(message);
     PyErr_Print();
 }

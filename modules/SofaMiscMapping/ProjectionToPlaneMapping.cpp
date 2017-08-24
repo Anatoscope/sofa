@@ -38,14 +38,14 @@ SOFA_DECL_CLASS(ProjectionToTargetPlaneMapping)
 using namespace defaulttype;
 
 // Register in the Factory
-int ProjectionToTargetPlaneMappingClass = core::RegisterObject("Compute distance between a moving point and fixed line")
+int ProjectionToTargetPlaneMappingClass = core::RegisterObject("Compute distance between a moving point and fixed plane")
 #ifndef SOFA_FLOAT
         .add< ProjectionToTargetPlaneMapping< Vec3dTypes, Vec3dTypes > >()
         .add< ProjectionToTargetPlaneMapping< Rigid3dTypes, Vec3dTypes > >()
 #endif
 #ifndef SOFA_DOUBLE
         .add< ProjectionToTargetPlaneMapping< Vec3fTypes, Vec3fTypes > >()
-        .add< ProjectionToTargetPlaneMapping< Rigid3fTypes, Vec3fTypes > >()
+        .add< ProjectionToTargetPlaneMapping< Rigid3fTypes, Vec3fTypes > >(true)
 #endif
         ;
 
@@ -66,7 +66,7 @@ SOFA_DECL_CLASS(ProjectionToPlaneMultiMapping)
 using namespace defaulttype;
 
 // Register in the Factory
-int ProjectionToPlaneMultiMappingClass = core::RegisterObject("Compute distance between a moving point and a moving line")
+int ProjectionToPlaneMultiMappingClass = core::RegisterObject("Compute distance between a moving point and a moving plane")
 #ifndef SOFA_FLOAT
         .add< ProjectionToPlaneMultiMapping< Vec3dTypes, Vec3dTypes > >()
 #endif

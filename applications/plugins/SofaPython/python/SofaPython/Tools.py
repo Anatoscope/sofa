@@ -9,15 +9,19 @@ import units
 def listToStr(x):
     """ concatenate lists for use with data.
     """
+#    Sofa.msg_deprecated("SofaPython.Tools.listToStr", "In Node.createObject: no need to explicitely convert a list to string")
     return ' '.join(map(str, x))
+#    return repr(x)
 
 def listListToStr(xx):
     """ concatenate lists of list for use with data.
     """
+#    Sofa.msg_deprecated("SofaPython.Tools.listListToStr", "In Node.createObject: no need to explicitely convert a list to string")
     str_xx=""
     for x in xx:
         str_xx += listToStr(x) + " "
     return str_xx
+#    return repr(xx)
 
 def strToListFloat(s):
     """ Convert a string to a list of float
@@ -94,6 +98,10 @@ class Material:
         self._reset()
         with open(filename,'r') as file:
             self.data.update(json.load(file))
+
+    def setPoissonRatio(self, value):
+        for m in self.data:
+            self.data[m]['poissonRatio'] = value
             
     def density(self, material):
         return units.massDensity_from_SI(self._get(material, "density"))

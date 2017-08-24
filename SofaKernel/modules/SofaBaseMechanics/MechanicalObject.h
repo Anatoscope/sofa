@@ -32,7 +32,6 @@
 #include <sofa/defaulttype/Quat.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
-#include <sofa/defaulttype/LaparoscopicRigidTypes.h>
 
 #include <vector>
 #include <fstream>
@@ -409,6 +408,10 @@ public:
     virtual bool pickParticles(const core::ExecParams* params, double rayOx, double rayOy, double rayOz, double rayDx, double rayDy, double rayDz, double radius0, double dRadius,
             std::multimap< double, std::pair<sofa::core::behavior::BaseMechanicalState*, int> >& particles);
 
+    virtual bool closestParticle(const core::ExecParams* params, Vector3 const& point,
+            defaulttype::Vector3 const& origin, double radius0, double dRadius,
+            sofa::core::behavior::BaseMechanicalState*& ms, int& index, SReal& distance);
+
 
    /// if this mechanical object stores independent dofs (in opposition to mapped dofs)
    bool isIndependent() const;
@@ -516,8 +519,6 @@ void MechanicalObject<defaulttype::Rigid3dTypes>::draw(const core::visual::Visua
 template<> SOFA_BASE_MECHANICS_API
 void MechanicalObject<defaulttype::Rigid3fTypes>::draw(const core::visual::VisualParams* vparams);
 #endif
-template<> SOFA_BASE_MECHANICS_API
-void MechanicalObject<defaulttype::LaparoscopicRigid3Types>::draw(const core::visual::VisualParams* vparams);
 
 
 
@@ -538,7 +539,6 @@ extern template class SOFA_BASE_MECHANICS_API MechanicalObject<defaulttype::Vec6
 extern template class SOFA_BASE_MECHANICS_API MechanicalObject<defaulttype::Rigid3fTypes>;
 extern template class SOFA_BASE_MECHANICS_API MechanicalObject<defaulttype::Rigid2fTypes>;
 #endif
-extern template class SOFA_BASE_MECHANICS_API MechanicalObject<defaulttype::LaparoscopicRigid3Types>;
 #endif
 
 } // namespace container

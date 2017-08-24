@@ -33,10 +33,10 @@ void Python_test::run( const Python_test_data& data ) {
         // Check the file exists
         std::ifstream file(data.filepath.c_str());
         bool scriptFound = file.good();
-        ASSERT_TRUE(scriptFound);
+        ASSERT_TRUE(scriptFound) << " ("<<data.filepath<<")";
     }
 
-    ASSERT_TRUE( loader.loadTestWithArguments(data.filepath.c_str(),data.arguments) );
+    ASSERT_TRUE( loader.loadTestWithArguments(data.filepath.c_str(),data.arguments) ) << " ("<<data.filepath<<")";
 
 }
 
@@ -44,18 +44,18 @@ void Python_test::run( const Python_test_data& data ) {
 static bool ends_with(const std::string& suffix, const std::string& full){
     const std::size_t lf = full.length();
     const std::size_t ls = suffix.length();
-    
+
     if(lf < ls) return false;
-    
+
     return (0 == full.compare(lf - ls, ls, suffix));
 }
 
 static bool starts_with(const std::string& prefix, const std::string& full){
     const std::size_t lf = full.length();
     const std::size_t lp = prefix.length();
-    
+
     if(lf < lp) return false;
-    
+
     return (0 == full.compare(0, lp, prefix));
 }
 
@@ -66,13 +66,13 @@ void Python_test_list::addTestDir(const std::string& dir, const std::string& pre
 
     std::vector<std::string> files;
     helper::system::FileSystem::listDirectory(dir, files);
-    
+
     for(const std::string& file : files) {
         if( starts_with(prefix, file) && ends_with(".py", file) ) {
             addTest(file, dir);
         }
     }
-    
+
 }
 
 
@@ -133,17 +133,17 @@ enum flag : char {
 };
 
 
-
+PyObject* default_excepthook {nullptr} ;
 
 // TODO FIXME: there's probably a MEMLEAK hiding in there, figure it out
 static PyObject* except_hook(PyObject* self, PyObject* args) {
-    // raise the stop flag 
+    // raise the stop flag
     char* flags = reinterpret_cast<char*>(PyCapsule_GetPointer(self, NULL));
     assert(flags && "cannot get flags pointer (wtf?)");
     if(!flags) std::exit(1);
-    
+
     *flags |= flag::stop;
-    
+
     // switch on exception type
     PyObject* type;
     PyObject* value;
@@ -151,20 +151,17 @@ static PyObject* except_hook(PyObject* self, PyObject* args) {
 
     if( !PyArg_ParseTuple(args, "OOO", &type, &value, &traceback) ) {
         assert(false && "cannot parse excepthook args (wtf?)");
-        std::exit(1);        
+        std::exit(1);
     }
 
     if( type == PyExc_AssertionError ) {
-        // test failure 
+        // test failure
         *flags |= flag::test_failure;
     } else {
         // other python error
         *flags |= flag::python_error;
     }
 
-    // TODO should we decref after use?
-    PyObject* default_excepthook = PySys_GetObject((char*)"__excepthook__") || fail("cannot get default excepthook");
-    
     // call default excepthook to get traceback etc
     return PyObject_CallObject(default_excepthook, args);
 }
@@ -178,12 +175,16 @@ static PyMethodDef except_hook_def = {
 
 
 static void install_sys_excepthook(char* flags) {
-    PyObject* self = PyCapsule_New(flags, NULL, NULL) || fail("cant wrap flags pointer");
-    
-    PyObject* excepthook = PyCFunction_NewEx(&except_hook_def, self, NULL)
-        || fail("cannot create excepthook closure");
+    if(!default_excepthook){
+        default_excepthook = PySys_GetObject((char*)"excepthook") || fail("cannot get default excepthook");
 
-    PySys_SetObject((char*)"excepthook", excepthook) || fail("cannot set sys.excepthook");
+        PyObject* self = PyCapsule_New(flags, NULL, NULL) || fail("cant wrap flags pointer");
+
+        PyObject* excepthook = PyCFunction_NewEx(&except_hook_def, self, NULL)
+                || fail("cannot create excepthook closure");
+
+        PySys_SetObject((char*)"excepthook", excepthook) || fail("cannot set sys.excepthook");
+    }
 }
 
 
@@ -200,7 +201,7 @@ void Python_scene_test::run( const Python_test_data& data ) {
         // Check the file exists
         std::ifstream file(data.filepath.c_str());
         bool scriptFound = file.good();
-        ASSERT_TRUE(scriptFound);
+        ASSERT_TRUE(scriptFound) << " ("<<data.filepath<<")";
     }
 
     if( !simulation::getSimulation() ) {
@@ -211,29 +212,29 @@ void Python_scene_test::run( const Python_test_data& data ) {
     try {
         install_sys_excepthook(&flags);
     } catch( std::runtime_error& e) {
-        ASSERT_TRUE(false) << "error setting up python excepthook, aborting test";
+        ASSERT_TRUE(false) << "error setting up python excepthook, aborting test" << " ("<<data.filepath<<")";
     }
 
     simulation::Node::SPtr root;
-        
+
     try {
-        
+
         loader.loadSceneWithArguments(data.filepath.c_str(),
                                       data.arguments,
                                       &root);
-        ASSERT_TRUE(bool(root)) << "scene creation failed!";
+        ASSERT_TRUE(bool(root)) << "scene creation failed!" << " ("<<data.filepath<<")";
 
         root->addObject( new Listener );
         simulation::getSimulation()->init(root.get());
-        
-            
+
+
         // TODO eventually tests should only stop by throwing SystemExit
         unsigned i;
         for(i = 0; (i < max_steps) && !(flags & flag::stop) && root->isActive(); ++i) {
             simulation::getSimulation()->animate(root.get(), root->getDt());
         }
 
-        ASSERT_TRUE(i != max_steps) << "maximum allowed steps reached: " << max_steps;
+        ASSERT_TRUE(i != max_steps) << "maximum allowed steps reached: " << max_steps << " ("<<data.filepath<<")";
 
         if( flags & flag::test_failure ) {
             FAIL() << "test failure";
@@ -243,14 +244,14 @@ void Python_scene_test::run( const Python_test_data& data ) {
             FAIL() << "python error";
         }
 
-	} catch( simulation::PythonEnvironment::system_exit& e) {
+    } catch( simulation::PythonEnvironment::system_exit& e) {
         SUCCEED() << "test terminated normally";
     } catch( const result& test_result ) {
-        ASSERT_TRUE(test_result.value);
+        ASSERT_TRUE(test_result.value) << " ("<<data.filepath<<")";
 
         // TODO raii for unloading
         simulation::getSimulation()->unload( root.get() );
-	}
+    }
 }
 
 

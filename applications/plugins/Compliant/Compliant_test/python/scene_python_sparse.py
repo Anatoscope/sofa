@@ -74,3 +74,5 @@ def createScene(node):
     node.gravity = '0 1 0'
 
     script = Script(node)
+
+    return node

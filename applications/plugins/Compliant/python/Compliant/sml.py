@@ -50,10 +50,10 @@ def insertRigid(parentNode, rigidModel, density, scale=1, param=None):
             massinfo.setFromInertia(rigidModel.inertia[0], rigidModel.inertia[1], rigidModel.inertia[2], # Ixx, Ixy, Ixz
                                     rigidModel.inertia[3], rigidModel.inertia[4], # Iyy, Iyz
                                     rigidModel.inertia[5] ) # Izz
-        rigid.setFromRigidInfo(massinfo, offset=rigidModel.position, inertia_forces = 0 )    # TODO: handle inertia_forces ?
+        rigid.setFromRigidInfo(massinfo, offset=rigidModel.position, inertia_forces = False )    # TODO: handle inertia_forces ?
     elif len(rigidModel.mesh)!=0 :
         # get inertia from meshes and density
-        rigid.setFromRigidInfo(rigidModel.getRigidMassInfo(density, scale), offset=StructuralAPI.scaleOffset(scale, rigidModel.position), inertia_forces = 0 )    # TODO: handle inertia_forces ?
+        rigid.setFromRigidInfo(rigidModel.getRigidMassInfo(density, scale), offset=StructuralAPI.scaleOffset(scale, rigidModel.position), inertia_forces = False )    # TODO: handle inertia_forces ?
 
         #if not rigidModel.mass is None :
             ## no density but a mesh let's normalise computed mass with specified mass
@@ -209,18 +209,6 @@ class SceneArticulatedRigid(SofaPython.sml.BaseScene):
             Sofa.msg_warning("Compliant.sml", "insertMergeRigid: no rigid merged")
         return mergeNode
 
-    def addMeshExporters(self, dir, ExportAtEnd=False):
-        """ add obj Exporters for each visual model of the scene
-        """
-        if not os.path.exists(dir):
-            os.makedirs(dir)
-        for rigid in self.rigids.itervalues():
-            for mid,visual in rigid.visuals.iteritems():
-                filename = os.path.join(dir, os.path.basename(self.model.meshes[mid].source))
-                e = visual.node.createObject('ObjExporter', name='ObjExporter', filename=filename, printLog=True, exportAtEnd=ExportAtEnd)
-                self.meshExporters.append(e)
-
-
     def createScene(self):
         self.node.createObject('RequiredPlugin', name = 'Flexible' )
         self.node.createObject('RequiredPlugin', name = 'Compliant' )
@@ -233,7 +221,10 @@ class SceneArticulatedRigid(SofaPython.sml.BaseScene):
 
         # rigids
         for rigidModel in self.model.getSolidsByTags(self.param.rigidTags):
-            self.rigids[rigidModel.id] = insertRigid(self.node, rigidModel, self.material.density(self.getMaterial(rigidModel.id)), self._geometricScale, self.param)
+            rigid =  insertRigid(self.node, rigidModel, self.material.density(self.getMaterial(rigidModel.id)), self._geometricScale, self.param)
+            self.rigids[rigidModel.id] = rigid
+            self.visuals[rigidModel.id] = rigid.visuals
+            self.collisions[rigidModel.id] = rigid.collisions
         
         # joints
         for jointModel in self.model.genericJoints.values():

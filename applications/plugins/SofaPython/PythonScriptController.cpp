@@ -77,7 +77,7 @@ class MyFileEventListener : public FileEventListener
 {
     PythonScriptController* m_controller ;
 public:
-   MyFileEventListener(PythonScriptController* psc){
+    MyFileEventListener(PythonScriptController* psc){
         m_controller = psc ;
     }
 
@@ -87,7 +87,7 @@ public:
         /// This function is called when the file has changed. Two cases have
         /// to be considered if the script was already loaded once or not.
         if(!m_controller->scriptControllerInstance()){
-           m_controller->doLoadScript();
+            m_controller->doLoadScript();
         }else{
             std::string file=filepath;
             SP_CALL_FILEFUNC(const_cast<char*>("onReimpAFile"),
@@ -150,15 +150,15 @@ void PythonScriptController::setInstance(PyObject* instance) {
     if( m_ScriptControllerInstance ) {
         Py_DECREF( m_ScriptControllerInstance );
     }
-    
+
     m_ScriptControllerInstance = instance;
 
     // note: we don't use PyObject_Type as it returns a new reference which is
     // not handled correctly in loadScript
     m_ScriptControllerClass = (PyObject*)instance->ob_type;
-    
+
     Py_INCREF( instance );
-    
+
     refreshBinding();
 }
 
@@ -209,7 +209,7 @@ void PythonScriptController::loadScript()
     if( m_filename.isSet() && !m_filename.getRelativePath().empty() && !PythonEnvironment::runFile(m_filename.getFullPath().c_str()) )
     {
         SP_MESSAGE_ERROR( getName() << " object - "<<m_filename.getFullPath().c_str()<<" script load error." )
-                return;
+        return;
     }
 
     // classe
@@ -218,15 +218,15 @@ void PythonScriptController::loadScript()
     if (!m_ScriptControllerClass)
     {
         SP_MESSAGE_ERROR( getName() << " load error (class \""<<m_classname.getValueString()<<"\" not found)." )
-                return;
+        return;
     }
 
     // verify that the class is a subclass of PythonScriptController
     if (1!=PyObject_IsSubclass(m_ScriptControllerClass,(PyObject*)&SP_SOFAPYTYPEOBJECT(PythonScriptController)))
     {
-        // LOAD ERROR
+
         SP_MESSAGE_ERROR( getName() << " load error (class \""<<m_classname.getValueString()<<"\" does not inherit from \"Sofa.PythonScriptController\")." )
-                return;
+        return;
     }
 
     // créer l'instance de la classe
@@ -238,7 +238,7 @@ void PythonScriptController::loadScript()
     if (!m_ScriptControllerInstance)
     {
         SP_MESSAGE_ERROR( getName() << " load error (class \""<<m_classname.getValueString()<<"\" instanciation error)." )
-                return;
+        return;
     }
 
     refreshBinding();

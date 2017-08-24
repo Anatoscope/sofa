@@ -66,9 +66,7 @@ BaseSofa_test::BaseSofa_test(){
     //and pass the seed in command argument line ex: SofaTest_test.exe seed 32
     helper::srand(seed);
 
-    // gtest already use color so we remove the color from the sofa message to make the distinction
-    // clean and avoid ambiguity.
-    Console::setColorsStatus(Console::ColorsDisabled) ;
+    Console::setColorsStatus(Console::ColorsEnabled) ;
 
     // Repeating this for each class is harmless because addHandler test if the handler is already installed and
     // if so it don't install it again.

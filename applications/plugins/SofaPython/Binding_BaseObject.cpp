@@ -25,64 +25,69 @@
 #include "PythonFactory.h"
 #include "PythonToSofa.inl"
 
-using namespace sofa::core::objectmodel;
+using sofa::core::objectmodel::BaseObject;
 
-extern "C" PyObject * BaseObject_init(PyObject *self, PyObject * /*args*/)
+static BaseObject* get_baseobject(PyObject* self) {
+    return sofa::py::unwrap<BaseObject>(self);
+}
+
+
+static PyObject * BaseObject_init(PyObject *self, PyObject * /*args*/)
 {
     BaseObject* obj = get_baseobject( self );
     obj->init();
     Py_RETURN_NONE;
 }
 
-extern "C" PyObject * BaseObject_bwdInit(PyObject *self, PyObject * /*args*/)
+static PyObject * BaseObject_bwdInit(PyObject *self, PyObject * /*args*/)
 {
     BaseObject* obj = get_baseobject( self );
     obj->bwdInit();
     Py_RETURN_NONE;
 }
 
-extern "C" PyObject * BaseObject_reinit(PyObject *self, PyObject * /*args*/)
+static PyObject * BaseObject_reinit(PyObject *self, PyObject * /*args*/)
 {
     BaseObject* obj = get_baseobject( self );
     obj->reinit();
     Py_RETURN_NONE;
 }
 
-extern "C" PyObject * BaseObject_storeResetState(PyObject *self, PyObject * /*args*/)
+static PyObject * BaseObject_storeResetState(PyObject *self, PyObject * /*args*/)
 {
     BaseObject* obj = get_baseobject( self );
     obj->storeResetState();
     Py_RETURN_NONE;
 }
 
-extern "C" PyObject * BaseObject_reset(PyObject *self, PyObject * /*args*/)
+static PyObject * BaseObject_reset(PyObject *self, PyObject * /*args*/)
 {
     BaseObject* obj = get_baseobject( self );
     obj->reset();
     Py_RETURN_NONE;
 }
 
-extern "C" PyObject * BaseObject_cleanup(PyObject *self, PyObject * /*args*/)
+static PyObject * BaseObject_cleanup(PyObject *self, PyObject * /*args*/)
 {
     BaseObject* obj = get_baseobject( self );
     obj->cleanup();
     Py_RETURN_NONE;
 }
 
-extern "C" PyObject * BaseObject_getContext(PyObject *self, PyObject * /*args*/)
+static PyObject * BaseObject_getContext(PyObject *self, PyObject * /*args*/)
 {
     BaseObject* obj = get_baseobject( self );
     return sofa::PythonFactory::toPython(obj->getContext());
 }
 
-extern "C" PyObject * BaseObject_getMaster(PyObject *self, PyObject * /*args*/)
+static PyObject * BaseObject_getMaster(PyObject *self, PyObject * /*args*/)
 {
     BaseObject* obj = get_baseobject( self );
     return sofa::PythonFactory::toPython(obj->getMaster());
 }
 
 
-extern "C" PyObject * BaseObject_setSrc(PyObject *self, PyObject * args)
+static PyObject * BaseObject_setSrc(PyObject *self, PyObject * args)
 {
     BaseObject* obj = get_baseobject( self );
     char *valueString;
@@ -95,7 +100,7 @@ extern "C" PyObject * BaseObject_setSrc(PyObject *self, PyObject * args)
     Py_RETURN_NONE;
 }
 
-extern "C" PyObject * BaseObject_getPathName(PyObject * self, PyObject * /*args*/)
+static PyObject * BaseObject_getPathName(PyObject * self, PyObject * /*args*/)
 {
     BaseObject* obj = get_baseobject( self );
 
@@ -103,7 +108,7 @@ extern "C" PyObject * BaseObject_getPathName(PyObject * self, PyObject * /*args*
 }
 
 // the same as 'getPathName' with a extra prefix '@'
-extern "C" PyObject * BaseObject_getLinkPath(PyObject * self, PyObject * /*args*/)
+static PyObject * BaseObject_getLinkPath(PyObject * self, PyObject * /*args*/)
 {
     BaseObject* obj = get_baseobject( self );
 
@@ -111,7 +116,7 @@ extern "C" PyObject * BaseObject_getLinkPath(PyObject * self, PyObject * /*args*
 }
 
 
-extern "C" PyObject * BaseObject_getSlaves(PyObject * self, PyObject * /*args*/)
+static PyObject * BaseObject_getSlaves(PyObject * self, PyObject * /*args*/)
 {
     BaseObject* obj = get_baseobject( self );
 
@@ -125,7 +130,7 @@ extern "C" PyObject * BaseObject_getSlaves(PyObject * self, PyObject * /*args*/)
     return list;
 }
 
-extern "C" PyObject * BaseObject_getName(PyObject * self, PyObject * /*args*/)
+static PyObject * BaseObject_getName(PyObject * self, PyObject * /*args*/)
 {
     BaseObject* obj = get_baseobject( self );
 

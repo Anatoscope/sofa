@@ -55,6 +55,8 @@ private:
     unsigned int stepCounter;
     unsigned int maxStep;
 
+    std::ofstream* outfile;
+    
     int nbFiles;
 
 public:
@@ -75,6 +77,8 @@ public:
 protected:
     STLExporter();
     virtual ~STLExporter();
+
+    std::string getFilename() const;
 public:
     void init();
     void cleanup();

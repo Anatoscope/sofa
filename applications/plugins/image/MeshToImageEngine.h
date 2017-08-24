@@ -67,12 +67,13 @@ public:
 
     typedef SReal Real;
 
-    Data< helper::vector<Real> > voxelSize; // should be a Vec<3,Real>, but it is easier to be backward-compatible that way
+    Data< helper::vector<Real> > d_voxelSize; // should be a Vec<3,Real>, but it is easier to be backward-compatible that way
     typedef helper::WriteOnlyAccessor<Data< helper::vector<Real> > > waVecReal;
-    Data< defaulttype::Vec<3,unsigned> > nbVoxels;
-    Data< bool > rotateImage;
-    Data< unsigned int > padSize;
-    Data< unsigned int > subdiv;
+    Data< defaulttype::Vec<3,unsigned> > d_nbVoxels;
+    Data< bool > d_rotateImage;
+    Data< helper::vector<unsigned int> > d_padSize; // should be a Vec<3,unsigned int>, but it is easier to be backward-compatible that way
+    typedef helper::WriteOnlyAccessor<Data< helper::vector<unsigned int> > > waVecUI;
+    Data< unsigned int > d_subdiv;
 
     typedef _ImageTypes ImageTypes;
     typedef typename ImageTypes::T T;
@@ -90,84 +91,84 @@ public:
     typedef helper::vector<defaulttype::Vec<3,Real> > SeqPositions;
     typedef helper::ReadAccessor<Data< SeqPositions > > raPositions;
     typedef helper::WriteOnlyAccessor<Data< SeqPositions > > waPositions;
-    helper::vectorData< SeqPositions > vf_positions;
+    helper::vectorData< SeqPositions > vd_positions;
 
     typedef typename core::topology::BaseMeshTopology::Edge Edge;
     typedef typename core::topology::BaseMeshTopology::SeqEdges SeqEdges;
     typedef helper::ReadAccessor<Data< SeqEdges > > raEdges;
     typedef helper::WriteOnlyAccessor<Data< SeqEdges > > waEdges;
-    helper::vectorData< SeqEdges > vf_edges;
+    helper::vectorData< SeqEdges > vd_edges;
 
     typedef typename core::topology::BaseMeshTopology::Triangle Triangle;
     typedef typename core::topology::BaseMeshTopology::SeqTriangles SeqTriangles;
     typedef helper::ReadAccessor<Data< SeqTriangles > > raTriangles;
     typedef helper::WriteOnlyAccessor<Data< SeqTriangles > > waTriangles;
-    helper::vectorData< SeqTriangles > vf_triangles;
+    helper::vectorData< SeqTriangles > vd_triangles;
 
     typedef double ValueType;
     typedef helper::vector<ValueType> SeqValues;
     typedef helper::ReadAccessor<Data< SeqValues > > raValues;
-    helper::vectorData< SeqValues > vf_values;
+    helper::vectorData< SeqValues > vd_values;
 
-    helper::vectorData< bool > vf_FillInside;
-    helper::vectorData< ValueType > vf_InsideValues;
+    helper::vectorData< bool > vd_FillInside;
+    helper::vectorData< ValueType > vd_InsideValues;
 
     typedef helper::SVector<typename core::topology::BaseMeshTopology::PointID> SeqIndex; ///< one roi defined as an index list
     typedef helper::vector<SeqIndex> VecSeqIndex;  ///< vector of rois
-    helper::vectorData<VecSeqIndex> vf_roiIndices;  ///< vector of rois for each mesh
-    helper::vectorData<SeqValues> vf_roiValue;   ///< values for each roi
+    helper::vectorData<VecSeqIndex> vd_roiIndices;  ///< vector of rois for each mesh
+    helper::vectorData<SeqValues> vd_roiValue;   ///< values for each roi
     typedef helper::ReadAccessor<Data< VecSeqIndex > > raIndex;
 
-    Data< ValueType > backgroundValue;
+    Data< ValueType > d_backgroundValue;
 
-    Data<unsigned int> f_nbMeshes;
+    Data<unsigned int> d_nbMeshes;
 
-    Data<bool> gridSnap;
+    Data<bool> d_gridSnap;
 
-    Data<bool> worldGridAligned;
+    Data<bool> d_worldGridAligned;
 
 
     virtual std::string getTemplateName() const    { return templateName(this);    }
     static std::string templateName(const MeshToImageEngine<ImageTypes>* = NULL) { return ImageTypes::Name();    }
 
     MeshToImageEngine()    :   Inherited()
-      , voxelSize(initData(&voxelSize,helper::vector<Real>(3,(Real)1.0),"voxelSize","voxel Size (redondant with and not priority over nbVoxels)"))
-      , nbVoxels(initData(&nbVoxels,defaulttype::Vec<3,unsigned>(0,0,0),"nbVoxels","number of voxel (redondant with and priority over voxelSize)"))
-      , rotateImage(initData(&rotateImage,false,"rotateImage","orient the image bounding box according to the mesh (OBB)"))
-      , padSize(initData(&padSize,(unsigned int)(0),"padSize","size of border in number of voxels"))
-      , subdiv(initData(&subdiv,(unsigned int)(4),"subdiv","number of subdivisions for face rasterization (if needed, increase to avoid holes)"))
+      , d_voxelSize(initData(&d_voxelSize,helper::vector<Real>(3,(Real)1.0),"voxelSize","voxel Size (redondant with and not priority over nbVoxels)"))
+      , d_nbVoxels(initData(&d_nbVoxels,defaulttype::Vec<3,unsigned>(0,0,0),"nbVoxels","number of voxel (redondant with and priority over voxelSize)"))
+      , d_rotateImage(initData(&d_rotateImage,false,"rotateImage","orient the image bounding box according to the mesh (OBB)"))
+      , d_padSize(initData(&d_padSize,helper::vector<unsigned int>(3,(unsigned int)0) ,"padSize","size of border in number of voxels"))
+      , d_subdiv(initData(&d_subdiv,(unsigned int)(4),"subdiv","number of subdivisions for face rasterization (if needed, increase to avoid holes)"))
       , image(initData(&image,ImageTypes(),"image",""))
       , transform(initData(&transform,TransformType(),"transform",""))
-      , vf_positions(this, "position", "input positions for mesh ", helper::DataEngineInput)
-      , vf_edges(this,"edges", "input edges for mesh ", helper::DataEngineInput)
-      , vf_triangles(this,"triangles", "input triangles for mesh ", helper::DataEngineInput)
-      , vf_values(this,"value", "pixel value on mesh surface ", helper::DataEngineInput, SeqValues((size_t)1,(ValueType)1.0))
-      , vf_FillInside(this,"fillInside", "fill the mesh using insideValue?", helper::DataEngineInput, true)
-      , vf_InsideValues(this,"insideValue", "pixel value inside the mesh", helper::DataEngineInput, (ValueType)1.0)
-      , vf_roiIndices(this,"roiIndices", "List of Regions Of Interest, vertex indices", helper::DataEngineInput)
-      , vf_roiValue(this,"roiValue", "pixel value for ROIs, list of values", helper::DataEngineInput)
-      , backgroundValue(initData(&backgroundValue,0.,"backgroundValue","pixel value at background"))
-      , f_nbMeshes( initData (&f_nbMeshes, (unsigned)1, "nbMeshes", "number of meshes to voxelize (Note that the last one write on the previous ones)") )
-      , gridSnap(initData(&gridSnap,true,"gridSnap","align voxel centers on voxelSize multiples for perfect image merging (nbVoxels and rotateImage should be off)"))
-      , worldGridAligned(initData(&worldGridAligned, false, "worldGridAligned", "perform rasterization on a world aligned grid using nbVoxels and voxelSize"))
+      , vd_positions(this, "position", "input positions for mesh ", helper::DataEngineInput)
+      , vd_edges(this,"edges", "input edges for mesh ", helper::DataEngineInput)
+      , vd_triangles(this,"triangles", "input triangles for mesh ", helper::DataEngineInput)
+      , vd_values(this,"value", "pixel value on mesh surface ", helper::DataEngineInput, SeqValues((size_t)1,(ValueType)1.0))
+      , vd_FillInside(this,"fillInside", "fill the mesh using insideValue?", helper::DataEngineInput, true)
+      , vd_InsideValues(this,"insideValue", "pixel value inside the mesh", helper::DataEngineInput, (ValueType)1.0)
+      , vd_roiIndices(this,"roiIndices", "List of Regions Of Interest, vertex indices", helper::DataEngineInput)
+      , vd_roiValue(this,"roiValue", "pixel value for ROIs, list of values", helper::DataEngineInput)
+      , d_backgroundValue(initData(&d_backgroundValue,0.,"backgroundValue","pixel value at background"))
+      , d_nbMeshes( initData (&d_nbMeshes, (unsigned)1, "nbMeshes", "number of meshes to voxelize (Note that the last one write on the previous ones)") )
+      , d_gridSnap(initData(&d_gridSnap,true,"gridSnap","align voxel centers on voxelSize multiples for perfect image merging (nbVoxels and rotateImage should be off)"))
+      , d_worldGridAligned(initData(&d_worldGridAligned, false, "worldGridAligned", "perform rasterization on a world aligned grid using nbVoxels and voxelSize"))
     {
-        vf_positions.resize(f_nbMeshes.getValue());
-        vf_edges.resize(f_nbMeshes.getValue());
-        vf_triangles.resize(f_nbMeshes.getValue());
-        vf_values.resize(f_nbMeshes.getValue());
-        vf_FillInside.resize(f_nbMeshes.getValue());
-        vf_InsideValues.resize(f_nbMeshes.getValue());
-        vf_roiIndices.resize(f_nbMeshes.getValue());
-        vf_roiValue.resize(f_nbMeshes.getValue());
+        vd_positions.resize(d_nbMeshes.getValue());
+        vd_edges.resize(d_nbMeshes.getValue());
+        vd_triangles.resize(d_nbMeshes.getValue());
+        vd_values.resize(d_nbMeshes.getValue());
+        vd_FillInside.resize(d_nbMeshes.getValue());
+        vd_InsideValues.resize(d_nbMeshes.getValue());
+        vd_roiIndices.resize(d_nbMeshes.getValue());
+        vd_roiValue.resize(d_nbMeshes.getValue());
 
-        this->addAlias(vf_positions[0], "position");
-        this->addAlias(vf_edges[0], "edges");
-        this->addAlias(vf_triangles[0], "triangles");
-        this->addAlias(vf_values[0], "value");
-        this->addAlias(vf_FillInside[0], "fillInside");
-        this->addAlias(vf_InsideValues[0], "insideValue");
-        this->addAlias(vf_roiIndices[0], "roiIndices");
-        this->addAlias(vf_roiValue[0], "roiValue");
+        this->addAlias(vd_positions[0], "position");
+        this->addAlias(vd_edges[0], "edges");
+        this->addAlias(vd_triangles[0], "triangles");
+        this->addAlias(vd_values[0], "value");
+        this->addAlias(vd_FillInside[0], "fillInside");
+        this->addAlias(vd_InsideValues[0], "insideValue");
+        this->addAlias(vd_roiIndices[0], "roiIndices");
+        this->addAlias(vd_roiValue[0], "roiValue");
     }
 
     virtual ~MeshToImageEngine()
@@ -177,25 +178,25 @@ public:
     virtual void init()
     {
         // backward compatibility (if InsideValue is not set: use first value)
-        for( size_t meshId=0; meshId<vf_InsideValues.size() ; ++meshId )
-            if(!this->vf_InsideValues[meshId]->isSet() && this->vf_values[meshId]->isSet())
-                if(meshId>=this->vf_FillInside.size() || this->vf_FillInside[meshId]->getValue())
+        for( size_t meshId=0; meshId<vd_InsideValues.size() ; ++meshId )
+            if(!this->vd_InsideValues[meshId]->isSet() && this->vd_values[meshId]->isSet())
+                if(meshId>=this->vd_FillInside.size() || this->vd_FillInside[meshId]->getValue())
                 {
-                    this->vf_InsideValues[meshId]->setValue(this->vf_values[meshId]->getValue()[0]);
-                    serr<<"InsideValue["<<meshId<<"] is not set -> used Value["<<meshId<<"]="<<this->vf_values[meshId]->getValue()[0]<<" instead"<<sendl;
+                    this->vd_InsideValues[meshId]->setValue(this->vd_values[meshId]->getValue()[0]);
+                    serr<<"InsideValue["<<meshId<<"] is not set -> used Value["<<meshId<<"]="<<this->vd_values[meshId]->getValue()[0]<<" instead"<<sendl;
                 }
 
 
-        addInput(&f_nbMeshes);
+        addInput(&d_nbMeshes);
 
-        vf_positions.resize(f_nbMeshes.getValue());
-        vf_edges.resize(f_nbMeshes.getValue());
-        vf_triangles.resize(f_nbMeshes.getValue());
-        vf_values.resize(f_nbMeshes.getValue());
-        vf_FillInside.resize(f_nbMeshes.getValue());
-        vf_InsideValues.resize(f_nbMeshes.getValue());
-        vf_roiIndices.resize(f_nbMeshes.getValue());
-        vf_roiValue.resize(f_nbMeshes.getValue());
+        vd_positions.resize(d_nbMeshes.getValue());
+        vd_edges.resize(d_nbMeshes.getValue());
+        vd_triangles.resize(d_nbMeshes.getValue());
+        vd_values.resize(d_nbMeshes.getValue());
+        vd_FillInside.resize(d_nbMeshes.getValue());
+        vd_InsideValues.resize(d_nbMeshes.getValue());
+        vd_roiIndices.resize(d_nbMeshes.getValue());
+        vd_roiValue.resize(d_nbMeshes.getValue());
 
         addOutput(&image);
         addOutput(&transform);
@@ -210,42 +211,42 @@ public:
 
     virtual void reinit()
     {
-        vf_positions.resize(f_nbMeshes.getValue());
-        vf_edges.resize(f_nbMeshes.getValue());
-        vf_triangles.resize(f_nbMeshes.getValue());
-        vf_values.resize(f_nbMeshes.getValue());
-        vf_FillInside.resize(f_nbMeshes.getValue());
-        vf_InsideValues.resize(f_nbMeshes.getValue());
-        vf_roiIndices.resize(f_nbMeshes.getValue());
-        vf_roiValue.resize(f_nbMeshes.getValue());
+        vd_positions.resize(d_nbMeshes.getValue());
+        vd_edges.resize(d_nbMeshes.getValue());
+        vd_triangles.resize(d_nbMeshes.getValue());
+        vd_values.resize(d_nbMeshes.getValue());
+        vd_FillInside.resize(d_nbMeshes.getValue());
+        vd_InsideValues.resize(d_nbMeshes.getValue());
+        vd_roiIndices.resize(d_nbMeshes.getValue());
+        vd_roiValue.resize(d_nbMeshes.getValue());
         update();
     }
 
     /// Parse the given description to assign values to this object's fields and potentially other parameters
     void parse ( sofa::core::objectmodel::BaseObjectDescription* arg )
     {
-        vf_positions.parseSizeData(arg, f_nbMeshes);
-        vf_edges.parseSizeData(arg, f_nbMeshes);
-        vf_triangles.parseSizeData(arg, f_nbMeshes);
-        vf_values.parseSizeData(arg, f_nbMeshes);
-        vf_FillInside.parseSizeData(arg, f_nbMeshes);
-        vf_InsideValues.parseSizeData(arg, f_nbMeshes);
-        vf_roiIndices.parseSizeData(arg, f_nbMeshes);
-        vf_roiValue.parseSizeData(arg, f_nbMeshes);
+        vd_positions.parseSizeData(arg, d_nbMeshes);
+        vd_edges.parseSizeData(arg, d_nbMeshes);
+        vd_triangles.parseSizeData(arg, d_nbMeshes);
+        vd_values.parseSizeData(arg, d_nbMeshes);
+        vd_FillInside.parseSizeData(arg, d_nbMeshes);
+        vd_InsideValues.parseSizeData(arg, d_nbMeshes);
+        vd_roiIndices.parseSizeData(arg, d_nbMeshes);
+        vd_roiValue.parseSizeData(arg, d_nbMeshes);
         Inherit1::parse(arg);
     }
 
     /// Assign the field values stored in the given map of name -> value pairs
     void parseFields ( const std::map<std::string,std::string*>& str )
     {
-        vf_positions.parseFieldsSizeData(str, f_nbMeshes);
-        vf_edges.parseFieldsSizeData(str, f_nbMeshes);
-        vf_triangles.parseFieldsSizeData(str, f_nbMeshes);
-        vf_values.parseFieldsSizeData(str, f_nbMeshes);
-        vf_FillInside.parseFieldsSizeData(str, f_nbMeshes);
-        vf_InsideValues.parseFieldsSizeData(str, f_nbMeshes);
-        vf_roiIndices.parseFieldsSizeData(str, f_nbMeshes);
-        vf_roiValue.parseFieldsSizeData(str, f_nbMeshes);
+        vd_positions.parseFieldsSizeData(str, d_nbMeshes);
+        vd_edges.parseFieldsSizeData(str, d_nbMeshes);
+        vd_triangles.parseFieldsSizeData(str, d_nbMeshes);
+        vd_values.parseFieldsSizeData(str, d_nbMeshes);
+        vd_FillInside.parseFieldsSizeData(str, d_nbMeshes);
+        vd_InsideValues.parseFieldsSizeData(str, d_nbMeshes);
+        vd_roiIndices.parseFieldsSizeData(str, d_nbMeshes);
+        vd_roiValue.parseFieldsSizeData(str, d_nbMeshes);
         Inherit1::parseFields(str);
     }
 
@@ -257,9 +258,17 @@ protected:
         cleanDirty();
 
         // to be backward-compatible, if less than 3 values, fill with the last one
-        waVecReal vs( voxelSize ); unsigned vs_lastid=vs.size()-1;
-        for( unsigned i=vs.size() ; i<3 ; ++i ) vs.push_back( vs[vs_lastid] );
-        vs.resize(3);
+        waVecReal vsize( d_voxelSize ); unsigned vs_lastid=vsize.size()-1;
+        for( unsigned i=vsize.size() ; i<3 ; ++i ) vsize.push_back( vsize[vs_lastid] );
+        vsize.resize(3);
+
+        // to be backward-compatible, if less than 3 values, fill with the last one
+        waVecUI psize( d_padSize ); unsigned ps_lastid=psize.size()-1;
+        for( unsigned i=psize.size() ; i<3 ; ++i ) psize.push_back( psize[ps_lastid] );
+        psize.resize(3);
+
+        const unsigned int nbmeshes = d_nbMeshes.getValue();
+        const defaulttype::Vec<3,unsigned>& nbVoxels=d_nbVoxels.getValue();
 
         waImage iml(this->image);
         waTransform tr(this->transform);
@@ -267,22 +276,22 @@ protected:
         // update transform
         Real BB[3][2] = { {std::numeric_limits<Real>::max(), -std::numeric_limits<Real>::max()} , {std::numeric_limits<Real>::max(), -std::numeric_limits<Real>::max()} , {std::numeric_limits<Real>::max(), -std::numeric_limits<Real>::max()} };
 
-        if(worldGridAligned.getValue() == true) // no transformation, simply assign an image of numVoxel*voxelSize
+        if(d_worldGridAligned.getValue() == true) // no transformation, simply assign an image of numVoxel*voxelSize
         {
             // min and max centered around origin of transform
             for(int i=0; i< 3; i++)
             {
-                BB[i][1] = nbVoxels.getValue()[i]*voxelSize.getValue()[i]*0.5f;
+                BB[i][1] = nbVoxels[i]*vsize[i]*0.5f;
                 BB[i][0] = -BB[i][1];
             }
         }
-        else if(!this->rotateImage.getValue()) // use Axis Aligned Bounding Box
+        else if(!this->d_rotateImage.getValue()) // use Axis Aligned Bounding Box
         {
             for(size_t j=0; j<3; j++) tr->getRotation()[j]=(Real)0 ;
 
-            for( unsigned meshId=0; meshId<f_nbMeshes.getValue() ; ++meshId )
+            for( unsigned meshId=0; meshId<nbmeshes ; ++meshId )
             {
-                raPositions pos(*this->vf_positions[meshId]);       unsigned int nbp = pos.size();
+                raPositions pos(*this->vd_positions[meshId]);       unsigned int nbp = pos.size();
 
                 for(size_t i=0; i<nbp; i++) for(size_t j=0; j<3; j++) { if(BB[j][0]>pos[i][j]) BB[j][0]=pos[i][j]; if(BB[j][1]<pos[i][j]) BB[j][1]=pos[i][j]; }
             }
@@ -295,17 +304,17 @@ protected:
                 BB[j][0] -= EPSILON;
             }
 
-            if( nbVoxels.getValue()[0]!=0 && nbVoxels.getValue()[1]!=0 && nbVoxels.getValue()[2]!=0 ) for(size_t j=0; j<3; j++) tr->getScale()[j] = (BB[j][1] - BB[j][0]) / nbVoxels.getValue()[j];
-            else for(size_t j=0; j<3; j++) tr->getScale()[j] = this->voxelSize.getValue()[j];
+            if( nbVoxels[0]!=0 && nbVoxels[1]!=0 && nbVoxels[2]!=0 ) for(size_t j=0; j<3; j++) tr->getScale()[j] = (BB[j][1] - BB[j][0]) / nbVoxels[j];
+            else for(size_t j=0; j<3; j++) tr->getScale()[j] = vsize[j];
 
-            if(this->gridSnap.getValue())
-                if( nbVoxels.getValue()[0]==0 || nbVoxels.getValue()[1]==0 || nbVoxels.getValue()[2]==0 )
+            if(this->d_gridSnap.getValue())
+                if( nbVoxels[0]==0 || nbVoxels[1]==0 || nbVoxels[2]==0 )
                 {
                     for(size_t j=0; j<3; j++) BB[j][0] = tr->getScale()[j]*floor(BB[j][0]/tr->getScale()[j]);
                     for(size_t j=0; j<3; j++) BB[j][1] = tr->getScale()[j]*ceil(BB[j][1]/tr->getScale()[j]);
                 }
 
-            for(size_t j=0; j<3; j++) tr->getTranslation()[j]=BB[j][0]+tr->getScale()[j]*0.5-tr->getScale()[j]*this->padSize.getValue();
+            for(size_t j=0; j<3; j++) tr->getTranslation()[j]=BB[j][0]+tr->getScale()[j]*0.5-tr->getScale()[j]*psize[j];
         }
         else  // use Oriented Bounding Box
         {
@@ -313,18 +322,18 @@ protected:
 
             // get mean and covariance
             Coord mean; mean.fill(0);
-            for( unsigned meshId=0; meshId<f_nbMeshes.getValue() ; ++meshId )
+            for( unsigned meshId=0; meshId<nbmeshes ; ++meshId )
             {
-                raPositions pos(*this->vf_positions[meshId]);       unsigned int nbp = pos.size();
+                raPositions pos(*this->vd_positions[meshId]);       unsigned int nbp = pos.size();
                 for(size_t i=0; i<nbp; i++) mean+=pos[i];
                 nbpTotal += nbp;
             }
             mean/=(Real)nbpTotal;
 
             defaulttype::Mat<3,3,Real> M; M.fill(0);
-            for( unsigned meshId=0; meshId<f_nbMeshes.getValue() ; ++meshId )
+            for( unsigned meshId=0; meshId<nbmeshes ; ++meshId )
             {
-                raPositions pos(*this->vf_positions[meshId]);       unsigned int nbp = pos.size();
+                raPositions pos(*this->vd_positions[meshId]);       unsigned int nbp = pos.size();
                 for(size_t i=0; i<nbp; i++)  for(size_t j=0; j<3; j++)  for(size_t k=j; k<3; k++)  M[j][k] += (pos[i][j] - mean[j]) * (pos[i][k] - mean[k]);
             }
             M/=(Real)nbpTotal;
@@ -345,9 +354,9 @@ protected:
 
             // get bb
             Coord P;
-            for( unsigned meshId=0; meshId<f_nbMeshes.getValue() ; ++meshId )
+            for( unsigned meshId=0; meshId<nbmeshes ; ++meshId )
             {
-                raPositions pos(*this->vf_positions[meshId]);       unsigned int nbp = pos.size();
+                raPositions pos(*this->vd_positions[meshId]);       unsigned int nbp = pos.size();
                 for(size_t i=0; i<nbp; i++) { P=MT*(pos[i]);  for(size_t j=0; j<3; j++) { if(BB[j][0]>P[j]) BB[j][0]=P[j]; if(BB[j][1]<P[j]) BB[j][1]=P[j]; } }
             }
 
@@ -359,10 +368,11 @@ protected:
                 BB[j][0] -= EPSILON;
             }
 
-            if( nbVoxels.getValue()[0]!=0 && nbVoxels.getValue()[1]!=0 && nbVoxels.getValue()[2]!=0 ) for(size_t j=0; j<3; j++) tr->getScale()[j] = (BB[j][1] - BB[j][0]) / nbVoxels.getValue()[j];
-            else for(size_t j=0; j<3; j++) tr->getScale()[j] = this->voxelSize.getValue()[j];
+            if( nbVoxels[0]!=0 && nbVoxels[1]!=0 && nbVoxels[2]!=0 ) for(size_t j=0; j<3; j++) tr->getScale()[j] = (BB[j][1] - BB[j][0]) / nbVoxels[j];
+            else for(size_t j=0; j<3; j++) tr->getScale()[j] = vsize[j];
 
-            P=Coord(BB[0][0],BB[1][0],BB[2][0]) + tr->getScale()*0.5 - tr->getScale()*this->padSize.getValue();
+            P=Coord(BB[0][0],BB[1][0],BB[2][0]) + tr->getScale()*0.5;
+            for(size_t j=0; j<3; j++) P[j] -= tr->getScale()[j]*psize[j];
             tr->getTranslation()=M*(P);
         }
 
@@ -373,13 +383,21 @@ protected:
 
         // update image extents
         unsigned int dim[3];
-        for(size_t j=0; j<3; j++) dim[j]=ceil((BB[j][1]-BB[j][0])/tr->getScale()[j]+(Real)2.0*this->padSize.getValue());
+        for(size_t j=0; j<3; j++)
+        {
+            dim[j]=ceil((BB[j][1]-BB[j][0])/tr->getScale()[j]+(Real)2.0*psize[j]);
+            if(dim[j]==0)  // center the image on flat objects
+            {
+                dim[j]=1;
+                tr->getTranslation()[j]-=tr->getScale()[j]*0.5;
+            }
+        }
 
-        if(this->worldGridAligned.getValue()==true)
+        if(this->d_worldGridAligned.getValue()==true)
             for(size_t j=0; j<3; j++)
             {
-                dim[j]=ceil((BB[j][1]-BB[j][0])/this->voxelSize.getValue()[j]);
-                tr->getScale()[j]= this->voxelSize.getValue()[j];
+                dim[j]=ceil((BB[j][1]-BB[j][0])/vsize[j]);
+                tr->getScale()[j]= vsize[j];
             }
         
         if(iml->getCImgList().size() == 0) iml->getCImgList().assign(1,dim[0],dim[1],dim[2],1);
@@ -387,9 +405,9 @@ protected:
 
         // Keep it as a pointer since the code will be called recursively
         cimg_library::CImg<T>& im = iml->getCImg();
-        im.fill( (T)backgroundValue.getValue() );
+        im.fill( (T)d_backgroundValue.getValue() );
 
-        for( size_t meshId=0 ; meshId<f_nbMeshes.getValue() ; ++meshId )        rasterizeAndFill ( meshId, im, tr );
+        for( size_t meshId=0 ; meshId<nbmeshes ; ++meshId )        rasterizeAndFill ( meshId, im, tr );
 
         if(this->f_printLog.getValue()) sout<<this->getName()<<": Voxelization done"<<sendl;
 
@@ -399,20 +417,20 @@ protected:
     // regular rasterization like first implementation, with inside filled by the unique value
     void rasterizeAndFill( const unsigned int &meshId, cimg_library::CImg<T>& im, const waTransform& tr )
     {
-        raPositions pos(*this->vf_positions[meshId]);       unsigned int nbp = pos.size();
-        raTriangles tri(*this->vf_triangles[meshId]);       unsigned int nbtri = tri.size();
-        raEdges edg(*this->vf_edges[meshId]);               unsigned int nbedg = edg.size();
+        raPositions pos(*this->vd_positions[meshId]);       unsigned int nbp = pos.size();
+        raTriangles tri(*this->vd_triangles[meshId]);       unsigned int nbtri = tri.size();
+        raEdges edg(*this->vd_edges[meshId]);               unsigned int nbedg = edg.size();
         if(!nbp || (!nbtri && !nbedg) ) { serr<<"no topology defined for mesh "<<meshId<<sendl; return; }
-        unsigned int nbval = this->vf_values[meshId]->getValue().size();
+        unsigned int nbval = this->vd_values[meshId]->getValue().size();
 
-        raIndex roiIndices(*this->vf_roiIndices[meshId]);
-        if(roiIndices.size() && !this->vf_roiValue[meshId]->getValue().size()) serr<<"at least one roiValue for mesh "<<meshId<<" needs to be specified"<<sendl;
+        raIndex roiIndices(*this->vd_roiIndices[meshId]);
+        if(roiIndices.size() && !this->vd_roiValue[meshId]->getValue().size()) serr<<"at least one roiValue for mesh "<<meshId<<" needs to be specified"<<sendl;
         if(this->f_printLog.getValue())  for(size_t r=0;r<roiIndices.size();++r) sout<<this->getName()<<": mesh "<<meshId<<"\t ROI "<<r<<"\t number of vertices= " << roiIndices[r].size() << "\t value= "<<getROIValue(meshId,r)<<sendl;
 
         /// colors definition
         const T FillColor = (T)getValue(meshId,0);
-        const T InsideColor = (T)this->vf_InsideValues[meshId]->getValue();
-        //        T OutsideColor = (T)this->backgroundValue.getValue();
+        const T InsideColor = (T)this->vd_InsideValues[meshId]->getValue();
+        //        T OutsideColor = (T)this->d_backgroundValue.getValue();
 
         /// draw surface
         cimg_library::CImg<bool> mask;
@@ -422,7 +440,7 @@ protected:
         // draw edges
         if(this->f_printLog.getValue() && nbedg) sout<<this->getName()<<":  Voxelizing edges (mesh "<<meshId<<")..."<<sendl;
 
-        unsigned int subdivValue = this->subdiv.getValue();
+        unsigned int subdivValue = this->d_subdiv.getValue();
 
         std::map<unsigned int,T> edgToValue; // we record special roi values and rasterize them after to prevent from overwriting
 #ifdef _OPENMP
@@ -492,7 +510,7 @@ protected:
         }
 
         /// fill inside
-        if(this->vf_FillInside[meshId]->getValue())
+        if(this->vd_FillInside[meshId]->getValue())
         {
             if(!isClosed(tri.ref())) sout<<"mesh["<<meshId<<"] might be open, let's try to fill it anyway"<<sendl;
             // flood fill from the exterior point (0,0,0) with the color outsideColor
@@ -507,15 +525,15 @@ protected:
     /// retrieve input value of vertex 'index' of mesh 'meshId'
     ValueType getValue( const unsigned int &meshId, const unsigned int &index ) const
     {
-        if(!this->vf_values[meshId]->getValue().size()) return (ValueType)1.0;
-        return ( index<this->vf_values[meshId]->getValue().size() )? this->vf_values[meshId]->getValue()[index] : this->vf_values[meshId]->getValue()[0];
+        if(!this->vd_values[meshId]->getValue().size()) return (ValueType)1.0;
+        return ( index<this->vd_values[meshId]->getValue().size() )? this->vd_values[meshId]->getValue()[index] : this->vd_values[meshId]->getValue()[0];
     }
 
     /// retrieve value of roi 'index' of mesh 'meshId'
     ValueType getROIValue( const unsigned int &meshId, const unsigned int &index ) const
     {
-        if(!this->vf_roiValue[meshId]->getValue().size()) return (ValueType)1.0;
-        return ( index<this->vf_roiValue[meshId]->getValue().size() )? this->vf_roiValue[meshId]->getValue()[index] : this->vf_roiValue[meshId]->getValue()[0];
+        if(!this->vd_roiValue[meshId]->getValue().size()) return (ValueType)1.0;
+        return ( index<this->vd_roiValue[meshId]->getValue().size() )? this->vd_roiValue[meshId]->getValue()[index] : this->vd_roiValue[meshId]->getValue()[0];
     }
 
 

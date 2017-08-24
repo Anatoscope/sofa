@@ -21,28 +21,26 @@
 ******************************************************************************/
 #include "Binding_VectorLinearSpringData.h"
 #include "Binding_Data.h"
+using sofa::core::objectmodel::Data ;
 
 #include <SofaDeformable/SpringForceField.h>
+using sofa::component::interactionforcefield::LinearSpring ;
+
 #include <sofa/defaulttype/DataTypeInfo.h>
+using sofa::defaulttype::AbstractTypeInfo ;
+
 #include "Binding_LinearSpring.h"
 #include "PythonToSofa.inl"
-
-using namespace sofa::core::objectmodel;
-using namespace sofa::defaulttype;
-using namespace sofa::component::interactionforcefield;
 
 typedef LinearSpring<SReal> MyLinearSpring;
 typedef sofa::helper::vector<MyLinearSpring> VectorLinearSpring;
 typedef Data<VectorLinearSpring> DataBinding_VectorLinearSpring;
 
 
-
 /// getting a Data<VectorLinearSpring>* from a PyObject*
 static inline Data<VectorLinearSpring>* get_DataVectorLinearSpring(PyObject* obj) {
-    return get<Data<VectorLinearSpring>>(obj);
+    return sofa::py::unwrap<Data<VectorLinearSpring>>(obj);
 }
-
-
 
 
 SP_CLASS_ATTR_GET(VectorLinearSpringData,value)(PyObject *self, void*)
@@ -76,11 +74,10 @@ SP_CLASS_ATTR_GET(VectorLinearSpringData,value)(PyObject *self, void*)
             }
             PyList_SetItem(rows,i,row);
         }
-
         return rows;
     }
-
 }
+
 
 SP_CLASS_ATTR_SET(VectorLinearSpringData,value)(PyObject *self, PyObject * args, void*)
 {
@@ -109,7 +106,6 @@ SP_CLASS_ATTR_SET(VectorLinearSpringData,value)(PyObject *self, PyObject * args,
     const int rowWidth = valid ? typeinfo->size() : 1;
     int nbRows = typeinfo->size(data->getValueVoidPtr()) / typeinfo->size();
 
-
     if( !PyList_Check(args) )
     {
         // one value
@@ -120,7 +116,6 @@ SP_CLASS_ATTR_SET(VectorLinearSpringData,value)(PyObject *self, PyObject * args,
             PyErr_BadArgument();
             return -1;
         }
-
 
         // right number if rows ?
         if (1!=nbRows)
@@ -146,12 +141,9 @@ SP_CLASS_ATTR_SET(VectorLinearSpringData,value)(PyObject *self, PyObject * args,
     {
         // values list
         // is it a double-dimension list ?
-        //PyObject *firstRow = PyList_GetItem(args,0);
-
         if (PyList_Check(PyList_GetItem(args,0)))
         {
             // two-dimension array!
-
             // right number if rows ?
             if (PyList_Size(args)!=nbRows)
             {
@@ -160,7 +152,6 @@ SP_CLASS_ATTR_SET(VectorLinearSpringData,value)(PyObject *self, PyObject * args,
                         if (PyList_Size(args)<nbRows)
                         nbRows = PyList_Size(args);
             }
-
 
             VectorLinearSpring* vectorLinearSpring = data->beginEdit();
 
@@ -182,7 +173,6 @@ SP_CLASS_ATTR_SET(VectorLinearSpringData,value)(PyObject *self, PyObject * args,
                 // okay, let's set our list...
                 for (int j=0; j<size; j++)
                 {
-
                     PyObject *listElt = PyList_GetItem(row,j);
                     if(!PyObject_IsInstance(listElt,reinterpret_cast<PyObject*>(&SP_SOFAPYTYPEOBJECT(LinearSpring))))
                     {
@@ -193,21 +183,15 @@ SP_CLASS_ATTR_SET(VectorLinearSpringData,value)(PyObject *self, PyObject * args,
                     }
                     LinearSpring<SReal>* spring=dynamic_cast<LinearSpring<SReal>*>(((PyPtr<LinearSpring<SReal> >*)listElt)->object);
 
-
                     (*vectorLinearSpring)[j+i*rowWidth].m1 = spring->m1;
                     (*vectorLinearSpring)[j+i*rowWidth].m2 = spring->m2;
                     (*vectorLinearSpring)[j+i*rowWidth].ks = spring->ks;
                     (*vectorLinearSpring)[j+i*rowWidth].kd = spring->kd;
                     (*vectorLinearSpring)[j+i*rowWidth].initpos = spring->initpos;
-
                 }
-
             }
-
             data->endEdit();
-
             return 0;
-
         }
         else
         {
@@ -227,9 +211,7 @@ SP_CLASS_ATTR_SET(VectorLinearSpringData,value)(PyObject *self, PyObject * args,
             // okay, let's set our list...
             for (int i=0; i<size; i++)
             {
-
                 PyObject *listElt = PyList_GetItem(args,i);
-
                 if(!PyObject_IsInstance(listElt,reinterpret_cast<PyObject*>(&SP_SOFAPYTYPEOBJECT(LinearSpring))))
                 {
                     // type mismatch
@@ -239,33 +221,27 @@ SP_CLASS_ATTR_SET(VectorLinearSpringData,value)(PyObject *self, PyObject * args,
                 }
 
                 LinearSpring<SReal>* spring=dynamic_cast<LinearSpring<SReal>*>(((PyPtr<LinearSpring<SReal> >*)listElt)->object);
-
                 (*vectorLinearSpring)[i].m1 = spring->m1;
                 (*vectorLinearSpring)[i].m2 = spring->m2;
                 (*vectorLinearSpring)[i].ks = spring->ks;
                 (*vectorLinearSpring)[i].kd = spring->kd;
                 (*vectorLinearSpring)[i].initpos = spring->initpos;
-
             }
-
             data->endEdit();
-
             return 0;
         }
     }
-
 }
 
 
-
-
-extern "C" Py_ssize_t VectorLinearSpringData_length(PyObject *self)
+static Py_ssize_t VectorLinearSpringData_length(PyObject *self)
 {
     DataBinding_VectorLinearSpring* data  = get_DataVectorLinearSpring( self );
     return data->getValue().size();
 }
 
-extern "C" PyObject * VectorLinearSpringData_getitem(PyObject *self, PyObject *i)
+
+static PyObject * VectorLinearSpringData_getitem(PyObject *self, PyObject *i)
 {
     DataBinding_VectorLinearSpring* data  = get_DataVectorLinearSpring( self );
 
@@ -273,9 +249,7 @@ extern "C" PyObject * VectorLinearSpringData_getitem(PyObject *self, PyObject *i
     const void* valueVoidPtr = data->getValueVoidPtr();
     //    int rowWidth = typeinfo->size();
     int nbRows = typeinfo->size(data->getValueVoidPtr()) / typeinfo->size();
-
     long index = PyInt_AsLong(i);
-
     if (typeinfo->size(valueVoidPtr)==1)
     {
         SP_MESSAGE_WARNING( "the VectorLinearSpringData contains only one element" )
@@ -300,7 +274,8 @@ extern "C" PyObject * VectorLinearSpringData_getitem(PyObject *self, PyObject *i
     }
 }
 
-extern "C" int VectorLinearSpringData_setitem(PyObject *self, PyObject* i, PyObject* v)
+
+static int VectorLinearSpringData_setitem(PyObject *self, PyObject* i, PyObject* v)
 {
     DataBinding_VectorLinearSpring* data  = get_DataVectorLinearSpring( self );
 
@@ -308,7 +283,6 @@ extern "C" int VectorLinearSpringData_setitem(PyObject *self, PyObject* i, PyObj
     int nbRows = typeinfo->size(data->getValueVoidPtr()) / typeinfo->size();
 
     long index = PyInt_AsLong(i);
-
     if( index>=nbRows )
     {
         SP_MESSAGE_ERROR( "the VectorLinearSpringData contains only "<<nbRows<<" element" )
@@ -316,17 +290,14 @@ extern "C" int VectorLinearSpringData_setitem(PyObject *self, PyObject* i, PyObj
         return -1;
     }
 
-    MyLinearSpring* value=((PyPtr<LinearSpring<SReal>>*)v)->object; // TODO: check dynamic cast
-
+    MyLinearSpring* value= sofa::py::unwrap<MyLinearSpring>(v); // TODO: check dynamic cast
     VectorLinearSpring& vec = *data->beginEdit();
 
     vec[index] = *value;
-
     data->endEdit();
 
     return 0;
 }
-
 
 
 SP_CLASS_ATTRS_BEGIN(VectorLinearSpringData)
@@ -334,14 +305,10 @@ SP_CLASS_ATTR(VectorLinearSpringData,value)
 SP_CLASS_ATTRS_END
 
 
-
-
 SP_CLASS_METHODS_BEGIN(VectorLinearSpringData)
 SP_CLASS_METHODS_END
 
-
 SP_CLASS_MAPPING(VectorLinearSpringData)
 
-
-SP_CLASS_TYPE_PTR_ATTR_MAPPING(VectorLinearSpringData,DataBinding_VectorLinearSpring,Data)
+SP_CLASS_TYPE_PTR_ATTR_MAPPING(VectorLinearSpringData, sofa::core::objectmodel::BaseData, Data)
 
