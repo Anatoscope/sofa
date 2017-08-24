@@ -28,11 +28,9 @@ set(SOURCE_FILES
     VolumeMapping_test.cpp
     LengthMapping_test.cpp
 #    SurfaceMapping_test.cpp
+    Engine_test.cpp
 )
 
-set(PYTHON_FILES
-    scenes/python/reInitMapping.py
-)
 
 if(WIN32)
     list(APPEND HEADER_FILES "stdafx.h")
@@ -42,6 +40,9 @@ endif()
 find_package(SofaPython QUIET)
 
 if(SofaPython_FOUND)
+    set(PYTHON_FILES
+        scenes/python/reInitMapping.py
+    )
     list(APPEND SOURCE_FILES python_test_list.cpp)
     add_definitions("-DFLEXIBLE_TEST_PYTHON_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/scenes/python\"")
 endif()
@@ -52,7 +53,6 @@ find_package(image QUIET)
 
 if(image_FOUND)
     list(APPEND SOURCE_FILES
-            Engine_test.cpp
             ShapeFunction_test.cpp
         )
 endif()
@@ -61,12 +61,5 @@ endif()
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES} ${PYTHON_FILES})
 target_link_libraries(${PROJECT_NAME} Flexible SofaTest SofaGTestMain)
 
-if(image_FOUND)
-    target_link_libraries(${PROJECT_NAME} image)
-endif()
-
-
-# #Needed by python test
-# AddCompilerDefinitions("SOFA_SRC_DIR=${SOFA_SRC_DIR}")
 
 add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
