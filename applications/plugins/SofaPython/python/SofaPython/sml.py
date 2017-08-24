@@ -618,7 +618,7 @@ class BaseScene:
     def getVisual(self,solidId,meshId):
         """ returns a visual object identified by solidId/meshId
         """
-        Sofa.msg_deprecated("SofaPython.sml.BaseScene","getCollision is deprecated, access directly self.visuals[solidId][meshId]")
+        Sofa.msg_deprecated("SofaPython.sml.BaseScene","getVisual is deprecated, access directly self.visuals[solidId][meshId]")
         mesh=None
         if hasattr(self, 'rigids'):  # inserted by Compliant.sml FIXME: parent class should not know child class !
             if solidId in self.rigids:

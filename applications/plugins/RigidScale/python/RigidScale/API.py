@@ -118,7 +118,7 @@ class ShearlessAffineBody:
             p.extend([0,0,0,1])
             self.frame.append(Frame.Frame(p))
 
-    def setManually(self, filepath=None, offset=[[0,0,0,0,0,0,1]], voxelSize=0.01, density=1000, mass=1, inertia=[1,1,1], inertia_forces=False, generatedDir=None, uniformScale=False):
+    def setManually(self, filepath=None, offset=[[0,0,0,0,0,0,1]], voxelSize=0.01, density=1000, mass=1, inertia=[1,1,1], inertia_forces=0, generatedDir=None, uniformScale=False):
 
         if len(offset) == 0:
             Sofa.msg_error("RigidScale.API","ShearlessAffineBody should have at least 1 ShearLessAffine")
