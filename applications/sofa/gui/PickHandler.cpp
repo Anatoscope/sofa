@@ -195,10 +195,20 @@ void PickHandler::unload()
 
 }
 
-Operation *PickHandler::changeOperation(sofa::component::configurationsetting::MouseButtonSetting* setting)
-{
-    if (operations[setting->button.getValue().getSelectedId()]) delete operations[setting->button.getValue().getSelectedId()];
-    Operation *mouseOp=OperationFactory::Instanciate(setting->getOperationType());
+Operation *PickHandler::changeOperation(sofa::component::configurationsetting::MouseButtonSetting* setting) {
+    if (operations[setting->button.getValue().getSelectedId()]) {
+        // mtournier: there's shared_ptr for this god dammit
+        delete operations[setting->button.getValue().getSelectedId()];
+    }
+
+    Operation *mouseOp = OperationFactory::Instanciate(setting->getOperationType());
+
+    if(!mouseOp) {
+        msg_error("PickHandler") << "cannot instantiate mouse operation type: " << setting->getOperationType()
+                                 << " (is plugin loaded?)";
+        return mouseOp;
+    }
+    
     mouseOp->configure(this,setting);
     operations[setting->button.getValue().getSelectedId()]=mouseOp;
     return mouseOp;
