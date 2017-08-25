@@ -118,6 +118,8 @@ void TTriangleModel<DataTypes>::updateNormals()
         const defaulttype::Vector3& pt3 = t.p3();
 
         t.n() = cross(pt2-pt1,pt3-pt1);
+
+        // TODO use sse
         t.n().normalize();
         //sout << i << " " << t.n() << sendl;
     }
@@ -888,28 +890,39 @@ void TTriangleModel<DataTypes>::computeBBox(const core::ExecParams* params, bool
 
     static const Real max_real = std::numeric_limits<Real>::max();
     static const Real min_real = std::numeric_limits<Real>::min();
+
     Real maxBBox[3] = {min_real,min_real,min_real};
     Real minBBox[3] = {max_real,max_real,max_real};
 
-    for (int i=0; i<size; i++)
-    {
-        Element t(this,i);
-        const defaulttype::Vector3& pt1 = t.p1();
-        const defaulttype::Vector3& pt2 = t.p2();
-        const defaulttype::Vector3& pt3 = t.p3();
+    // iterate on vertices
+    const auto& vertices = this->mstate->read(core::ConstVecCoordId::position())->getValue();
 
-        for (int c=0; c<3; c++)
-        {
-            if (pt1[c] > maxBBox[c]) maxBBox[c] = (Real)pt1[c];
-            else if (pt1[c] < minBBox[c]) minBBox[c] = (Real)pt1[c];
-
-            if (pt2[c] > maxBBox[c]) maxBBox[c] = (Real)pt2[c];
-            else if (pt2[c] < minBBox[c]) minBBox[c] = (Real)pt2[c];
-
-            if (pt3[c] > maxBBox[c]) maxBBox[c] = (Real)pt3[c];
-            else if (pt3[c] < minBBox[c]) minBBox[c] = (Real)pt3[c];
+    for(const auto& vi : vertices) {
+        for (int c=0; c<3; c++) {
+            if (vi[c] > maxBBox[c]) maxBBox[c] = vi[c];
+            else if (vi[c] < minBBox[c]) minBBox[c] = vi[c];
         }
     }
+    
+    // for (int i=0; i < size; ++i) {
+        
+    //     Element t(this,i);
+    //     const defaulttype::Vector3& pt1 = t.p1();
+    //     const defaulttype::Vector3& pt2 = t.p2();
+    //     const defaulttype::Vector3& pt3 = t.p3();
+
+    //     for (int c=0; c<3; c++)
+    //     {
+    //         if (pt1[c] > maxBBox[c]) maxBBox[c] = (Real)pt1[c];
+    //         else if (pt1[c] < minBBox[c]) minBBox[c] = (Real)pt1[c];
+
+    //         if (pt2[c] > maxBBox[c]) maxBBox[c] = (Real)pt2[c];
+    //         else if (pt2[c] < minBBox[c]) minBBox[c] = (Real)pt2[c];
+
+    //         if (pt3[c] > maxBBox[c]) maxBBox[c] = (Real)pt3[c];
+    //         else if (pt3[c] < minBBox[c]) minBBox[c] = (Real)pt3[c];
+    //     }
+    // }
 
     this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<Real>(minBBox,maxBBox));
 }
