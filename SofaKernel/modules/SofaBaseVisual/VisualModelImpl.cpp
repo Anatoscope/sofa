@@ -48,6 +48,9 @@
 #include <map>
 #include <memory>
 
+#include <sofa/helper/AdvancedTimer.h>
+#include <sofa/helper/sse.hpp>
+
 namespace sofa
 {
 
@@ -815,6 +818,9 @@ void VisualModelImpl::init()
     updateVisual();
 }
 
+
+
+
 void VisualModelImpl::computeNormals()
 {
     const VecCoord& vertices = getVertices();
@@ -827,47 +833,57 @@ void VisualModelImpl::computeNormals()
 
     if (vertNormIdx.empty())
     {
-        int nbn = (vertices).size();
-        //serr << "CN0("<<nbn<<")"<<sendl;
+        const unsigned nbn = vertices.size();
 
-        ResizableExtVector<Deriv>& normals = *(m_vnormals.beginEdit());
-
+        ResizableExtVector<Deriv>& normals = *(m_vnormals.beginWriteOnly());
         normals.resize(nbn);
-        for (int i = 0; i < nbn; i++)
-            normals[i].clear();
 
-        for (unsigned int i = 0; i < triangles.size(); i++)
-        {
-            const Coord& v1 = vertices[triangles[i][0]];
-            const Coord& v2 = vertices[triangles[i][1]];
-            const Coord& v3 = vertices[triangles[i][2]];
-            Coord n = cross(v2-v1, v3-v1);
+        // old school is best school
+        std::memset(&normals[0], nbn * sizeof(Deriv), 0);
 
-            normals[triangles[i][0]] += n;
-            normals[triangles[i][1]] += n;
-            normals[triangles[i][2]] += n;
+        for (unsigned i = 0, m = triangles.size(); i < m; ++i) {
+            const auto t = triangles[i];
+            
+            const Coord v1 = vertices[t[0]];
+            const Coord v2 = vertices[t[1]];
+            const Coord v3 = vertices[t[2]];
+            
+            const Coord n = cross(v2-v1, v3-v1);
+
+            normals[t[0]] += n;
+            normals[t[1]] += n;
+            normals[t[2]] += n;
         }
 
-        for (unsigned int i = 0; i < quads.size(); i++)
+        for (unsigned i = 0; i < quads.size(); i++)
         {
-            const Coord & v1 = vertices[quads[i][0]];
-            const Coord & v2 = vertices[quads[i][1]];
-            const Coord & v3 = vertices[quads[i][2]];
-            const Coord & v4 = vertices[quads[i][3]];
-            Coord n1 = cross(v2-v1, v4-v1);
-            Coord n2 = cross(v3-v2, v1-v2);
-            Coord n3 = cross(v4-v3, v2-v3);
-            Coord n4 = cross(v1-v4, v3-v4);
+            const auto q = quads[i];
+            
+            const Coord v1 = vertices[q[0]];
+            const Coord v2 = vertices[q[1]];
+            const Coord v3 = vertices[q[2]];
+            const Coord v4 = vertices[q[3]];
 
-            normals[quads[i][0]] += n1;
-            normals[quads[i][1]] += n2;
-            normals[quads[i][2]] += n3;
-            normals[quads[i][3]] += n4;
+            const Coord v41 = v4 - v1;
+            const Coord v32 = v3 - v2;
+            const Coord v43 = v4 - v3;
+            const Coord v21 = v2 - v1;
+            
+            const Coord n1 = cross(v21, v41);
+            const Coord n2 = cross(v32, -v21);
+            const Coord n3 = cross(v43, -v32);
+            const Coord n4 = cross(-v41, -v43);
+
+            normals[q[0]] += n1;
+            normals[q[1]] += n2;
+            normals[q[2]] += n3;
+            normals[q[3]] += n4;
         }
 
-        for (unsigned int i = 0; i < normals.size(); i++)
-            normals[i].normalize();
-
+        for (unsigned i = 0; i < nbn; ++i) {
+            fast_normalize(normals[i]);
+        }
+        
         m_vnormals.endEdit();
     }
     else
@@ -1167,7 +1183,8 @@ void VisualModelImpl::updateVisual()
         {
             /** HD : build also a Ogl description from main Topology. But it needs to be build only once since the topology update
             is taken care of by the handleTopologyChange() routine */
-
+            std::clog << "use topology" << std::endl;
+            
             sofa::core::topology::TopologyModifier* topoMod;
             this->getContext()->get(topoMod);
 
@@ -1181,8 +1198,10 @@ void VisualModelImpl::updateVisual()
                 computeMesh();
             }
         }
+        
         computePositions();
         computeNormals();
+        
         if (m_updateTangents.getValue())
             computeTangents();
 
@@ -1191,10 +1210,11 @@ void VisualModelImpl::updateVisual()
         d_isModified.setValue( false );
     }
 
+    
     m_positions.updateIfDirty();
     m_vertices2.updateIfDirty();
     m_vnormals.updateIfDirty();
-    //m_vtexcoords.updateIfDirty();
+
     m_vtangents.updateIfDirty();
     m_vbitangents.updateIfDirty();
     m_edges.updateIfDirty();
@@ -1233,19 +1253,18 @@ void VisualModelImpl::updateVisual()
 }
 
 
-void VisualModelImpl::computePositions()
-{
+void VisualModelImpl::computePositions() {
     const ResizableExtVector<int> &vertPosIdx = m_vertPosIdx.getValue();
 
-    if (!vertPosIdx.empty())
-    {
+    if (!vertPosIdx.empty()) {
         // Need to transfer positions
-        VecCoord& vertices = *(m_vertices2.beginEdit());
+        VecCoord& vertices = *(m_vertices2.beginWriteOnly());
         const VecCoord& positions = this->m_positions.getValue();
-
-        for (unsigned int i=0 ; i < vertices.size(); ++i)
+        
+        for (unsigned int i = 0, m = vertices.size() ; i < m; ++i) {
             vertices[i] = positions[vertPosIdx[i]];
-
+        }
+        
         m_vertices2.endEdit();
     }
 }
