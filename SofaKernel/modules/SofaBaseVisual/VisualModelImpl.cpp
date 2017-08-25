@@ -1057,7 +1057,7 @@ void VisualModelImpl::computeTangents()
 
 void VisualModelImpl::computeBBox(const core::ExecParams* params, bool)
 {
-    const VecCoord& x = getVertices(); //m_vertices.getValue(params);
+    const VecCoord& x = m_positions.getValue(); //m_vertices.getValue(params);
 
     SReal minBBox[3] = {std::numeric_limits<Real>::max(),std::numeric_limits<Real>::max(),std::numeric_limits<Real>::max()};
     SReal maxBBox[3] = {-std::numeric_limits<Real>::max(),-std::numeric_limits<Real>::max(),-std::numeric_limits<Real>::max()};
