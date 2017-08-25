@@ -321,6 +321,8 @@ public:
 
     Data< helper::vector<sofa::core::loader::Material> > materials;
     Data< helper::vector<FaceGroup> > groups;
+
+    Data<bool> normalize_normals;
 protected:
     /// Default constructor.
     VisualModelImpl();

@@ -157,6 +157,7 @@ VisualModelImpl::VisualModelImpl() //const std::string &name, std::string filena
     , srgbTexturing		(initData	(&srgbTexturing, (bool) false, "srgbTexturing", "When sRGB rendering is enabled, is the texture in sRGB colorspace?"))
     , materials			(initData	(&materials, "materials", "List of materials"))
     , groups			(initData	(&groups, "groups", "Groups of triangles and quads using a given material"))
+    , normalize_normals(initData(&normalize_normals, false, "normalize_normals", "force normals normalization"))
     , xformsModified(false)
 {
 #ifdef SOFA_SMP
@@ -880,8 +881,10 @@ void VisualModelImpl::computeNormals()
             normals[q[3]] += n4;
         }
 
-        for (unsigned i = 0; i < nbn; ++i) {
-            fast_normalize(normals[i]);
+        if( normalize_normals.getValue() ) {
+            for (unsigned i = 0; i < nbn; ++i) {
+                fast_normalize(normals[i]);
+            }
         }
         
         m_vnormals.endEdit();
@@ -898,8 +901,11 @@ void VisualModelImpl::computeNormals()
         //serr << "CN1("<<nbn<<")"<<sendl;
 
         normals.resize(nbn);
-        for (int i = 0; i < nbn; i++)
-            normals[i].clear();
+
+        // old school is best school
+        std::memset(&normals[0], nbn * sizeof(Deriv), 0);
+        // for (int i = 0; i < nbn; i++)
+        //     normals[i].clear();
 
         for (unsigned int i = 0; i < triangles.size() ; i++)
         {
@@ -930,11 +936,12 @@ void VisualModelImpl::computeNormals()
             normals[vertNormIdx[quads[i][3]]] += n4;
         }
 
-        for (unsigned int i = 0; i < normals.size(); i++)
-        {
-            normals[i].normalize();
+        if( normalize_normals.getValue() ) {
+            for (int i = 0; i < nbn; ++i) {
+                fast_normalize(normals[i]);
+            }
         }
-
+        
         ResizableExtVector<Deriv>& vnormals = *(m_vnormals.beginEdit());
         vnormals.resize(vertices.size());
         for (unsigned int i = 0; i < vertices.size(); i++)
@@ -1067,7 +1074,7 @@ void VisualModelImpl::computeBBox(const core::ExecParams* params, bool)
         for (int c=0; c<3; c++)
         {
             if (p[c] > maxBBox[c]) maxBBox[c] = p[c];
-            if (p[c] < minBBox[c]) minBBox[c] = p[c];
+            else if (p[c] < minBBox[c]) minBBox[c] = p[c];
         }
     }
     this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<SReal>(minBBox,maxBBox));
