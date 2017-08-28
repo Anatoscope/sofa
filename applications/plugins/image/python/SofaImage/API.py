@@ -91,11 +91,13 @@ class Image:
             mesh.mesh = self.node.createObject("MeshClosingEngine", name="closer_"+name, inputPosition=meshPath+".position", inputTriangles=meshPath+".triangles")
             mesh.roiValue=[closingValue]
             mesh.roiIndices=mesh.mesh.getLinkPath()+".indices"
-        elif len(roiIndices)!=0 and len(roiValue)!=0 :
+        if len(roiIndices)!=0 and len(roiValue)!=0 :
             mesh.roiValue=roiValue
             args=dict()
             for i,roi in enumerate(roiIndices):
                 args["indices"+str(i+1)]=concat(roi)
+            if not closingValue is None :
+                args["indices"+str(len(roiIndices)+1)]="@closer_"+name+".indices"
             mesh.mergeROIs = self.node.createObject('MergeROIs', name="mergeROIs_"+name, nbROIs=len(roiIndices), **args)
             mesh.roiIndices=mesh.mergeROIs.getLinkPath()+".roiIndices"
             # use mergeROIs to potentially combine other rois (from meshclosing, boxRois, etc.)
