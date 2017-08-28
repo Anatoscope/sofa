@@ -217,13 +217,18 @@ class SceneArticulatedRigid(SofaPython.sml.BaseScene):
 
         Compliant.StructuralAPI.geometric_stiffness = self.param.geometricStiffness
 
+        # if there is no 'Rigids' node, just use our node as a parent for all rigids
+        # self.nodes["Rigids"] can be set in sub-moulinette to set rigids parent node
+        if not "Rigids" in self.nodes:
+            self.nodes["Rigids"] = self.node
+
         if not self.param.simuLengthUnit is None:
             self._geometricScale = eval("SofaPython.units.length_"+self.model.units["length"]) / eval("SofaPython.units.length_"+self.param.simuLengthUnit)
             SofaPython.units.local_length = eval("SofaPython.units.length_"+self.param.simuLengthUnit)
 
         # rigids
         for rigidModel in self.model.getSolidsByTags(self.param.rigidTags):
-            rigid =  insertRigid(self.node, rigidModel, self.material.density(self.getMaterial(rigidModel.id)), self._geometricScale, self.param, rigidModel.getValueByTag(self.param.color))
+            rigid =  insertRigid(self.nodes["Rigids"], rigidModel, self.material.density(self.getMaterial(rigidModel.id)), self._geometricScale, self.param, rigidModel.getValueByTag(self.param.color))
             self.rigids[rigidModel.id] = rigid
             self.visuals[rigidModel.id] = rigid.visuals
             self.collisions[rigidModel.id] = rigid.collisions
