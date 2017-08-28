@@ -400,7 +400,7 @@ struct MultiMapping_test : public Sofa_test<typename _MultiMapping::Real>
             {
                 if( this->vectorMaxDiff(dfp[p],fp12[p])>this->epsilon()*errorMax*errorFactorDJ ){
                     succeed = false;
-                    ADD_FAILURE() << "applyDJT test failed, difference should be less than " << this->epsilon()*errorMax*errorFactorDJ << std::endl <<
+                    ADD_FAILURE() << "applyDJT test failed, difference ("<<this->vectorMaxDiff(dfp[p],fp12[p])<<") should be less than " << this->epsilon()*errorMax*errorFactorDJ << std::endl <<
                                      "dfp["<<p<<"]    = " << dfp[p] << std::endl <<
                                      "fp2["<<p<<"]-fp["<<p<<"] = " << fp12[p] << std::endl;
                 }
@@ -430,7 +430,7 @@ struct MultiMapping_test : public Sofa_test<typename _MultiMapping::Real>
 
                 if( this->vectorMaxDiff(Kvp,fp12[p])>this->epsilon()*errorMax*errorFactorDJ ){
                     succeed = false;
-                    ADD_FAILURE() << "K test failed on parent "<< p << ", difference should be less than " << this->epsilon()*errorMax*errorFactorDJ  << std::endl
+                    ADD_FAILURE() << "K test failed on parent "<< p << ", difference ("<<this->vectorMaxDiff(Kvp,fp12[p])<<") should be less than " << this->epsilon()*errorMax*errorFactorDJ  << std::endl
                                   << "Kv    = " << Kvp << std::endl
                                   << "dfp = " << fp12[p] << std::endl;
                 }
