@@ -842,12 +842,11 @@ void VisualModelImpl::computeNormals()
         // old school is best school
         std::memset(&normals[0], nbn * sizeof(Deriv), 0);
 
-        for (unsigned i = 0, m = triangles.size(); i < m; ++i) {
-            const auto t = triangles[i];
-            
-            const Coord v1 = vertices[t[0]];
-            const Coord v2 = vertices[t[1]];
-            const Coord v3 = vertices[t[2]];
+        for ( const auto& t : triangles ) {
+
+            const Coord& v1 = vertices[t[0]];
+            const Coord& v2 = vertices[t[1]];
+            const Coord& v3 = vertices[t[2]];
             
             const Coord n = cross(v2-v1, v3-v1);
 
@@ -856,14 +855,12 @@ void VisualModelImpl::computeNormals()
             normals[t[2]] += n;
         }
 
-        for (unsigned i = 0; i < quads.size(); i++)
+        for ( const auto& q : quads )
         {
-            const auto q = quads[i];
-            
-            const Coord v1 = vertices[q[0]];
-            const Coord v2 = vertices[q[1]];
-            const Coord v3 = vertices[q[2]];
-            const Coord v4 = vertices[q[3]];
+            const Coord& v1 = vertices[q[0]];
+            const Coord& v2 = vertices[q[1]];
+            const Coord& v3 = vertices[q[2]];
+            const Coord& v4 = vertices[q[3]];
 
             const Coord v41 = v4 - v1;
             const Coord v32 = v3 - v2;
@@ -907,33 +904,33 @@ void VisualModelImpl::computeNormals()
         // for (int i = 0; i < nbn; i++)
         //     normals[i].clear();
 
-        for (unsigned int i = 0; i < triangles.size() ; i++)
+        for ( const auto& t : triangles )
         {
-            const Coord & v1 = vertices[triangles[i][0]];
-            const Coord & v2 = vertices[triangles[i][1]];
-            const Coord & v3 = vertices[triangles[i][2]];
+            const Coord & v1 = vertices[t[0]];
+            const Coord & v2 = vertices[t[1]];
+            const Coord & v3 = vertices[t[2]];
             Coord n = cross(v2-v1, v3-v1);
 
-            normals[vertNormIdx[triangles[i][0]]] += n;
-            normals[vertNormIdx[triangles[i][1]]] += n;
-            normals[vertNormIdx[triangles[i][2]]] += n;
+            normals[vertNormIdx[t[0]]] += n;
+            normals[vertNormIdx[t[1]]] += n;
+            normals[vertNormIdx[t[2]]] += n;
         }
 
-        for (unsigned int i = 0; i < quads.size() ; i++)
+        for ( const auto& q : quads )
         {
-            const Coord & v1 = vertices[quads[i][0]];
-            const Coord & v2 = vertices[quads[i][1]];
-            const Coord & v3 = vertices[quads[i][2]];
-            const Coord & v4 = vertices[quads[i][3]];
+            const Coord & v1 = vertices[q[0]];
+            const Coord & v2 = vertices[q[1]];
+            const Coord & v3 = vertices[q[2]];
+            const Coord & v4 = vertices[q[3]];
             Coord n1 = cross(v2-v1, v4-v1);
             Coord n2 = cross(v3-v2, v1-v2);
             Coord n3 = cross(v4-v3, v2-v3);
             Coord n4 = cross(v1-v4, v3-v4);
 
-            normals[vertNormIdx[quads[i][0]]] += n1;
-            normals[vertNormIdx[quads[i][1]]] += n2;
-            normals[vertNormIdx[quads[i][2]]] += n3;
-            normals[vertNormIdx[quads[i][3]]] += n4;
+            normals[vertNormIdx[q[0]]] += n1;
+            normals[vertNormIdx[q[1]]] += n2;
+            normals[vertNormIdx[q[2]]] += n3;
+            normals[vertNormIdx[q[3]]] += n4;
         }
 
         if( normalize_normals.getValue() ) {
