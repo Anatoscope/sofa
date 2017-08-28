@@ -832,23 +832,21 @@ void VisualModelImpl::computeNormals()
     const ResizableExtVector<Quad>& quads = m_quads.getValue();
     const ResizableExtVector<int> &vertNormIdx = m_vertNormIdx.getValue();
 
-    if (vertNormIdx.empty())
-    {
-        const unsigned nbn = vertices.size();
+    if (vertNormIdx.empty()) {
+        const unsigned nbn = vertices.size(); 
 
         ResizableExtVector<Deriv>& normals = *(m_vnormals.beginWriteOnly());
         normals.resize(nbn);
 
-        // old school is best school
-        std::memset(&normals[0], nbn * sizeof(Deriv), 0);
-
-        for ( const auto& t : triangles ) {
+        std::fill(normals.begin(), normals.end(), Deriv());
+        
+        for(const auto& t : triangles) {
 
             const Coord& v1 = vertices[t[0]];
             const Coord& v2 = vertices[t[1]];
             const Coord& v3 = vertices[t[2]];
             
-            const Coord n = cross(v2-v1, v3-v1);
+            const Coord n = cross(v2 - v1, v3 - v1);
 
             normals[t[0]] += n;
             normals[t[1]] += n;
@@ -879,8 +877,8 @@ void VisualModelImpl::computeNormals()
         }
 
         if( normalize_normals.getValue() ) {
-            for (unsigned i = 0; i < nbn; ++i) {
-                fast_normalize(normals[i]);
+            for(auto& ni : normals) {
+                fast_normalize(ni);
             }
         }
         
