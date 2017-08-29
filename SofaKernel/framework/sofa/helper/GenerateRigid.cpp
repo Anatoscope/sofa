@@ -56,8 +56,8 @@ void generateRigid(Rigid3Mass& mass, Vector3& center, const sofa::helper::io::Me
 
     const vector<Vector3>& points = mesh->getVertices();
     const vector< vector< vector<int> > >& facets = mesh->getFacets();
-    for (unsigned int i = 0; i < facets.size(); i++)
-    {
+
+    for (unsigned int i = 0; i < facets.size(); i++) {
         const vector<int>& v = facets[i][0];
         for (unsigned int j = 2; j < v.size(); j++)
         {
@@ -163,12 +163,11 @@ void generateRigid(Rigid3Mass& mass, Vector3& center, const sofa::helper::io::Me
     mass.inertiaMatrix /= mass.mass;
 }
 
-void generateRigid( defaulttype::Rigid3Mass& mass, defaulttype::Vector3& center, helper::io::Mesh* mesh
-                                  , SReal density
-                                  , const defaulttype::Vector3& scale
-                                  , const defaulttype::Vector3& rotation /*Euler angles*/
-                                  )
-{
+void generateRigid( defaulttype::Rigid3Mass& mass, defaulttype::Vector3& center,
+                    helper::io::Mesh* mesh,
+                    SReal density,
+                    const defaulttype::Vector3& scale,
+                    const defaulttype::Vector3& rotation /*Euler angles*/) {
     if( scale != Vector3(1, 1, 1) ) {
         for(size_t i = 0, n = mesh->getVertices().size(); i < n; ++i) {
             mesh->getVertices()[i] = mesh->getVertices()[i].linearProduct(scale);
@@ -192,15 +191,16 @@ void generateRigid( defaulttype::Rigid3Mass& mass, defaulttype::Vector3& center,
 
 }
 
-bool generateRigid(Rigid3Mass& mass, Vector3& center, const std::string& meshFilename
-                   , SReal density
-                   , const Vector3& scale
-                   , const Vector3& rotation /*Euler angles*/
-                  )
-{
+bool generateRigid(Rigid3Mass& mass,
+                   Vector3& center,
+                   const std::string& meshFilename,
+                   SReal density,
+                   const Vector3& scale,
+                   const Vector3& rotation /*Euler angles*/) {
+
     sofa::helper::io::Mesh* mesh = sofa::helper::io::Mesh::Create( meshFilename );
-    if (mesh == NULL)
-    {
+
+    if (!mesh) {
         msg_error("GenerateRigid") << "unable to load mesh from file '"<<meshFilename<<"'" ;
         return false;
     }
@@ -212,37 +212,33 @@ bool generateRigid(Rigid3Mass& mass, Vector3& center, const std::string& meshFil
 
 
 
-bool generateRigid(GenerateRigidInfo& res
-                                  , const std::string& meshFilename
-                                  , SReal density
-                                  , const defaulttype::Vector3& scale
-                                  , const Vector3 &rotation)
-{
+bool generateRigid(GenerateRigidInfo& res,
+                   const std::string& meshFilename,
+                   SReal density,
+                   const defaulttype::Vector3& scale,
+                   const Vector3 &rotation) {
     sofa::helper::io::Mesh* mesh = sofa::helper::io::Mesh::Create( meshFilename );
-    if (mesh == NULL)
-    {
-        msg_info("GenerateRigid") << "unable to load mesh from file '"<<meshFilename<<"'" ;
+    if (!mesh) {
+        msg_error("GenerateRigid") << "unable to load mesh from file '" << meshFilename << "'";
         return false;
     }
+
     generateRigid(res, mesh, meshFilename, density, scale, rotation);
     return true;
 }
 
-void generateRigid( GenerateRigidInfo& res
-                                  , io::Mesh *mesh
-                                  , std::string const& meshName
-                                  , SReal density
-                                  , const defaulttype::Vector3& scale
-                                  , const Vector3 &rotation
-                                  )
-{
+void generateRigid( GenerateRigidInfo& res,
+                    io::Mesh *mesh,
+                    const std::string& meshName,
+                    SReal density,
+                    const defaulttype::Vector3& scale,
+                    const Vector3& rotation) {
     Rigid3Mass rigidMass;
 
     generateRigid( rigidMass, res.com, mesh, density, scale, rotation  );
-
-    if( rigidMass.mass < 0 )
-    {
-        msg_warning("GeneratedRigid")<<"are normals inverted? "<<meshName;
+    
+    if( rigidMass.mass < 0 ) {
+        msg_warning("GeneratedRigid") << "are normals inverted? " << meshName;
         rigidMass.mass = -rigidMass.mass;
         rigidMass.inertiaMatrix = -rigidMass.inertiaMatrix;
     }
@@ -250,11 +246,11 @@ void generateRigid( GenerateRigidInfo& res
     res.mass = rigidMass.mass;
     res.inertia = res.mass * rigidMass.inertiaMatrix;
 
-    // a threshol to test if inertia is diagonal in function of diagonal values
-    SReal threshold = defaulttype::trace( res.inertia ) * 1e-6;
-
+    // a threshold to test if inertia is diagonal in function of diagonal values
+    static const SReal threshold = defaulttype::trace( res.inertia ) * 1e-6;
+    
     // if not diagonal, extracting principal axes basis to get the corresponding rotation with a diagonal inertia
-    if( res.inertia[0][1]>threshold || res.inertia[0][2]>threshold || res.inertia[1][2]>threshold )
+    if( res.inertia[0][1] > threshold || res.inertia[0][2] > threshold || res.inertia[1][2] > threshold )
     {
         defaulttype::Matrix3 U;
         Decompose<SReal>::eigenDecomposition_iterative( res.inertia, U, res.inertia_diagonal );
@@ -276,6 +272,7 @@ void generateRigid( GenerateRigidInfo& res
         res.inertia_diagonal[2] = res.inertia[2][2];
         res.inertia_rotation.clear();
     }
+
 }
 
 
