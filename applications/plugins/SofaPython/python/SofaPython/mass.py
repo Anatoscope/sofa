@@ -3,12 +3,15 @@ import numpy
 import numpy.linalg
 
 from SofaPython import Quaternion
+import warnings
 
 def decomposeInertia(inertia):
     """ Decompose an inertia matrix into
     - a diagonal inertia
     - the rotation (quaternion) to get to the frame in wich the inertia is diagonal
     """
+    assert not numpy.isnan(inertia).any(), "input inertia matrix contains NaNs"
+    
     U, diagonal_inertia, V = numpy.linalg.svd(inertia)
     # det should be 1->rotation or -1->reflexion
     if numpy.linalg.det(U) < 0 : # reflexion
@@ -17,8 +20,13 @@ def decomposeInertia(inertia):
     inertia_rotation = Quaternion.from_matrix( U )
     return diagonal_inertia, inertia_rotation
 
-class RigidMassInfo:
-    """ A structure to set and store a RigidMass as used by sofa: mass, com, diagonal_inertia and inertia_rotation
+class RigidMassInfo(object):
+
+    __slots__ = 'mass', 'com', 'diagonal_inertia', 'inertia_rotation', 'density'
+    
+    """A structure to set and store a RigidMass as used by sofa: mass, com,
+    diagonal_inertia and inertia_rotation
+
     """
 
     def __init__(self):
@@ -32,18 +40,25 @@ class RigidMassInfo:
         """ TODO: a single scalar for scale could be enough
         """
         self.density = density
-        rigidInfo = Sofa.generateRigid( filepath, density, scale3d[0], scale3d[1], scale3d[2], rotation[0], rotation[1], rotation[2] )
+        rigidInfo = Sofa.generateRigid( filepath, density, scale3d[0], scale3d[1], scale3d[2],
+                                        rotation[0], rotation[1], rotation[2] )
         self.mass = rigidInfo[0]
         self.com = rigidInfo[1:4]
+        
         self.diagonal_inertia = rigidInfo[4:7]
         self.inertia_rotation = rigidInfo[7:11]
 
+        if not self.mass and density:
+            warnings.warn("zero mass when processing {0}".format(filepath))
+
+        
     def setFromInertia(self, Ixx, Ixy, Ixz, Iyy, Iyz, Izz):
         """ set the diagonal_inertia and inertia_rotation from the full inertia matrix
         """
         I = numpy.array([ [Ixx, Ixy, Ixz],
                           [Ixy, Iyy, Iyz],
                           [Ixz, Iyz, Izz] ])
+        
         self.diagonal_inertia, self.inertia_rotation = decomposeInertia(I)
 
     def getWorldInertia(self):
@@ -61,16 +76,23 @@ class RigidMassInfo:
     def __add__(self, other):
         res = RigidMassInfo()
         # sum mass
-        res.mass = self.mass+other.mass
-        # barycentric center of mass
-        res.com = (self.mass*numpy.array(self.com) + other.mass*numpy.array(other.com)) / ( self.mass + other.mass )
+        res.mass = self.mass + other.mass
 
+        # barycentric center of mass
+        total_mass = self.mass + other.mass
+        assert total_mass, "zero total mass"
+        
+        res.com = (self.mass * numpy.array(self.com)
+                   + other.mass*numpy.array(other.com)) / total_mass
+        
         # inertia tensors
         # resultant inertia in world frame
         res_I_w = self.getWorldInertia() + other.getWorldInertia()
 
         # resultant inertia at com, world axis, using // axis theorem
-        a=numpy.array(res.com).reshape(3,1)
+        a = numpy.array(res.com).reshape(3,1)
+
+        
         res_I_com = res_I_w - res.mass*(pow(numpy.linalg.norm(res.com),2)*numpy.eye(3) - a*a.transpose())
 
         res.diagonal_inertia, res.inertia_rotation = decomposeInertia(res_I_com)
