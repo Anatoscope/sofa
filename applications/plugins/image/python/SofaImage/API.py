@@ -82,7 +82,7 @@ class Image:
         mesh.mesh = externMesh
         self.__addMesh(mesh,closingValue,roiIndices,roiValue,_name)
 
-    def __addMesh(self, mesh, closingValue=None, roiIndices=list(), roiValue=list(), name=None):
+    def __addMesh(self, mesh, closingValue=None, roiIndices=list(), roiValue=list(), name):
         """ some code factorization between addMeshLoader and addExternMesh
         """
         args=dict()
