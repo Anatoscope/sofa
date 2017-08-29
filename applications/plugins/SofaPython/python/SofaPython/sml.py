@@ -3,7 +3,7 @@ import Sofa
 import sys
 import os.path
 import math
-import xml.etree.ElementTree as etree
+import xml.etree.cElementTree as etree
 
 import Quaternion
 import Tools

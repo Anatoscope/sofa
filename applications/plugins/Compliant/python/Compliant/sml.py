@@ -1,6 +1,6 @@
 import os.path
 import math
-import xml.etree.ElementTree as etree
+import xml.etree.cElementTree as etree
 import sys
 
 from Compliant import StructuralAPI
