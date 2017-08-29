@@ -55,7 +55,9 @@ def getNode(rootNode, path):
 def meshLoader(parentNode, filename, name=None, **args):
     """ Insert the correct MeshLoader based on the filename extension
     """
-    ext = os.path.splitext(filename)[1]
+    
+    ext = os.path.splitext(filename)[1].lower()
+    
     if name is None:
         _name="loader_"+os.path.splitext(os.path.basename(filename))[0]
     else:
