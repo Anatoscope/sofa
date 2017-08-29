@@ -100,6 +100,7 @@ set(HEADER_FILES
     system/thread/thread_specific_ptr.h
     system/FileMonitor.h
     system/FileRepository.h
+    stl.hpp
     vector.h
     vectorData.h
     vectorLinks.h
@@ -185,6 +186,7 @@ set(SOURCE_FILES
     system/thread/debug.cpp
     system/FileRepository.cpp
     vector.cpp
+    stl.cpp    
     types/fixed_array.cpp
     types/RGBAColor.cpp
     types/Material.cpp
