@@ -40,7 +40,8 @@ using namespace sofa::core::loader;
 
 SOFA_DECL_CLASS(MeshSTL)
 
-Creator<Mesh::FactoryMesh,MeshSTL> MeshSTLClass("stl");
+static Creator<Mesh::FactoryMesh, MeshSTL> MeshSTLClass("stl");
+static Creator<Mesh::FactoryMesh, MeshSTL> MeshSTLClassUppercase("STL");
 
 void MeshSTL::init (std::string filename)
 {
