@@ -23,6 +23,10 @@
 #include <sofa/helper/system/FileRepository.h>
 #include <sofa/helper/system/SetDirectory.h>
 #include <sofa/helper/logging/Messaging.h>
+
+#include <sofa/helper/stl.hpp>
+#include <stdint.h>
+
 using std::cout;
 using std::endl;
 
@@ -41,7 +45,6 @@ using namespace sofa::core::loader;
 SOFA_DECL_CLASS(MeshSTL)
 
 static Creator<Mesh::FactoryMesh, MeshSTL> MeshSTLClass("stl");
-static Creator<Mesh::FactoryMesh, MeshSTL> MeshSTLClassUppercase("STL");
 
 void MeshSTL::init (std::string filename)
 {
@@ -50,16 +53,23 @@ void MeshSTL::init (std::string filename)
         msg_error("MeshSTL") << "File " << filename << " not found ";
         return;
     }
+    
     loaderType = "stl";
     std::ifstream file(filename.c_str());
 
-    if (!file.good())
-    {
-       file.close();
-       msg_error("MeshSTL") << "Cannot read file '" << filename << "'.";
-       return;
+    if (!file.good()) {
+        msg_error("MeshSTL") << "Cannot read file '" << filename << "'.";
+        return;
     }
 
+
+    if( stl::is_binary(file) ) {
+        readBinarySTL(filename); 
+    } else {
+        file.seekg(0, std::ios::beg);    
+        readSTL(file);
+    }
+    
 #ifndef NDEBUG
 std::size_t namepos = filename.find_last_of("/");
 std::string name = filename.substr(namepos+1);
@@ -112,6 +122,7 @@ msg_info("MeshSTL") <<  "Reading binary STL file : " << name;
     }
 
 }
+
 
 
 void MeshSTL::readSTL(std::ifstream &file)
