@@ -11,8 +11,26 @@ union uint32 {
     std::uint32_t value;
 };
 
-bool is_binary(std::istream& in) {
+struct stream_pos {
+    std::istream& in;
+    const std::istream::pos_type pos;
+    
+    stream_pos(std::istream& in)
+        : in(in),
+          pos(in.tellg()) {
 
+    }
+
+    ~stream_pos() {
+        in.clear();
+        in.seekg(pos);
+    }
+};
+
+
+bool is_binary(std::istream& in) {
+    const stream_pos backup(in);
+    
     in.seekg(0, std::ios::end);
     const std::size_t file_size = in.tellg();
 
