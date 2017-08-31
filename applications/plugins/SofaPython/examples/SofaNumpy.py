@@ -40,5 +40,13 @@ def createSceneAndController(node):
     print "a 2D array:", mo.position, SofaPython.SofaNumpy.numpy_data_ro( mo, "position" )
 
 
+    # WriteAccessor as Context
+    print( "before:",mo.position[0][0] )
+    with SofaPython.SofaNumpy.numpy_data_WriteAccessor( mo, "position" ) as pos:
+        pos[0][0] = 456
+    print( "after:",mo.position[0][0] )
+
+
+
 
     sys.stdout.flush()

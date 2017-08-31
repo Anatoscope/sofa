@@ -77,6 +77,19 @@ def numpy_data_endEdit(obj, name):
     data.endEditVoidPtr()
 
 
+# convenience WriteAccessor as context
+class numpy_data_WriteAccessor(object):
+
+    def __init__(self, obj, dataname):
+        self.data = obj.findData(dataname)
+
+    def __enter__(self):
+        return as_numpy( self.data, False )
+
+    def __exit__(self, type, value, traceback):
+        self.data.endEditVoidPtr()
+
+
 
 def vec_as_numpy( (ptr, size, typename) ):
     '''maps vec as a numpy array'''
