@@ -34,4 +34,6 @@ timeout "visualization/strainDiscretizer.scn" "50"
 iterations "deformation/linearHexaFEM-comparison.scn" "3"
 timeout "deformation/linearHexaFEM-comparison.scn" "200"
 
+# high order topologies now require a specific plugin
+ignore "shapeFunction/BezierTetrahedron.scn"
 
