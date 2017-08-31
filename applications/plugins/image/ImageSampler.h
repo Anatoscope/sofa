@@ -147,7 +147,9 @@ struct ImageSamplerSpecialization<defaulttype::Image<T>>
 
         if(recursive)
         {
-            helper::vector<unsigned int> indices; indices.resize(pos.size()); for(unsigned int i=0; i<pos.size(); i++) indices[i]=i;
+            helper::vector<unsigned int> indices( pos.size() );
+            for(unsigned int i=0; i<pos.size(); i++)
+                indices[i]=i;
             sampler->subdivide(indices);
         }
 
