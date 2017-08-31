@@ -38,6 +38,8 @@ def as_numpy( data, readOnly=-1 ):
 
     if readOnly:
         ptr, shape, typename = data.getValueVoidPtr()
+        # TODO voir comment bloquer le numpy array en ecriture avec numpy.ctypeslib.ndpointer flags WRITEABLE
+        # https://docs.scipy.org/doc/numpy-1.10.0/reference/routines.ctypeslib.html
     else:
         ptr, shape, typename = data.beginEditVoidPtr()
 
