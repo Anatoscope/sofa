@@ -28,7 +28,7 @@ struct stream_pos {
 };
 
 
-bool is_binary(std::istream& in) {
+bool SOFA_HELPER_API is_binary(std::istream& in) {
     const stream_pos backup(in);
     
     in.seekg(0, std::ios::end);

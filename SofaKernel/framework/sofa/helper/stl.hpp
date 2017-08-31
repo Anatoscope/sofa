@@ -1,6 +1,7 @@
 #ifndef SOFA_HELPER_STL_HPP
 #define SOFA_HELPER_STL_HPP
 
+#include <sofa/helper/helper.h>
 
 #include <istream>
 
@@ -13,7 +14,7 @@ namespace stl {
 
 // determine if a given opened stl file is binary or not by trying binary first
 // and comparing file size. seekpos is left unspecified.
-bool is_binary(std::istream& in);
+bool SOFA_HELPER_API is_binary(std::istream& in);
 
 }
 }
