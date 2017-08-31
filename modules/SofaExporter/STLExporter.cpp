@@ -53,13 +53,14 @@ STLExporter::STLExporter()
     : stepCounter(0)
     , maxStep(0)
     , stlFilename( initData(&stlFilename, "filename", "output STL file name"))
-    , d_binaryFormat( initData(&d_binaryFormat, (bool)true, "binaryformat", "if true, save in binary format, otherwise in ascii"))
+    , d_binaryFormat( initData(&d_binaryFormat, true, "binaryformat", "if true, save in binary format, otherwise in ascii"))
     , m_position( initData(&m_position, "position", "points coordinates"))
     , m_triangle( initData(&m_triangle, "triangle", "triangles indices"))
     , m_quad( initData(&m_quad, "quad", "quads indices"))
     , exportEveryNbSteps( initData(&exportEveryNbSteps, (unsigned int)0, "exportEveryNumberOfSteps", "export file only at specified number of steps (0=disable)"))
-    , exportAtBegin( initData(&exportAtBegin, (bool)false, "exportAtBegin", "export file at the initialization"))
-    , exportAtEnd( initData(&exportAtEnd, (bool)false, "exportAtEnd", "export file when the simulation is finished"))
+    , exportAtBegin( initData(&exportAtBegin, false, "exportAtBegin", "export file at the initialization"))
+    , exportAtEnd( initData(&exportAtEnd, false, "exportAtEnd", "export file when the simulation is finished"))
+    , set_extension( initData(&set_extension, true, "set_extension", "automatically add/set extension to .stl"))
 {
         this->addAlias(&m_triangle, "triangles");
         this->addAlias(&m_quad, "quads");
@@ -115,27 +116,30 @@ void STLExporter::init()
 
 }
 
-std::string STLExporter::getFilename() const
-{
+std::string STLExporter::getFilename() const {
     std::string filename = stlFilename.getFullPath();
-    if (maxStep)
-    {
-        // if extension given, remove it
-        if (".stl" == filename.substr(filename.size()-4, 4))
-            filename = filename.substr(0, filename.size()-4);
-        std::ostringstream oss;
-        oss.width(5);
-        oss.fill('0');
-        oss << nbFiles;
-        filename += oss.str();
-        filename += ".stl";
+
+    if( set_extension.getValue() ) {
+        // mtournier: why???
+        if (maxStep) {
+            // if extension given, remove it
+            if (".stl" == filename.substr(filename.size()-4, 4)) {
+                filename = filename.substr(0, filename.size()-4);
+            }
+            std::ostringstream oss;
+            oss.width(5);
+            oss.fill('0');
+            oss << nbFiles;
+            filename += oss.str();
+            filename += ".stl";
+        } else {
+            // add the file extension if necessary
+            if (".stl" != filename.substr(filename.size()-4, 4)) {
+                filename += ".stl";
+            }
+        }
     }
-    else
-    {
-        // add the file extension if necessary
-        if (".stl" != filename.substr(filename.size()-4, 4))
-        filename += ".stl";
-    }
+    
     return filename;
 }
 
