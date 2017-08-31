@@ -18,7 +18,7 @@ def createSceneAndController(node):
 
 
     # accessing the Data as a numpy array is sharing c++ memory
-    pos = SofaPython.SofaNumpy.numpy_data( mo, "position" )
+    pos = SofaPython.SofaNumpy.numpy_data_beginEdit( mo, "position" )
     print type(pos)
 
 
@@ -27,14 +27,17 @@ def createSceneAndController(node):
     pos[0][0] = 123
     print( "after:",mo.position[0][0] )
 
+    # do not forget to unlock the Data and set it dirty
+    SofaPython.SofaNumpy.numpy_data_endEdit( mo, "position" )
+
 
 
     fc = node.createObject("FixedConstraint", fixAll=False, indices="0")
-    print "a simple bool:", fc.fixAll, SofaPython.SofaNumpy.numpy_data( fc, "fixAll" )
-    print "a simple scalar:", fc.drawSize, SofaPython.SofaNumpy.numpy_data( fc, "drawSize" )
-    print "an array:", node.gravity, SofaPython.SofaNumpy.numpy_data( node, "gravity" )
-    print "a 1D array:", fc.indices, SofaPython.SofaNumpy.numpy_data( fc, "indices" )
-    print "a 2D array:", mo.position, SofaPython.SofaNumpy.numpy_data( mo, "position" )
+    # print "a simple bool:", fc.fixAll, SofaPython.SofaNumpy.numpy_data( fc, "fixAll" )
+    print "a simple scalar:", fc.drawSize, SofaPython.SofaNumpy.numpy_data_ro( fc, "drawSize" )
+    print "an array:", node.gravity, SofaPython.SofaNumpy.numpy_data_ro( node, "gravity" )
+    print "a 1D array:", fc.indices, SofaPython.SofaNumpy.numpy_data_ro( fc, "indices" )
+    print "a 2D array:", mo.position, SofaPython.SofaNumpy.numpy_data_ro( mo, "position" )
 
 
 

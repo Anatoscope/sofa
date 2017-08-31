@@ -22,10 +22,24 @@ ctypeFromName = {
 }
 
 
-def as_numpy( data ):
-    '''maps data content as a numpy array'''
+def as_numpy( data, readOnly=-1 ):
+    """ maps data content as a numpy array
+    :param data: the Data
+    :param readOnly: (boolean) if true you should not modify the numpy array content
+                     if false (read/write), you have to call endEdit to unlock the Data and set it as dirty
+    :return: numpy array
+    """
 
-    ptr, shape, typename = data.getValueVoidPtr()
+    if not isinstance(readOnly, bool): # backward compatibility
+        Sofa.msg_deprecated("SofaNumpy","as_numpy: Data must be explicitly accessed as read-only or read-write. "
+                                        "With a read-only access, the numpy array should not be modified. "
+                                        "With a read-write access, the Data must be explicitly unlocked and set as dirty with a call to 'Data.endEditVoidPtr'")
+        readOnly = True # similar to the first behavior
+
+    if readOnly:
+        ptr, shape, typename = data.getValueVoidPtr()
+    else:
+        ptr, shape, typename = data.beginEditVoidPtr()
 
     type = ctypeFromName.get(typename,None)
     if not type: raise Exception("can't map data of type " + typename)
@@ -45,7 +59,23 @@ def as_numpy( data ):
 # convenience
 def numpy_data(obj, name):
     data = obj.findData(name)
-    return as_numpy(data)
+    return as_numpy(data,-1)
+
+# read-only
+def numpy_data_ro(obj, name):
+    data = obj.findData(name)
+    return as_numpy(data,True)
+
+# read-write
+def numpy_data_beginEdit(obj, name):
+    data = obj.findData(name)
+    return as_numpy(data,False)
+
+# convenience
+def numpy_data_endEdit(obj, name):
+    data = obj.findData(name)
+    data.endEditVoidPtr()
+
 
 
 def vec_as_numpy( (ptr, size, typename) ):
