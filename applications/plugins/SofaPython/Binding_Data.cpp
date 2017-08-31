@@ -722,6 +722,13 @@ static PyObject * Data_isDirty(PyObject * self, PyObject * /*args*/)
     return PyBool_FromLong( data->isDirty() );
 }
 
+static PyObject * Data_setDirtyValue(PyObject * self, PyObject * /*args*/)
+{
+    BaseData* data = get_basedata( self );
+    data->setDirtyValue();
+    Py_RETURN_NONE;
+}
+
 
 /// implementation of __str__ to cast a Data to a string
 static PyObject * Data_str(PyObject *self)
@@ -751,6 +758,7 @@ SP_CLASS_METHOD(Data,getLinkPath)
 SP_CLASS_METHOD(Data,getValueVoidPtr)
 SP_CLASS_METHOD(Data,getCounter)
 SP_CLASS_METHOD(Data,isDirty)
+SP_CLASS_METHOD(Data,setDirtyValue)
 SP_CLASS_METHOD(Data,getAsACreateObjectParameter)
 SP_CLASS_METHODS_END
 
