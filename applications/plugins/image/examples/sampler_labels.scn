@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<Node 	name="root" gravity="0 0 0" dt="1"  >
+  <RequiredPlugin pluginName="image"/>
+  <VisualStyle displayFlags="showVisual " />
+
+  <MeshObjLoader name="mesh" filename="mesh/Armadillo_simplified.obj" triangulate="1"/>
+    <VisualModel src="@mesh" color="1 0 0 0.2"/>
+  <MeshObjLoader name="mesh2" filename="mesh/dragon.obj" triangulate="1"/>
+  <VisualModel src="@mesh2"  color="0 1 0 0.2"/>
+  
+  <MeshToImageEngine  template="ImageUC" name="rasterizer" voxelSize="1.5" padSize="1" rotateImage="true"
+                     nbMeshes="2"
+                     position="@mesh.position" triangles="@mesh.triangles" value="1" insideValue="2"
+                     position2="@mesh2.position" triangles2="@mesh2.triangles" value2="3" insideValue2="4"
+                     />
+  <ImageContainer template="ImageUC" name="image" src="@rasterizer" />
+  <ImageViewer template="ImageUC" name="viewer" src="@image"  />
+  <ImageSampler template="ImageUC" name="sampler" src="@image" param="1" showEdges="true" printLog="true" labels="1 4" />
+
+  <Node name="simu"  >
+	  <EulerImplicit rayleighMass="1" rayleighStiffness="0.03" />
+	  <CGLinearSolver />
+	  <Mesh  src="@../sampler" />
+	  <MechanicalObject showObject="1" drawMode="1" />
+          <UniformMass totalmass="1000.0" />
+
+          <HexahedronFEMForceField youngModulus="30.0" poissonRatio="0.3" method="large" updateStiffnessMatrix="false" />
+
+<!--	  <Node name="Visual"  >
+	     <VisualModel  fileMesh="mesh/Armadillo_simplified.obj"   />
+	     <BarycentricMapping input="@.." output="@." />
+	  </Node>-->
+  </Node>
+
+</Node>
+

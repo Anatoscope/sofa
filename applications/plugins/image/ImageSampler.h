@@ -77,6 +77,14 @@ struct ImageSamplerSpecialization<defaulttype::Image<T>>
     {
     }
 
+    /// testing if v is in labels (returns true if labels is empty)
+    /// @warning labels must be sorted
+    static bool isInside( T v, const helper::vector<T>& labels )
+    {
+        if( labels.empty() ) return (bool)v;
+        return std::binary_search( labels.begin(), labels.end(), v );
+    }
+
     static void regularSampling( ImageSamplerT* sampler, const bool atcorners=false, const bool recursive=false )
     {
 //        typedef typename ImageSamplerT::Real Real;
@@ -96,10 +104,12 @@ struct ImageSamplerSpecialization<defaulttype::Image<T>>
         typename ImageSamplerT::waEdges g(sampler->graphEdges);           g.clear();
         typename ImageSamplerT::waHexa h(sampler->hexahedra);             h.clear();
 
+        const typename ImageSamplerT::Labels& labels = sampler->d_labels.getValue();
+
         // convert to single channel boolean image
         cimg_library::CImg<bool> img(inimg.width()+1,inimg.height()+1,inimg.depth()+1,1,false);
-        if(atcorners) {  cimg_forXYZC(inimg,x,y,z,c) if(inimg(x,y,z,c)) { img(x,y,z)=img(x+1,y,z)=img(x,y+1,z)=img(x+1,y+1,z)=img(x,y,z+1)=img(x+1,y,z+1)=img(x,y+1,z+1)=img(x+1,y+1,z+1)=true; } }
-        else cimg_forXYZC(inimg,x,y,z,c) if(inimg(x,y,z,c)) img(x,y,z)=true;
+        if(atcorners) {  cimg_forXYZC(inimg,x,y,z,c) if( isInside( inimg(x,y,z,c), labels ) ) { img(x,y,z)=img(x+1,y,z)=img(x,y+1,z)=img(x+1,y+1,z)=img(x,y,z+1)=img(x+1,y,z+1)=img(x,y+1,z+1)=img(x+1,y+1,z+1)=true; } }
+        else cimg_forXYZC(inimg,x,y,z,c) if( isInside( inimg(x,y,z,c), labels) ) img(x,y,z)=true;
 
         // count non empty voxels
         unsigned int nb=0;
@@ -123,17 +133,30 @@ struct ImageSamplerSpecialization<defaulttype::Image<T>>
                         else pos[nb]=Coord(x,y,z);
                         // edges
                         if(x) if(img(x-1,y,z))
-                            if(!atcorners || inimg(x-1,y-1,z-1) || inimg(x-1,y,z-1) || inimg(x-1,y-1,z) || inimg(x-1,y,z)) // check that edge is surrounded by at least one non-empty voxel (corner method)
+                            if(!atcorners ||
+                                    isInside( inimg(x-1,y-1,z-1), labels ) ||
+                                    isInside( inimg(x-1,y,z-1), labels ) ||
+                                    isInside( inimg(x-1,y-1,z), labels ) ||
+                                    isInside( inimg(x-1,y,z), labels ) ) // check that edge is surrounded by at least one non-empty voxel (corner method)
                                 e.push_back(Edge(nb-1,nb));
                         if(y) if(img(x,y-1,z))
-                            if(!atcorners || inimg(x-1,y-1,z-1) || inimg(x,y-1,z-1) || inimg(x-1,y-1,z) || inimg(x,y-1,z)) // check that edge is surrounded by at least one non-empty voxel (corner method)
+                            if(!atcorners ||
+                                    isInside( inimg(x-1,y-1,z-1), labels ) ||
+                                    isInside( inimg(x,y-1,z-1), labels ) ||
+                                    isInside( inimg(x-1,y-1,z), labels ) ||
+                                    isInside( inimg(x,y-1,z), labels ) )// check that edge is surrounded by at least one non-empty voxel (corner method)
                                 e.push_back(Edge(pLine(x),nb));
                         if(z) if(img(x,y,z-1))
-                            if(!atcorners || inimg(x-1,y-1,z-1) || inimg(x-1,y,z-1) || inimg(x,y-1,z-1) || inimg(x,y,z-1)) // check that edge is surrounded by at least one non-empty voxel (corner method)
+                            if(!atcorners ||
+                                    isInside( inimg(x-1,y-1,z-1), labels ) ||
+                                    isInside( inimg(x-1,y,z-1), labels ) ||
+                                    isInside( inimg(x,y-1,z-1), labels ) ||
+                                    isInside( inimg(x,y,z-1), labels ) ) // check that edge is surrounded by at least one non-empty voxel (corner method)
                                 e.push_back(Edge(pPlane(x,y),nb));
                         // hexa
                         if(x && y && z) if(img(x-1,y,z) && img(x,y-1,z) && img(x,y,z-1) && img(x-1,y-1,z) && img(x-1,y,z-1)  && img(x,y-1,z-1)   && img(x-1,y-1,z-1) )
-                            if(!atcorners || inimg(x-1,y-1,z-1)) // check that input pixel is not empty for corner method (to avoid elements between non-empty voxels)
+                            if(!atcorners ||
+                                    isInside( inimg(x-1,y-1,z-1), labels ) ) // check that input pixel is not empty for corner method (to avoid elements between non-empty voxels)
                                 h.push_back(Hexa(nb,pLine(x),pLine(x-1),nb-1,pPlane(x,y),pPlane(x,y-1),pPlane(x-1,y-1),pPlane(x-1,y) ));
 
                         nLine(x)=nb; nPlane(x,y)=nb;
@@ -178,6 +201,9 @@ struct ImageSamplerSpecialization<defaulttype::Image<T>>
         typename ImageSamplerT::waEdges g(sampler->graphEdges);           g.clear();
         typename ImageSamplerT::waHexa h(sampler->hexahedra);             h.clear();
 
+        const typename ImageSamplerT::Labels& labels = sampler->d_labels.getValue();
+
+
         typename ImageSamplerT::imCoord dim = in->getDimensions();
 
         // init voronoi and distances
@@ -188,7 +214,7 @@ struct ImageSamplerSpecialization<defaulttype::Image<T>>
         typename ImageSamplerT::waDist distData(sampler->distances);
         distData->setDimensions(dim);
         cimg_library::CImg<Real>& dist = distData->getCImg(); dist.fill(-1);
-        cimg_forXYZC(inimg,x,y,z,c) if(inimg(x,y,z,c)) dist(x,y,z)=cimg_library::cimg::type<Real>::max();
+        cimg_forXYZC(inimg,x,y,z,c) if( isInside( inimg(x,y,z,c), labels ) ) dist(x,y,z)=cimg_library::cimg::type<Real>::max();
 
         // list of seed points
         std::set<std::pair<Real,sofa::defaulttype::Vec<3,int> > > trial;
@@ -296,6 +322,8 @@ struct ImageSamplerSpecialization<defaulttype::Image<T>>
         typename ImageSamplerT::waEdges g(sampler->graphEdges);           g.clear();
         typename ImageSamplerT::waHexa h(sampler->hexahedra);             h.clear();
 
+        const typename ImageSamplerT::Labels& labels = sampler->d_labels.getValue();
+
         typename ImageSamplerT::imCoord dim = in->getDimensions();
 
         // init voronoi and distances
@@ -306,7 +334,7 @@ struct ImageSamplerSpecialization<defaulttype::Image<T>>
         typename ImageSamplerT::waDist distData(sampler->distances);
         distData->setDimensions(dim);
         cimg_library::CImg<Real>& dist = distData->getCImg(); dist.fill(-1);
-        cimg_forXYZC(inimg,x,y,z,c) if(inimg(x,y,z,c)) dist(x,y,z)=cimg_library::cimg::type<Real>::max();
+        cimg_forXYZC(inimg,x,y,z,c) if( isInside( inimg(x,y,z,c), labels ) ) dist(x,y,z)=cimg_library::cimg::type<Real>::max();
 
         // list of seed points
         std::set<std::pair<Real,sofa::defaulttype::Vec<3,int> > > trial;
@@ -511,6 +539,12 @@ public:
     Data< VorTypes > voronoi;
     /**@}*/
 
+
+    typedef helper::vector<T> Labels;
+    typedef helper::WriteAccessor<Data<Labels> > waLabels;
+    Data<Labels> d_labels; ///< an optional vector of labels, such as only voxels containing one of these labels will be sampled
+
+
     //@name visu data
     /**@{*/
     Data<bool> f_clearData;
@@ -537,6 +571,7 @@ public:
         , hexahedra(initData(&hexahedra,SeqHexahedra(),"hexahedra","output hexahedra"))
         , distances(initData(&distances,DistTypes(),"distances",""))
         , voronoi(initData(&voronoi,VorTypes(),"voronoi",""))
+        , d_labels(initData(&d_labels,Labels(),"labels","only voxels containing one of these labels will be sampled"))
         , f_clearData(initData(&f_clearData,true,"clearData","clear distance image after computation"))
         , showSamplesScale(initData(&showSamplesScale,0.0f,"showSamplesScale","show samples"))
         , drawMode(initData(&drawMode,0,"drawMode","0: points, 1: spheres"))
@@ -563,6 +598,7 @@ public:
         addInput(&image);
         addInput(&transform);
         addInput(&fixedPosition);
+        addInput(&d_labels);
         addOutput(&position);
         addOutput(&edges);
         addOutput(&graphEdges);
@@ -580,6 +616,12 @@ protected:
 
     virtual void update()
     {
+        // sorting d_vectorlabels so look-up will be faster
+        {
+        waLabels labels( d_labels );
+        std::sort( labels.begin(), labels.end() );
+        }
+
         updateAllInputsIfDirty(); // easy to ensure that all inputs are up-to-date
 
         cleanDirty();
