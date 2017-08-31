@@ -246,8 +246,10 @@ void generateRigid( GenerateRigidInfo& res,
     res.mass = rigidMass.mass;
     res.inertia = res.mass * rigidMass.inertiaMatrix;
 
+    // TODO why two cases???????????
     // a threshold to test if inertia is diagonal in function of diagonal values
-    static const SReal threshold = defaulttype::trace( res.inertia ) * 1e-6;
+    // TODO FIXME HARDCODE
+    const SReal threshold = defaulttype::trace( res.inertia ) * 1e-6;
     
     // if not diagonal, extracting principal axes basis to get the corresponding rotation with a diagonal inertia
     if( res.inertia[0][1] > threshold || res.inertia[0][2] > threshold || res.inertia[1][2] > threshold )

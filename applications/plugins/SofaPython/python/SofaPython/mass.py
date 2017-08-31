@@ -75,15 +75,14 @@ class RigidMassInfo(object):
 
     def __add__(self, other):
         res = RigidMassInfo()
+
         # sum mass
         res.mass = self.mass + other.mass
-
-        # barycentric center of mass
-        total_mass = self.mass + other.mass
-        assert total_mass, "zero total mass"
+        assert res.mass, "zero total mass"
         
+        # barycentric center of mass        
         res.com = (self.mass * numpy.array(self.com)
-                   + other.mass*numpy.array(other.com)) / total_mass
+                   + other.mass*numpy.array(other.com)) / res.mass
         
         # inertia tensors
         # resultant inertia in world frame
