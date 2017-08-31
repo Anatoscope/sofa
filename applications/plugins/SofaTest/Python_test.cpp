@@ -177,7 +177,7 @@ static PyObject* except_hook(PyObject* self, PyObject* args) {
         // TODO find a way to push traceback as well
         const py::object value_string = py::ptr(value).str();
         assert(value_string.c_str());        
-        shared->message += value_string.c_str();
+        shared->message = value_string.c_str();
     }
     
     // call default excepthook to get traceback etc
