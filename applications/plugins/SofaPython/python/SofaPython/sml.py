@@ -51,13 +51,13 @@ def _getObjectsByTags(objects, tags):
             taggedObjects.append(obj)
     return taggedObjects
 
-class Model:
+class Model(object):
     """ This class stores a Sofa Model read from a sml/xml (Sofa Modelling Language) file.
     """
 
-    class Mesh:
+    class Mesh(object):
 
-        class Group:
+        class Group(object):
             def __init__(self, id):
                 self.id=id
                 self.index=list()
@@ -105,7 +105,7 @@ class Model:
             """
             return _getObjectsByTags(self.groups.values(), tags)
 
-    class MeshAttributes:
+    class MeshAttributes(object):
         def __init__(self,objXml=None):
             self.mesh = None
             self.collision=True
@@ -130,7 +130,7 @@ class Model:
             """
             return getValueByTag(valuesByTag, self.tags, noDefault)
 
-    class Image:
+    class Image(object):
         def __init__(self, imageXml=None):
             self.format=None
             self.source=None
@@ -142,7 +142,8 @@ class Model:
             self.format = imageXml.find("source").attrib["format"]
             self.source = imageXml.find("source").text
 
-    class Solid:
+    class Solid(object):
+        
         def __init__(self, solidXml=None):
             self.id = None
             self.name = None
@@ -218,7 +219,7 @@ class Model:
                 assert( o.attrib["name"] )
                 self.keyPositions[o.attrib["name"]] = Tools.strToListFloat(o.text)
 
-    class Offset:
+    class Offset(object):
         def __init__(self, offsetXml=None):
             self.name = "offset"
             self.value = [0., 0., 0., 0., 0., 0., 1.] # x y z qx qy qz qw
@@ -235,7 +236,7 @@ class Model:
         def isAbsolute(self):
             return self.type == "absolute"
 
-    class Dof:
+    class Dof(object):
         def __init__(self, dofXml=None, dof=None, min=None, max=None):
             self.index = None
             if not dof is None:
@@ -252,7 +253,7 @@ class Model:
             if "max" in dofXml.attrib:
                 self.max = float(dofXml.attrib["max"])
 
-    class JointGeneric:
+    class JointGeneric(object):
         def __init__(self, jointXml=None):
             self.id = None
             self.name = None
@@ -276,7 +277,7 @@ class Model:
             for dof in jointXml.findall("dof"):
                 self.dofs.append(Model.Dof(dof))
 
-    class Skinning:
+    class Skinning(object):
         """ Skinning definition, vertices index influenced by bone with weight
         """
         def __init__(self):
@@ -285,13 +286,13 @@ class Model:
             self.index = list()  # indices of target mesh
             self.weight = list() # weights for these vertices with respect with this bone
 
-    class Surface:
+    class Surface(object):
         def __init__(self):
             self.solid = None # a Model.Solid object
             self.mesh = None  # a Model.Mesh object
             self.group = None # the name of the group defined in the mesh
 
-    class SurfaceLink:
+    class SurfaceLink(object):
         def __init__(self,objXml=None):
             self.id = None
             self.name = None
@@ -532,19 +533,23 @@ def setupUnits(myUnits):
         Sofa.msg_info("SofaPython.sml",message)
 
 def computeRigidMassInfo(solid, density, scale=1):
+    
     massInfo = mass.RigidMassInfo()
+    
     for mesh in solid.mesh:
         if solid.meshAttributes[mesh.id].simulation is True:
+
             # mesh mass info
             mmi = mass.RigidMassInfo()
             mmi.setFromMesh(mesh.source, density=density, scale3d=[scale]*3)
             massInfo += mmi
+            
     return massInfo
 
-class BaseScene:
+class BaseScene(object):
     """ Base class for Scene class, creates a node for this Scene
     """
-    class Param:
+    class Param(object):
         pass
 
     def __init__(self,parentNode,model,name=None):
