@@ -314,6 +314,7 @@ class Model:
         self.modelDir = None
         self.units = dict()
         self.meshes = dict()
+        self.meshAttributes = dict() # why meshAttribute is external to Mesh?
         self.images = dict()
         self.solids = dict()
         self.genericJoints = dict()
@@ -348,7 +349,14 @@ class Model:
                             mesh.source=sourceFullPath
                         else:
                             Sofa.msg_warning("SofaPython.sml","Model: mesh not found: "+mesh.source )
-                    self.meshes[m.attrib["id"]] = mesh
+                    meshId = m.attrib["id"]
+                    self.meshes[meshId] = mesh
+                    attr = Model.MeshAttributes(m)
+                    if not attr is None:
+                        self.meshAttributes[meshId]=attr
+                    else:
+                        self.meshAttributes[meshId]= Model.MeshAttributes()
+                    self.meshAttributes[meshId].mesh = self.meshes[meshId]
 
             # images
             for m in modelXml.iter("image"):
@@ -514,6 +522,14 @@ class Model:
         """ \return a list of solids which contains at least one tag from tags
         """
         return _getObjectsByTags(self.surfaceLinks.values(), tags)
+
+    def getMeshesByTags(self, tags):
+        """ \return a list of meshes which contains at least one tag from tags
+        """
+        meshes = list()
+        for ma in _getObjectsByTags(self.meshAttributes.values(), tags):
+            meshes.append(ma.mesh)
+        return meshes
 
 def insertVisual(parentNode, solid, color):
     node = parentNode.createChild("node_"+solid.name)
