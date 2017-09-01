@@ -9,7 +9,7 @@ using namespace sofa::defaulttype;
 
 SOFA_COMPLIANT_CONSTRAINT_CPP(CoulombConstraintBase)
 
-static int CoulombConstraintClass = 
+int CoulombConstraintClass =
     core::RegisterObject("standard coulomb constraint")
     
 #ifndef SOFA_FLOAT
