@@ -13,7 +13,7 @@ SOFA_DECL_CLASS(RigidLogMapping);
 
 using namespace defaulttype;
 
-static int handle  = core::RegisterObject("Computes rigid logarithm")
+int RigidLogMappingClass = core::RegisterObject("Computes rigid logarithm")
 
 #ifndef SOFA_FLOAT
     .add< RigidLogMapping< double > >()

@@ -10,7 +10,7 @@ using namespace sofa::defaulttype;
 
 SOFA_DECL_CLASS(UserCoulombConstraint);
 
-static int handle = 
+int UserCoulombConstraintClass =
     core::RegisterObject("user-friendly coulomb constraint")
     .add< UserCoulombConstraint >();
 

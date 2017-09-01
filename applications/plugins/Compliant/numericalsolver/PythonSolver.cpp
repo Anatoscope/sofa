@@ -8,7 +8,7 @@ namespace linearsolver {
 
 SOFA_DECL_CLASS(PythonSolver)
 
-static int PythonSolverClass = core::RegisterObject("Python solver").add< PythonSolver >();
+int PythonSolverClass = core::RegisterObject("Python solver").add< PythonSolver >();
 
 PythonSolver::PythonSolver()
     : factor_callback(initData(&factor_callback, "factor_callback", "durrr")),
