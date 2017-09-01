@@ -247,7 +247,6 @@ static PyObject * BaseContext_getObject(PyObject * self, PyObject * args, PyObje
     }
 
     bool emitWarningMessage = true;
-
     if (kw && PyDict_Size(kw)>0)
     {
         PyObject* keys = PyDict_Keys(kw);
@@ -276,7 +275,11 @@ static PyObject * BaseContext_getObject(PyObject * self, PyObject * args, PyObje
     context->get<BaseObject>(sptr,path);
     if (!sptr)
     {
-        return NULL;
+        if( emitWarningMessage )
+        {
+            msg_warning(context) << "Sofa.Node.getObject: component '"<<path<<"' not found";
+        }
+        Py_RETURN_NONE;
     }
 
     return sofa::PythonFactory::toPython(sptr.get());
