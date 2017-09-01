@@ -896,11 +896,8 @@ void VisualModelImpl::computeNormals()
         //serr << "CN1("<<nbn<<")"<<sendl;
 
         normals.resize(nbn);
+        std::fill(normals.begin(), normals.end(), Deriv());
 
-        // old school is best school
-        std::memset(&normals[0], nbn * sizeof(Deriv), 0);
-        // for (int i = 0; i < nbn; i++)
-        //     normals[i].clear();
 
         for ( const auto& t : triangles )
         {
