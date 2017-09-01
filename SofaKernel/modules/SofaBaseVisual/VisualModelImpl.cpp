@@ -1182,7 +1182,6 @@ void VisualModelImpl::updateVisual()
         {
             /** HD : build also a Ogl description from main Topology. But it needs to be build only once since the topology update
             is taken care of by the handleTopologyChange() routine */
-            std::clog << "use topology" << std::endl;
             
             sofa::core::topology::TopologyModifier* topoMod;
             this->getContext()->get(topoMod);
