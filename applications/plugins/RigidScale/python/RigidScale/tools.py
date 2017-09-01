@@ -149,7 +149,7 @@ class Armature:
         return
 
 
-    def rotate(self, bone, rotation):
+    def rotate(self, bone, rotation, local=True):
         parent = self.model.solids[bone].parent
         if(parent):
             parentPosition = np.array(self.scene.rigidScales[self.model.solids[bone].parent].rigidDofs.position).view(dtype=Types.Rigid3)[0]
@@ -159,7 +159,10 @@ class Armature:
 
         position = SofaNumpy.numpy_data(self.scene.rigidScales[bone].rigidDofs,"position").view(dtype=Types.Rigid3)[0]
         q = SofaPython.Quaternion.from_euler(rotation[:]).view(dtype=Types.Quaternion)
-        position.orient = initPosition.orient * q
+        if(local):
+            position.orient = initPosition.orient * q
+        else:
+            position.orient = q * initPosition.orient
         self.updateChildren(bone)
         if(parent):
             self.localCoordinates[bone] = parentPosition.inv() * position      
