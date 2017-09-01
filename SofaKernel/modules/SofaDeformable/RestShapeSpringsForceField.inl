@@ -77,14 +77,9 @@ void RestShapeSpringsForceField<DataTypes>::bwdInit()
     if (restMState.get() == NULL)
     {
       useRestMState = false;
-
-      msg_error(this)<< "external_rest_shape in node " << this-> getContext()->getName() << " not found";
-      //getContext()->removeObject(this);
-      return;
     }else
     {
       useRestMState = true;
-
       // sout << "RestShapeSpringsForceField : Mechanical state named " << restMState->getName() << " found for RestShapeSpringFF named " << this->getName() << sendl;
     }
 
