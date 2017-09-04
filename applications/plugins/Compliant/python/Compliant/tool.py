@@ -99,6 +99,8 @@ from numpy import ctypeslib
 def as_numpy( data ):
     '''maps data content as a numpy array'''
 
+    Sofa.msg_deprecated("Compliant.tools", "as_numpy is deprecated, use SofaPython.SofaNumpy instead")
+
     ptr, shape, typename = data.getValueVoidPtr()
 
     type = ctypeFromName.get(typename,None)
