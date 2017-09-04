@@ -66,25 +66,28 @@ def as_numpy( data, read_only = -1 ):
 
 
 
-# convenience
 def numpy_data(obj, name):
+    ## @deprecated
     Sofa.msg_deprecated("SofaNumpy","numpy_data: Data must be explicitly accessed as read-only or read-write. "
-                        " Use numpy_data_ro() or numpy_data_WriteAccessor instead" )
+                        " Use 'read_only()' or 'edit_data' context instead" )
     data = obj.findData(name)
     return as_numpy(data,-1)
 
-# read-only
-def numpy_data_ro(obj, name):
+def read_only(obj, name):
+    ## read-only access to the data as a numpy array
+    ## @warning the numpy array should NOT be modified
     data = obj.findData(name)
     return as_numpy(data, True)
 
-# read-write
-def numpy_data_beginEdit(obj, name):
+def beginEdit(obj, name):
+    ## read-write access to the data as a numpy array
+    ## @warning do not forget to call 'endEdit' to unlock the data and set it as dirty
     data = obj.findData(name)
     return as_numpy(data, False)
 
-# convenience
-def numpy_data_endEdit(obj, name):
+def endEdit(obj, name):
+    ## to be called after 'beginEdit'
+    ## to unlock the data and set it as dirty
     data = obj.findData(name)
     data.endEditVoidPtr()
 
@@ -92,6 +95,7 @@ from contextlib import contextmanager
 
 @contextmanager
 def edit_data(obj, name):
+    ## equivalent to a WriteAccessor
     data = obj.findData(name)
     view = as_numpy( data, read_only = False )
     
