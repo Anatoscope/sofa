@@ -23,6 +23,10 @@
 #include <sofa/helper/system/FileRepository.h>
 #include <sofa/helper/system/SetDirectory.h>
 #include <sofa/helper/logging/Messaging.h>
+
+#include <sofa/helper/stl.hpp>
+#include <stdint.h>
+
 using std::cout;
 using std::endl;
 
@@ -45,67 +49,47 @@ static Creator<Mesh::FactoryMesh, MeshSTL> MeshSTLClassUppercase("STL");
 
 void MeshSTL::init (std::string filename)
 {
-    if (!sofa::helper::system::DataRepository.findFile(filename))
-    {
-        msg_error("MeshSTL") << "File " << filename << " not found ";
+    if (!sofa::helper::system::DataRepository.findFile(filename)) {
+        msg_error("MeshSTL") << "file " << filename << " not found";
         return;
     }
-    loaderType = "stl";
+    
+    loaderType = "stl";         // wtf?
+    
     std::ifstream file(filename.c_str());
 
-    if (!file.good())
-    {
-       file.close();
-       msg_error("MeshSTL") << "Cannot read file '" << filename << "'.";
-       return;
+    if (!file.good()) {
+        msg_error("MeshSTL") << "cannot read file '" << filename;
+        return;
     }
 
-#ifndef NDEBUG
-std::size_t namepos = filename.find_last_of("/");
-std::string name = filename.substr(namepos+1);
-#endif
 
-    std::string token;
-    file >> token;
-    if (token == "solid")
-    {
-#ifndef NDEBUG
-msg_info("MeshSTL") << "Reading STL file : " << name;
-#endif
+    if( stl::is_binary(file) ) {
+        readBinarySTL(filename); 
+    } else {
         readSTL(file);
     }
-    else
-    {
-#ifndef NDEBUG
-msg_info("MeshSTL") <<  "Reading binary STL file : " << name;
-#endif
-        file.close();
-        readBinarySTL(filename);
-    }
+    
 
-    // announce the model statistics
 #ifndef NDEBUG
-    std::cout << " Vertices: " << vertices.size() << std::endl;
-    std::cout << " Normals: " << normals.size() << std::endl;
-    std::cout << " Texcoords: " << texCoords.size() << std::endl;
-    std::cout << " Triangles: " << facets.size() << std::endl;
+    // announce the model statistics    
+    msg_info("MeshSTL") << "vertices: " << vertices.size();
+    msg_info("MeshSTL") << "normals: " << normals.size();
+    msg_info("MeshSTL") << "texcoords: " << texCoords.size();
+    msg_info("MeshSTL") << "triangles: " << facets.size();
 #endif
-    if (vertices.size()>0)
-    {
+    
+    if (!vertices.empty() ) {
         // compute bbox
         Vector3 minBB = vertices[0];
         Vector3 maxBB = vertices[0];
-        for (unsigned int i=1; i<vertices.size(); i++)
-        {
-            Vector3 p = vertices[i];
-            for (int c=0; c<3; c++)
-            {
-                if (minBB[c] > p[c])
-                    minBB[c] = p[c];
-                if (maxBB[c] < p[c])
-                    maxBB[c] = p[c];
+        for (const Vector3& p : vertices) {
+            for (int c = 0; c < 3; c++) {
+                if (minBB[c] > p[c]) minBB[c] = p[c];
+                if (maxBB[c] < p[c]) maxBB[c] = p[c];
             }
         }
+        
 #ifndef NDEBUG
     msg_info("MeshSTL") << "BBox: <"<<minBB[0]<<','<<minBB[1]<<','<<minBB[2]<<">-<"<<maxBB[0]<<','<<maxBB[1]<<','<<maxBB[2]<<">";
 #endif
@@ -114,6 +98,7 @@ msg_info("MeshSTL") <<  "Reading binary STL file : " << name;
 }
 
 
+// TODO error handling lol
 void MeshSTL::readSTL(std::ifstream &file)
 {
     /* http://www.ennex.com/~fabbers/StL.asp */
@@ -220,13 +205,18 @@ void MeshSTL::readBinarySTL (const std::string &filename)
     // checking that the file is large enough to contain the given nb of facets
     // store current position in file
     std::streampos pos = dataFile.tellg();
+
     // get length of file
     dataFile.seekg(0, std::ios::end);
-    std::streampos length = dataFile.tellg();
+
+    std::size_t length = dataFile.tellg();
+    
     // restore pos
     dataFile.seekg(pos);
     // check length
-    assert( length >= (std::streampos)( 80 /*header*/ + 4 /*nb facets*/ + nbrFacet * (12 /*normal*/ + 3 * 12 /*points*/ + 2 /*attribute*/ ) ) );
+    std::size_t expected =( 80 /*header*/ + 4 /*nb facets*/ + nbrFacet * (12 /*normal*/ + 3 * 12 /*points*/ + 2 /*attribute*/ ) );
+    std::clog << expected << " " << std::size_t(length) << std::endl;
+    assert( length >= expected );
     }
 #endif
 

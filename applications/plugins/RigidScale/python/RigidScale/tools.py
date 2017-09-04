@@ -119,15 +119,16 @@ class Armature:
 
     def updateChildren(self, bone):
         if(bone in self.children):
-            position = SofaNumpy.numpy_data(self.scene.rigidScales[bone].rigidDofs,"position").view(dtype=Types.Rigid3)[0]
-            scale = SofaNumpy.numpy_data(self.scene.rigidScales[bone].scaleDofs,"position")[0]
+            position = SofaNumpy.numpy_data_ro(self.scene.rigidScales[bone].rigidDofs,"position").view(dtype=Types.Rigid3)[0]
+            scale = SofaNumpy.numpy_data_ro(self.scene.rigidScales[bone].scaleDofs,"position")[0]
             for child in self.children[bone]:
                 localCoordinates = np.copy(self.localCoordinates[child]).view(dtype=Types.Rigid3)
                 localCoordinates.center = localCoordinates.center*scale
                 newPosition = position*(localCoordinates)
                 
-                SofaNumpy.numpy_data(self.scene.rigidScales[child].rigidDofs,"position").view(dtype=Types.Rigid3)[0] = newPosition
-                SofaNumpy.numpy_data(self.scene.rigidScales[child].scaleDofs,"position")[0] = scale # children inherit their parent scale
+                with SofaNumpy.numpy_data_WriteAccessor(self.scene.rigidScales[child].rigidDofs,"position") as childPosition, SofaNumpy.numpy_data_WriteAccessor(self.scene.rigidScales[child].scaleDofs,"position") as childScale :
+                    childPosition[0] = newPosition
+                    childScale[0] = scale
                 self.updateChildren(child)
                 
         return
@@ -141,15 +142,16 @@ class Armature:
         else:
             initPosition = np.array(self.scene.rigidScales[bone].rigidDofs.rest_position).view(dtype=Types.Rigid3)[0]
 
-        position = SofaNumpy.numpy_data(self.scene.rigidScales[bone].rigidDofs,"position").view(dtype=Types.Rigid3)[0]
-        position.center = initPosition.center + translation
+        with SofaNumpy.numpy_data_WriteAccessor(self.scene.rigidScales[bone].rigidDofs,"position") as position:
+            positionRigid = position.view(dtype=Types.Rigid3)[0]
+            positionRigid.center = initPosition.center + translation
         self.updateChildren(bone)
         if(self.model.solids[bone].parent):
-            self.localCoordinates[bone] = parentPosition.inv() * position      
+            self.localCoordinates[bone] = parentPosition.inv() * positionRigid
         return
 
 
-    def rotate(self, bone, rotation):
+    def rotate(self, bone, rotation, local=True):
         parent = self.model.solids[bone].parent
         if(parent):
             parentPosition = np.array(self.scene.rigidScales[self.model.solids[bone].parent].rigidDofs.position).view(dtype=Types.Rigid3)[0]
@@ -157,15 +159,18 @@ class Armature:
         else:
             initPosition = np.array(self.scene.rigidScales[bone].rigidDofs.rest_position).view(dtype=Types.Rigid3)[0]
 
-        position = SofaNumpy.numpy_data(self.scene.rigidScales[bone].rigidDofs,"position").view(dtype=Types.Rigid3)[0]
-        q = SofaPython.Quaternion.from_euler(rotation[:]).view(dtype=Types.Quaternion)
-        position.orient = initPosition.orient * q
-        self.updateChildren(bone)
-        if(parent):
-            self.localCoordinates[bone] = parentPosition.inv() * position      
-
+        with SofaNumpy.numpy_data_WriteAccessor(self.scene.rigidScales[bone].rigidDofs,"position") as position:
+            positionRigid = position.view(dtype=Types.Rigid3)[0]
+            q = SofaPython.Quaternion.from_euler(rotation[:]).view(dtype=Types.Quaternion)
+            if(local):
+                positionRigid.orient = initPosition.orient * q
+            else:
+                positionRigid.orient = q * initPosition.orient
+            self.updateChildren(bone)
+            if(parent):
+                self.localCoordinates[bone] = parentPosition.inv() * positionRigid
 
     def scale(self, bone, scale):
-
-        SofaNumpy.numpy_data(self.scene.rigidScales[bone].scaleDofs,"position")[0] = scale
+        with SofaNumpy.numpy_data_WriteAccessor(self.scene.rigidScales[bone].scaleDofs,"position") as position:
+            position[0] = scale
         self.updateChildren(bone)

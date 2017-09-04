@@ -9,7 +9,7 @@ namespace forcefield {
 
 using namespace sofa::defaulttype;
 
-static const int handle = core::RegisterObject("Uniform damping")
+const int UniformDampingClass = core::RegisterObject("Uniform damping")
 #ifndef SOFA_FLOAT
     .add< UniformDamping< Vec1dTypes > >()
     .add< UniformDamping< Vec2dTypes > >()

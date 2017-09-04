@@ -253,9 +253,9 @@ bool FileRepository::findFile(std::string& filename, const std::string& basedir,
         // @todo do something cleaner
 
         std::stringstream tmplog;
-        tmplog << "File "<<filename<<" NOT FOUND in "<<basedir;
+        tmplog << "File "<<filename<<" NOT FOUND in \""<<basedir<<"\"";
         for (std::vector<std::string>::const_iterator it = vpath.begin(); it != vpath.end(); ++it)
-            tmplog << ':'<<*it;
+            tmplog << ":\""<<*it<<"\"";
         if( errlog==&std::cerr || errlog==&std::cout)
             msg_error("FileRepository") << tmplog.str();
         else

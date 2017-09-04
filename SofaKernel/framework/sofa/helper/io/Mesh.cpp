@@ -42,8 +42,12 @@ Mesh* Mesh::Create(const std::string& filename)
 {
     std::string loader="default";
     std::string::size_type p = filename.rfind('.');
-    if (p!=std::string::npos)
+    if (p!=std::string::npos) {
         loader = std::string(filename, p+1);
+
+        // normalize extension
+        std::transform(loader.begin(), loader.end(), loader.begin(), ::tolower);
+    }
     return FactoryMesh::CreateObject(loader, filename);
 }
 

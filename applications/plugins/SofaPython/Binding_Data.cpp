@@ -666,13 +666,19 @@ static PyObject * Data_getLinkPath(PyObject * self, PyObject * /*args*/)
 
 
 /// returns a pointer to the Data
-static PyObject * Data_getValueVoidPtr(PyObject * self, PyObject * /*args*/)
+static PyObject * Data_getValueVoidPtr_impl(PyObject * self, bool write )
 {
     BaseData* data = get_basedata( self );
 
     const AbstractTypeInfo *typeinfo = data->getValueTypeInfo();
-    void* dataValueVoidPtr = const_cast<void*>(data->getValueVoidPtr()); /// data->beginEditVoidPtr();
-    //TODO(PR:304) warning a endedit should be necessary somewhere (when releasing the python variable?)
+
+    void* dataValueVoidPtr;
+
+    if( write )
+        dataValueVoidPtr = data->beginEditVoidPtr();
+    else
+        dataValueVoidPtr = const_cast<void*>(data->getValueVoidPtr()); // warning changind constness to be able to give the ptr to python, but memory should ne be modified
+
     void* valueVoidPtr = typeinfo->getValuePtr(dataValueVoidPtr);
 
     /// N-dimensional arrays
@@ -708,6 +714,32 @@ static PyObject * Data_getValueVoidPtr(PyObject * self, PyObject * /*args*/)
 }
 
 
+/// returns a 'const' pointer to the Data
+/// @warning python does not know constness so the returned ptr is not const,
+/// but it should, that means that this memory better not be modified!!
+static PyObject * Data_getValueVoidPtr(PyObject * self, PyObject * /*args*/)
+{
+    return Data_getValueVoidPtr_impl( self, false );
+}
+
+/// returns a pointer to the Data
+/// @warning 'Data_endEditVoidPtr()' must be called to release the Data and set it as dirty
+static PyObject * Data_beginEditVoidPtr(PyObject * self, PyObject * /*args*/)
+{
+    return Data_getValueVoidPtr_impl( self, true );
+}
+
+/// release a pointer to the Data and set the Data as dirty
+/// required after a 'beginEditVoidPtr()'
+static PyObject * Data_endEditVoidPtr(PyObject * self, PyObject * /*args*/)
+{
+    BaseData* data = get_basedata( self );
+    data->endEditVoidPtr();
+    Py_RETURN_NONE;
+}
+
+
+
 /// returns the number of times the Data was modified
 static PyObject * Data_getCounter(PyObject * self, PyObject * /*args*/)
 {
@@ -720,6 +752,13 @@ static PyObject * Data_isDirty(PyObject * self, PyObject * /*args*/)
 {
     BaseData* data = get_basedata( self );
     return PyBool_FromLong( data->isDirty() );
+}
+
+static PyObject * Data_setDirtyValue(PyObject * self, PyObject * /*args*/)
+{
+    BaseData* data = get_basedata( self );
+    data->setDirtyValue();
+    Py_RETURN_NONE;
 }
 
 
@@ -749,8 +788,11 @@ SP_CLASS_METHOD(Data,read)
 SP_CLASS_METHOD(Data,setParent)
 SP_CLASS_METHOD(Data,getLinkPath)
 SP_CLASS_METHOD(Data,getValueVoidPtr)
+SP_CLASS_METHOD(Data,beginEditVoidPtr)
+SP_CLASS_METHOD(Data,endEditVoidPtr)
 SP_CLASS_METHOD(Data,getCounter)
 SP_CLASS_METHOD(Data,isDirty)
+SP_CLASS_METHOD(Data,setDirtyValue)
 SP_CLASS_METHOD(Data,getAsACreateObjectParameter)
 SP_CLASS_METHODS_END
 

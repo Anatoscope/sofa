@@ -74,6 +74,7 @@ public:
     Data<bool> exportAtBegin;
     Data<bool> exportAtEnd;
 
+    Data<bool> set_extension;
 protected:
     STLExporter();
     virtual ~STLExporter();

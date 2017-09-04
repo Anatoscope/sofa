@@ -83,7 +83,7 @@ def createBarycentricFrame( parentNode, name ):
     behaviorNode = node.createChild('behavior')
     behaviorNode.createObject("TopologyGaussPointSampler", name="sampler", inPosition="@../dofs.rest_position", showSamplesScale="0.1", drawMode="0")
     behaviorNode.createObject('MechanicalObject', name="intePts", template='F332', showObject="true", showObjectScale="0.05")
-    behaviorNode.createObject('LinearMapping', name="mapping", template='Affine,F332', showDeformationGradientScale='0.2', showSampleScale="0", printLog="false")
+    behaviorNode.createObject('LinearMapping', name="mapping", template='Affine,F332', showDeformationGradientScale='0.2', printLog="false")
 
     #Behavior
     eNode = behaviorNode.createChild('E')

@@ -19,7 +19,7 @@ import Sofa
 
 printLog = True
 
-def insertRigid(parentNode, rigidModel, density, scale=1, param=None):
+def insertRigid(parentNode, rigidModel, density, scale=1, param=None, color=[1,1,1,1]):
     """ create a StructuralAPI.RigidBody from the rigidModel. The model geometry is scaled with scale.
     The rigidMass is computed from:
         1) mass, com and inertia if present
@@ -50,10 +50,10 @@ def insertRigid(parentNode, rigidModel, density, scale=1, param=None):
             massinfo.setFromInertia(rigidModel.inertia[0], rigidModel.inertia[1], rigidModel.inertia[2], # Ixx, Ixy, Ixz
                                     rigidModel.inertia[3], rigidModel.inertia[4], # Iyy, Iyz
                                     rigidModel.inertia[5] ) # Izz
-        rigid.setFromRigidInfo(massinfo, offset=rigidModel.position, inertia_forces = False )    # TODO: handle inertia_forces ?
+        rigid.setFromRigidInfo(massinfo, offset=rigidModel.position, inertia_forces = 0 )    # TODO: handle inertia_forces ?
     elif len(rigidModel.mesh)!=0 :
         # get inertia from meshes and density
-        rigid.setFromRigidInfo(rigidModel.getRigidMassInfo(density, scale), offset=StructuralAPI.scaleOffset(scale, rigidModel.position), inertia_forces = False )    # TODO: handle inertia_forces ?
+        rigid.setFromRigidInfo(rigidModel.getRigidMassInfo(density, scale), offset=StructuralAPI.scaleOffset(scale, rigidModel.position), inertia_forces = 0 )    # TODO: handle inertia_forces ?
 
         #if not rigidModel.mass is None :
             ## no density but a mesh let's normalise computed mass with specified mass
@@ -88,9 +88,9 @@ def insertRigid(parentNode, rigidModel, density, scale=1, param=None):
         if rigidModel.meshAttributes[mesh.id].collision is True:
             rigid.collisions[mesh.id] = rigid.addCollisionMesh(mesh.source,name_suffix='_'+mesh.name, scale3d=[scale]*3)
             if rigidModel.meshAttributes[mesh.id].visual is True:
-                rigid.visuals[mesh.id] = rigid.collisions[mesh.id].addVisualModel()
+                rigid.visuals[mesh.id] = rigid.collisions[mesh.id].addVisualModel(color=color)
         elif rigidModel.meshAttributes[mesh.id].visual is True:
-            rigid.visuals[mesh.id] = rigid.addVisualModel(mesh.source,name_suffix='_'+mesh.name, scale3d=[scale]*3)
+            rigid.visuals[mesh.id] = rigid.addVisualModel(mesh.source,name_suffix='_'+mesh.name, scale3d=[scale]*3, color=color)
 
     return rigid
 
@@ -175,6 +175,8 @@ class SceneArticulatedRigid(SofaPython.sml.BaseScene):
         self.param.showOffset=False
         self.param.showOffsetScale=0.1 # SI unit (m)    
 
+        self.param.color={"default": [1,1,1,1]}
+
     def insertMergeRigid(self, mergeNodeName="dofRigid", tags=None, rigidIndexById=None ):
         """ Merge all the rigids in a single MechanicalObject using a SubsetMultiMapping
         optionnaly give a list of tags to select the rigids which are merged
@@ -215,13 +217,18 @@ class SceneArticulatedRigid(SofaPython.sml.BaseScene):
 
         Compliant.StructuralAPI.geometric_stiffness = self.param.geometricStiffness
 
+        # if there is no 'Rigids' node, just use our node as a parent for all rigids
+        # self.nodes["Rigids"] can be set in sub-moulinette to set rigids parent node
+        if not "Rigids" in self.nodes:
+            self.nodes["Rigids"] = self.node
+
         if not self.param.simuLengthUnit is None:
             self._geometricScale = eval("SofaPython.units.length_"+self.model.units["length"]) / eval("SofaPython.units.length_"+self.param.simuLengthUnit)
             SofaPython.units.local_length = eval("SofaPython.units.length_"+self.param.simuLengthUnit)
 
         # rigids
         for rigidModel in self.model.getSolidsByTags(self.param.rigidTags):
-            rigid =  insertRigid(self.node, rigidModel, self.material.density(self.getMaterial(rigidModel.id)), self._geometricScale, self.param)
+            rigid =  insertRigid(self.nodes["Rigids"], rigidModel, self.material.density(self.getMaterial(rigidModel.id)), self._geometricScale, self.param, rigidModel.getValueByTag(self.param.color))
             self.rigids[rigidModel.id] = rigid
             self.visuals[rigidModel.id] = rigid.visuals
             self.collisions[rigidModel.id] = rigid.collisions

@@ -79,6 +79,7 @@ struct SE3 {
 	
 	// rotation quaternion
 	static quat rotation(const coord_type& at) {
+        // TODO paranoid normalization in debug mode
 		return coord(at.getOrientation() );
 	}
 
@@ -112,7 +113,7 @@ struct SE3 {
 	static twist body(const coord_type& at, const deriv_type& sofa) {
 		twist res;
 
-		quat qT = rotation( at ).conjugate();
+		const quat qT = rotation( at ).conjugate();
 		
 		// orientation
 		res.template tail<3>() = qT * map(sofa.getVOrientation() );
@@ -126,7 +127,7 @@ struct SE3 {
 	static mat66 body(const coord_type& at) {
 		mat66 res;
 
-		mat33 R = rotation(at).normalized().toRotationMatrix();
+		const mat33 R = rotation(at).normalized().toRotationMatrix();
 
 		res <<
 			R.transpose(), mat33::Zero(),
@@ -144,7 +145,7 @@ struct SE3 {
 
 	static mat66 spatial_to_sofa(const coord_type& at) {
 		// TODO optimize !!!
-		coord_type i = inv(at);
+		const coord_type i = inv(at);
 		return body( i ) * Ad( i );
 	}
 	
@@ -153,7 +154,7 @@ struct SE3 {
 	static deriv_type sofa(const coord_type& at, const twist& body) {
 		deriv_type res;
 
-		quat q = rotation(at);
+		const quat q = rotation(at);
 
 		map( res.getVOrientation() )  = q * body.template tail<3>();
 		map( res.getVCenter() ) = q * body.template head<3>();
@@ -208,8 +209,8 @@ struct SE3 {
 	// SE(3) adjoint map
 	static twist Ad(const coord_type& at, const twist& v) {
 
-		quat q = rotation(at).normalized();
-		vec3 t = translation(at);
+		const quat q = rotation(at); 
+		const vec3 t = translation(at);
 
 		twist res;
 
@@ -229,9 +230,8 @@ struct SE3 {
 	// SE(3) adjoint, matrix version
 	static mat66 Ad(const coord_type& at) {
 
-        // TODO do we need normalize here ?
-		mat33 R = rotation(at).normalized().toRotationMatrix();
-		mat33 T = hat( translation(at) );
+		const mat33 R = rotation(at).toRotationMatrix();
+		const mat33 T = hat( translation(at) );
 
 		mat66 res;
 
@@ -285,8 +285,8 @@ struct SE3 {
 
         // max: is this really needed ?
 
-        // to avoid numerical instabilities of acos for theta < 5°
-        if(w>0.999) // theta < 5° -> _q[3] = cos(theta/2) > 0.999
+        // to avoid numerical instabilities of acos for theta < 5Â°
+        if(w>0.999) // theta < 5Â° -> _q[3] = cos(theta/2) > 0.999
         {
             sin_half_theta = q.vec().norm();
             theta = (real)(2.0 * asin(sin_half_theta)); // in (0, pi)
@@ -344,12 +344,12 @@ struct SE3 {
 	static mat33 dexp(const vec3& x, const quat& exp_v) {
 		mat33 res = mat33::Zero();
 
-		mat33 xhat = hat(x);
-		mat33 R = exp_v.toRotationMatrix();
+		const mat33 xhat = hat(x);
+		const mat33 R = exp_v.toRotationMatrix();
 		
 		res = mat33::Identity();
 
-		real theta2 = x.squaredNorm();
+		const real theta2 = x.squaredNorm();
 
 		if( theta2 > epsilon() ) {
             res.noalias() += (R.transpose() - mat33::Identity() + xhat) * xhat / theta2;
@@ -396,8 +396,8 @@ struct SE3 {
 	static mat66 product_dlog(const coord_type& g) {
 		mat66 res;
 
-		quat q = rotation(g);
-		mat33 R = q.toRotationMatrix();
+		const quat q = rotation(g);
+		const mat33 R = q.toRotationMatrix();
 
 		res <<
 			mat33::Identity(), mat33::Zero(),
@@ -437,7 +437,7 @@ struct SE3 {
     static mat66 dInv(const coord_type& g) {
         mat66 res;
 
-        mat33 R = rotation(g);
+        const mat33 R = rotation(g);
         
         res <<
             -R.transpose() , -R.transpose() * hat( translation(g) ),

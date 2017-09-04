@@ -23,6 +23,7 @@
 #include <SofaGeneralLoader/MeshSTLLoader.h>
 #include <sofa/core/visual/VisualParams.h>
 
+#include <sofa/helper/stl.hpp>
 #include <iostream>
 //#include <fstream> // we can't use iostream because the windows implementation gets confused by the mix of text and binary
 #include <cstdio>
@@ -56,31 +57,22 @@ MeshSTLLoader::MeshSTLLoader() : MeshLoader()
 }
 
 
-
 bool MeshSTLLoader::load()
 {
     const char* filename = m_filename.getFullPath().c_str();
+
     std::ifstream file(filename);
-    if (!file.good())
-    {
-        file.close();
-        serr << "Cannot read file '" << m_filename << "'." << sendl;
+    if (!file.good()) {
+        msg_error() << "Cannot read file '" << m_filename;
         return false;
     }
-
-    if( _forceBinary.getValue() )
-        return this->readBinarySTL(filename); // -- Reading binary file
-
-    std::string test;
-    file >> test;
-
-    if ( test == "solid" )
+    
+    if( helper::stl::is_binary(file) || _forceBinary.getValue() ) {
+        return this->readBinarySTL(filename);
+    } else {
         return this->readSTL(file);
-    else
-    {
-        file.close(); // no longer need for an ascii-open file
-        return this->readBinarySTL(filename); // -- Reading binary file
     }
+
 }
 
 
@@ -97,7 +89,6 @@ bool MeshSTLLoader::readBinarySTL(const char *filename)
     std::map< sofa::defaulttype::Vec3f, core::topology::Topology::index_type > my_map;
     core::topology::Topology::index_type positionCounter = 0;
     bool useMap = d_mergePositionUsingMap.getValue();
-
 
 
     // Skipping header file
@@ -240,8 +231,9 @@ bool MeshSTLLoader::readSTL(std::ifstream& dataFile)
 
         std::getline(dataFile, buffer);
         std::stringstream line;
-        line << buffer;
 
+        std::clog << line.str() << std::endl;
+        
         std::string bufferWord;
         line >> bufferWord;
 

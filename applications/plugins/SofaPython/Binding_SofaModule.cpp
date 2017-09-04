@@ -298,8 +298,11 @@ static PyObject * Sofa_generateRigid(PyObject * /*self*/, PyObject * args) {
     }
 
     sofa::helper::GenerateRigidInfo rigid;
-    if( !sofa::helper::generateRigid( rigid, meshFilename, density, Vector3(sx,sy,sz), Vector3(rx,ry,rz) ) )
-        exit(0);
+    if( !sofa::helper::generateRigid( rigid, meshFilename, density,
+                                      Vector3(sx,sy,sz), Vector3(rx,ry,rz) ) ) {
+        PyErr_SetString(PyExc_RuntimeError, "error when calling generateRigid");
+        return NULL;
+    }
 
     return Py_BuildValue("ddddddddddd",rigid.mass
                          ,rigid.com[0],rigid.com[1],rigid.com[2]

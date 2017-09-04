@@ -6,7 +6,11 @@ set(HEADER_FILES "")
 
 set(SOURCE_FILES "")
 
-set(PYTHON_FILES "")
+set(PYTHON_FILES
+    python/RigidScale/API.py
+    python/RigidScale/sml.py
+    python/RigidScale/tools.py
+    )
 
 set(MOC_FILES "")
 

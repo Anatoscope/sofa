@@ -19,7 +19,6 @@ class Image:
             self.insideValue = insideValue
             self.roiValue=list() # a list of values corresponding to each roi
             self.roiIndices=None # a string pointing to indices
-            self.mergeROIs=None
 
     def __init__(self, parentNode, name, imageType="ImageUC"):
         self.imageType = imageType
@@ -82,24 +81,32 @@ class Image:
         mesh.mesh = externMesh
         self.__addMesh(mesh,closingValue,roiIndices,roiValue,_name)
 
-    def __addMesh(self, mesh, closingValue=None, roiIndices=list(), roiValue=list(), name=None):
+    def __addMesh(self, mesh, closingValue, roiIndices, roiValue, name):
         """ some code factorization between addMeshLoader and addExternMesh
         """
         args=dict()
-        if not closingValue is None : # close mesh if closingValue is defined
+        if not closingValue is None and len(roiIndices)==0 and len(roiValue)==0 : # close mesh if closingValue is defined - FIXME and no roi is defined
             meshPath = mesh.mesh.getLinkPath()
             mesh.mesh = self.node.createObject("MeshClosingEngine", name="closer_"+name, inputPosition=meshPath+".position", inputTriangles=meshPath+".triangles")
             mesh.roiValue=[closingValue]
             mesh.roiIndices=mesh.mesh.getLinkPath()+".indices"
-        elif len(roiIndices)!=0 and len(roiValue)!=0 :
+        if len(roiIndices)!=0 and len(roiValue)!=0 :
             mesh.roiValue=roiValue
             args=dict()
             for i,roi in enumerate(roiIndices):
                 args["indices"+str(i+1)]=concat(roi)
-            mesh.mergeROIs = self.node.createObject('MergeROIs', name="mergeROIs_"+name, nbROIs=len(roiIndices), **args)
-            mesh.roiIndices=mesh.mergeROIs.getLinkPath()+".roiIndices"
+            mergeROIs = self.node.createObject('MergeROIs', name="mergeROIs_"+name, nbROIs=len(roiIndices), **args)
+            mesh.roiIndices = mergeROIs.getLinkPath()+".roiIndices"
             # use mergeROIs to potentially combine other rois (from meshclosing, boxRois, etc.)
             # but here, roiIndices reformating to "[i,j,..] [k,l,..]" would work..
+#            if not closingValue is None:
+#                # in that case rois and closing need to be merged, closing first to paint ROIs over it
+#                mesh.roiValue = [closingValue] + mesh.roiValue
+#                mergeVectors = self.node.createObject('MergeVectors', template="SVector<unsigned int>", name="mergeROIs_closing_"+name, nbInputs=2,
+#                    input1=mesh.mesh.getLinkPath()+".indices", input2=mergeROIs.getLinkPath()+".roiIndices")
+#                mesh.roiIndices=mergeVectors.getLinkPath()+".output"
+            if not closingValue is None:
+                Sofa.msg_warning("SofaImage.API", "addMesh does not support to paint both ROIs AND closing parts, closing is not painted - on mesh {0} with {1} ROIs".format(mesh.mesh.name, len(roiIndices)))
 
         self.meshes[name] = mesh
         self.meshSeq.append(name)

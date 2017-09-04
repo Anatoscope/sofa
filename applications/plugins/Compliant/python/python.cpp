@@ -24,10 +24,15 @@ struct scipy_csr_matrix {
 template<class U>
 struct eigen_csr_matrix : Eigen::SparseMatrix<U, Eigen::RowMajor> {
 
+    // this is a dummy class that provides glue between scipy matrices and eigen
+    // matrices (mostly adapting pointers/shapes)
+
+    
 private:
-    // that's right. use placement new to make sure the destructor is never
-    // called since memory is owned by scipy
+    // that's right: use placement new to make sure the destructor is never
+    // called since memory is owned by scipy.
     ~eigen_csr_matrix() { }
+    
 public:
 
     eigen_csr_matrix( const scipy_csr_matrix<U>* source ) {
@@ -37,6 +42,7 @@ public:
         this->m_outerIndex = source->outer_index;
         this->m_innerNonZeros = source->inner_nonzero;
 
+        // same here
         new (&this->m_data) eigen_compressed_storage(source->storage);
     }
 
@@ -54,9 +60,16 @@ public:
         typename scipy_csr_matrix<U>::storage_type to_scipy() const {
             typename scipy_csr_matrix<U>::storage_type res;
 
-            res.values = this->m_values;
-            res.indices = this->m_indices;
             res.size = this->m_size;
+
+            if( res.size ) {
+                res.values = this->m_values;
+                res.indices = this->m_indices;
+            } else {
+                // this keeps ctypes for yelling a warning
+                res.values = nullptr;
+                res.indices = nullptr;
+            }
 
             return res;
         }
@@ -81,7 +94,7 @@ public:
 
 
 using real = double;
-#include <iostream>
+
 extern "C" {
 
 
@@ -95,8 +108,10 @@ extern "C" {
     
     void eigen_from_scipy(eigen_csr_matrix<real>* lvalue,
                           const scipy_csr_matrix<real>* rvalue) {
-        char storage[sizeof(eigen_csr_matrix<real>)];
-        eigen_csr_matrix<real>* alias = new (storage) eigen_csr_matrix<real>(rvalue);
+        // note: we use placement new to make sure destructor is never called
+        // since memory is owned by scipy
+        std::aligned_union<0, eigen_csr_matrix<real> >::type storage;
+        const eigen_csr_matrix<real>* alias = new (&storage) eigen_csr_matrix<real>(rvalue);
         
         *lvalue = *alias;
         lvalue->makeCompressed();

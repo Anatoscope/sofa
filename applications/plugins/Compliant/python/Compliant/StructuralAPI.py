@@ -331,10 +331,10 @@ class RigidBody(RigidDOF):
         self.collision = RigidBody.CollisionMesh( self.node, filepath, scale3d, ( self.framecom.inv() * Frame.Frame(offset) ).offset(), name_suffix )
         return self.collision
 
-    def addVisualModel(self, filepath, scale3d=[1,1,1], offset=[0,0,0,0,0,0,1], name_suffix=''):
+    def addVisualModel(self, filepath, scale3d=[1,1,1], offset=[0,0,0,0,0,0,1], name_suffix='', color=[1,1,1,1]):
         ## adding a visual model to the rigid body with a relative offset
         # @warning the translation due to the center of mass offset is automatically removed. If necessary a function without this mechanism could be added
-        self.visual = RigidBody.VisualModel( self.node, filepath, scale3d, ( self.framecom.inv() * Frame.Frame(offset) ).offset(), name_suffix )
+        self.visual = RigidBody.VisualModel( self.node, filepath, scale3d, ( self.framecom.inv() * Frame.Frame(offset) ).offset(), name_suffix, color )
         return self.visual
 
     def addOffset(self, name, offset=[0,0,0,0,0,0,1], isMechanical=True):
@@ -389,29 +389,30 @@ class RigidBody(RigidDOF):
             ## add a component to compute mesh normals at each timestep
             self.normals = self.node.createObject("NormalsFromPoints", template='Vec3'+template_suffix, name="normalsFromPoints", position='@'+self.dofs.name+'.position', triangles='@'+self.topology.name+'.triangles', quads='@'+self.topology.name+'.quads', invertNormals=invert )
 
-        def addVisualModel(self):
+        def addVisualModel(self, color=[1,1,1,1]):
             ## add a visual model identical to the collision model
-            self.visual = RigidBody.CollisionMesh.VisualModel( self.node )
+            self.visual = RigidBody.CollisionMesh.VisualModel( self.node, color=color )
             return self.visual
 
         class VisualModel:
-            def __init__(self, node ):
+            def __init__(self, node, color=[1,1,1,1]):
                 global idxVisualModel
                 self.node = node.createChild( "visual" )  # node
                 # todo improve normal updates by using the Rigid Transform rather than by doing cross product
                 # enforcing mesh loading in VisualModel to have correct texture coordinates
-                self.model = self.node.createObject('VisualModel', name="model"+str(idxVisualModel), useNormals=False, updateNormals=True, fileMesh="@../loader.filename" )
+                self.model = self.node.createObject('VisualModel', name="model"+str(idxVisualModel), useNormals=False, updateNormals=True, fileMesh="@../loader.filename", color=concat(color) )
                 self.mapping = self.node.createObject('IdentityMapping', name="mapping")
                 idxVisualModel+=1
 
 
     class VisualModel:
-        def __init__(self, node, filepath, scale3d, offset, name_suffix=''):
+        def __init__(self, node, filepath, scale3d, offset, name_suffix='', color=[1,1,1,1]):
             global idxVisualModel
             self.node = node.createChild( "visual"+name_suffix )  # node
             r = Quaternion.to_euler(offset[3:])  * 180.0 / math.pi
             self.model = self.node.createObject('VisualModel', name="visual"+str(idxVisualModel), fileMesh=filepath,
-                                                scale3d=concat(scale3d), translation=concat(offset[:3]) , rotation=r.tolist() )
+                                                scale3d=concat(scale3d), translation=concat(offset[:3]) , rotation=r.tolist(),
+                                                color=concat(color) )
             self.mapping = self.node.createObject('RigidMapping', name="mapping")
             idxVisualModel+=1
 
@@ -446,9 +447,9 @@ class RigidBody(RigidDOF):
             self.collision = RigidBody.CollisionMesh(self.node, filepath, scale3d, offset, name_suffix)
             return self.collision
 
-        def addVisualModel(self, filepath, scale3d=[1, 1, 1], offset=[0, 0, 0, 0, 0, 0, 1], name_suffix=''):
+        def addVisualModel(self, filepath, scale3d=[1, 1, 1], offset=[0, 0, 0, 0, 0, 0, 1], name_suffix='', color=[1,1,1,1]):
             ## adding a visual model to the rigid body with a relative offset
-            self.visual = RigidBody.VisualModel(self.node, filepath, scale3d, offset, name_suffix)
+            self.visual = RigidBody.VisualModel(self.node, filepath, scale3d, offset, name_suffix, color)
             return self.visual
 
         def addMotor( self, forces=[0,0,0,0,0,0] ):

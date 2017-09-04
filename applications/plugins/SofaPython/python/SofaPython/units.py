@@ -10,9 +10,8 @@
 
 # TODO have a look to units for stress and elasticity parameters in 2D and 1D
 
-
-
 import math
+import collections
 
 
 ### some CONSTANTS are defined as user utilities
@@ -119,11 +118,17 @@ def time_to_SI( t, time_unit=None ):
 # m
 def length_from_SI( l, length_unit=None ):
     length_unit = length_unit or local_length
-    return l / length_unit
+    if isinstance(l, collections.Iterable):
+        return [li / length_unit for li in l]
+    else:
+        return l / length_unit
 
 def length_to_SI( l, length_unit=None ):
     length_unit = length_unit or local_length
-    return l * length_unit
+    if isinstance(l, collections.Iterable):
+        return [li * length_unit for li in l]
+    else:
+        return l * length_unit
 
 # kg
 def mass_from_SI( m, mass_unit=None ):

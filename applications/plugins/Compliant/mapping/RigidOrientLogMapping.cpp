@@ -13,7 +13,7 @@ SOFA_DECL_CLASS(RigidOrientLogMapping);
 
 using namespace defaulttype;
 
-static int handle  = core::RegisterObject("compute rigid orientation logarithm")
+int RigidOrientLogMappingClass = core::RegisterObject("compute rigid orientation logarithm")
 
 #ifndef SOFA_FLOAT
     .add< RigidOrientLogMapping< double > >()
