@@ -53,7 +53,7 @@ def as_numpy( data, read_only = -1 ):
         Sofa.msg_deprecated("SofaNumpy","as_numpy: Data must be explicitly accessed as read-only or read-write. "
                                         "With a read-only access, the numpy array should not be modified. "
                                         "With a read-write access, the Data must be explicitly unlocked and set as dirty with a call to 'Data.endEditVoidPtr'")
-        readOnly = True # similar to the first behavior
+        read_only = True # similar to the first behavior
 
     if read_only:
         ptr, shape, typename = data.getValueVoidPtr()
