@@ -60,6 +60,8 @@ def as_numpy( data, readOnly=-1 ):
 
 # convenience
 def numpy_data(obj, name):
+    Sofa.msg_deprecated("SofaNumpy","numpy_data: Data must be explicitly accessed as read-only or read-write. "
+                        " Use numpy_data_ro() or numpy_data_WriteAccessor instead" )
     data = obj.findData(name)
     return as_numpy(data,-1)
 
