@@ -1,222 +1,58 @@
-"""a readline console module (unix only). 
+"""a simple threaded readline console module (unix only)"""
 
-maxime.tournier@brain.riken.jp
+# TODO error if not unix
 
-the module starts a subprocess for the readline console and
-communicates through pipes (prompt/cmd).
-
-the console is polled through a timer, which depends on PySide.
-"""
-
-from select import select
-import os
+from __future__ import print_function
 import sys
-import signal
 
+import rlcompleter
+import readline
 
-if __name__ == '__main__':
+readline.parse_and_bind("tab: complete")
 
-    import readline
-
-    # prompt input stream
-    fd_in = int(sys.argv[1])    
-    file_in = os.fdopen( fd_in )
-
-    # cmd output stream
-    fd_out = int(sys.argv[2])
-    file_out = os.fdopen( fd_out, 'w' )
-
-    # some helpers
-    def send(data):
-        file_out.write(data + '\n')
-        file_out.flush()
-
-    def recv():
-        while True:
-            res = file_in.readline().rstrip('\n')
-            read, _, _ = select([ file_in ], [], [], 0)
-            if not read: return res
-
-            
-    class History:
-        """readline history safe open/close"""
-        
-        def __init__(self, filename):
-            self.filename = os.path.expanduser( filename )
-
-        def __enter__(self):
-            try:
-                readline.read_history_file(self.filename)
-                # print 'loaded console history from', self.filename
-            except IOError:
-                pass
-            return self
-
-        def __exit__(self, type, value, traceback):
-            readline.write_history_file( self.filename )
-
-    def cleanup(*args):
-        print('console cleanup')
-        os.system('stty sane')
-
-
-    for sig in [signal.SIGQUIT,
-                signal.SIGTERM,
-                signal.SIGILL,
-                signal.SIGSEGV]:
-            
-        old = signal.getsignal(sig)
-
-        def new(*args):
-            cleanup()
-            signal.signal(sig, old)
-            os.kill(os.getpid(), sig)
-            
-        signal.signal(sig, new)
+def start(local = None, history = '~/.sofa_console'):
     
-    
-    # main loop
-    try:
-        with History( "~/.sofa-console" ):
-            print 'console started'
-            while True:
-                send( raw_input( recv() ) )
-
-    except KeyboardInterrupt:
-        print 'console exited (SIGINT)'
-    except EOFError:
-        ppid = os.getppid()
-        try:
-            os.kill(os.getppid(), signal.SIGTERM)
-            print 'console exited (EOF), terminating parent process'
-        except OSError:
-            pass
-
-        
-        
-else:
-
-    import subprocess
-    import code
+    import threading
     import atexit
+    import os
+    import code
+    import sys
+    import signal
+    
+    def target():
+        
+        # install readline cleanup handler
+        def cleanup(): os.system('stty sane')
+        atexit.register(cleanup)
 
-
-    _cleanup = None
-
-    def _register( c ):
-        global _cleanup
-        if _cleanup: _cleanup()
-
-        _cleanup = c
-
-
-    class Console(code.InteractiveConsole):
-
-        def __init__(self, locals = None, timeout = 100):
-            """
-            python interpreter taking input from console subprocess
-            
-            scope is provided through 'locals' (usually: locals() or globals())
-
-            'timeout' (in milliseconds) sets how often is the console polled.
-            """
-            
-            code.InteractiveConsole.__init__(self, locals)
-
-            if timeout >= 0:
-                def callback():
-                    self.poll()
-
-                from PySide import QtCore
+        # deal with history
+        if history:
+            import readline
+            filename = os.path.expanduser( history )
+            try:
+                readline.read_history_file( filename )
+            except IOError as e:
+                pass
                 
-                self.timer = QtCore.QTimer()
-                self.timer.timeout.connect( callback )
-                self.timer.start( timeout )
+            def write_history():
+                readline.write_history_file( filename )
 
-                _register( lambda: self.timer.stop() )
+            atexit.register( write_history )
 
-        # execute next command, blocks on console input
-        def next(self):
-            line = recv()
-            data = '>>> '
+        namespace = local or None
+        readline.set_completer(rlcompleter.Completer(namespace).complete)
 
-            if self.push( line ):
-                data = '... '
-
-            send( data )
-
-        # convenience
-        def poll(self):
-            if ready(): self.next()
-
-
-    # send prompt to indicate we are ready
-    def send(data):
-        prompt_out.write(data + '\n')
-        prompt_out.flush()
+        try:
+            code.interact(local = local)
+        except Exception as e:
+            print('console error:', e)
+        else:
+            os.kill(os.getpid(), signal.SIGINT)
+        finally:
+            print('console exited')
             
-    # receive command line
-    def recv():
-        res = cmd_in.readline()
-        if res: return res.rstrip('\n')
-        return res
-
-    # is there any available command ?
-    def ready():
-        read, _, _ = select([ cmd_in ], [], [], 0)
-        return read
-
-
-    # communication pipes
-    prompt = os.pipe() 
-    cmd = os.pipe()
-
-    # subprocess with in/out fd, and forwarding stdin
-    sub = subprocess.Popen(['python', __file__,
-                            str(prompt[0]), str(cmd[1])],
-                           stdin = sys.stdin)
-
-    # open the tubes !
-    prompt_out = os.fdopen(prompt[1], 'w')
-    cmd_in = os.fdopen(cmd[0], 'r')
-
-    # we're ready
-    send('>>> ')
-    
         
-    # def cleanup(*args):
-    #     print('console cleanup')
-    #     os.system('stty sane')
+    thread = threading.Thread(target = target)
+    thread.daemon = True
+    thread.start()
 
-    # def exit(*args):
-    #     print 'exit'
-    #     cleanup()
-
-    # sys.exit(0) forces cleanup *from python* before the gui
-    # closes. otherwise pyside causes segfault on python finalize.
-    def handler(*args):
-        sub.terminate()
-        sub.wait()
-        sys.exit(0)
-        
-    from PySide import QtCore
-    app = QtCore.QCoreApplication.instance()
-    app.aboutToQuit.connect( handler )
-
-    # import atexit
-    # atexit.register( handler )
-    
-    # import atexit
-    # atexit.register(  exit )
-    
-    # for sig in [signal.SIGSEGV, signal.SIGILL]:
-    #     old = signal.getsignal(sig)
-        
-    #     def h(*args):
-    #         print args
-    #         sub.terminate()
-    #         signal.signal(sig, old)
-    #         os.kill(os.getpid(), sig)
-            
-    #     signal.signal(sig, h)
- 

@@ -1,11 +1,11 @@
+from SofaPython import console
+
+
 def createScene(node):
 
-    def hello():
-        print 'hello !'
+    dofs = node.createObject('MechanicalObject', size = 1)
 
-    print "usage: as usual, call dir() to see what's available."
+    console.start( locals() )
     
-    from SofaPython import console # the console is started during the import
-    c = console.Console( locals() )
     
 
