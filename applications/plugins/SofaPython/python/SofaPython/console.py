@@ -1,5 +1,10 @@
 """a simple threaded readline console module (unix only)"""
 
+import rlcompleter
+import readline
+
+readline.parse_and_bind("tab: complete")
+
 def start(local = None, history = '~/.sofa_console'):
     
     import threading
@@ -28,7 +33,9 @@ def start(local = None, history = '~/.sofa_console'):
                 readline.write_history_file( filename )
 
             atexit.register( write_history )
-            
+
+        namespace = local or None
+        readline.set_completer(rlcompleter.Completer(namespace).complete)            
         code.interact(local = local)
         os.kill(os.getpid(), signal.SIGINT)
         
