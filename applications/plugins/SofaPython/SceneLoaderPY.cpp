@@ -115,6 +115,7 @@ void SceneLoaderPY::loadSceneWithArguments(const char *filename,
                                            const std::vector<std::string>& arguments,
                                            Node::SPtr* root_out)
 {
+    PythonEnvironment::gil lock(__func__);    
     if(!OurHeader.empty() && 0 != PyRun_SimpleString(OurHeader.c_str()))
     {
         SP_MESSAGE_ERROR( "header script run error." );
@@ -173,6 +174,7 @@ void SceneLoaderPY::loadSceneWithArguments(const char *filename,
 
 bool SceneLoaderPY::loadTestWithArguments(const char *filename, const std::vector<std::string>& arguments)
 {
+    PythonEnvironment::gil lock(__func__);    
     if(!OurHeader.empty() && 0 != PyRun_SimpleString(OurHeader.c_str()))
     {
         SP_MESSAGE_ERROR( "header script run error." )

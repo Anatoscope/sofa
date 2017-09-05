@@ -192,11 +192,10 @@ static PyMethodDef except_hook_def = {
 };
 
 
-// save/restore excepthook
-class excepthook_installer {
-    PyObject* default_excepthook = nullptr;
-public:
-    excepthook_installer(shared_type* shared) {
+static void install_sys_excepthook(char* flags) {
+    if(!default_excepthook){
+        sofa::simulation::PythonEnvironment::gil lock(__func__);
+        
         default_excepthook = PySys_GetObject((char*)"excepthook") || fail("cannot get default excepthook");
 
         shared->default_excepthook = default_excepthook;
