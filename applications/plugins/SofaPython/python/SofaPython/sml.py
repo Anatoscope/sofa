@@ -60,8 +60,11 @@ class Model(object):
         class Group(object):
             def __init__(self, id):
                 self.id=id
+                # indices of the vertices in this group
                 self.index=list()
+                # optionnaly, data vectors can be associated to these vertices (for instance skinning weight)
                 self.data=dict()
+                # tags to classify this group
                 self.tags=set()
             def __len__(self):
                 return len(self.index)
@@ -71,6 +74,7 @@ class Model(object):
             self.name=None
             self.format=None
             self.source=None
+            # vertex groups defined on this mesh
             self.groups=dict()
             self.group=self.groups # for compatibility
             if not meshXml is None:
@@ -106,11 +110,17 @@ class Model(object):
             return _getObjectsByTags(self.groups.values(), tags)
 
     class MeshAttributes(object):
+        """ This class contains attributes for a given mesh associated to a given solid.
+        """
         def __init__(self,objXml=None):
             self.mesh = None
+            # is this mesh a collision mesh for this solid
             self.collision=True
+            # is this mesh to be simulated for this solid (depends on the sml moulinette)
             self.simulation=True
+            # is this mesh a visual mesh for this solid
             self.visual=True
+            # other characteristics of how this mesh participates to this solid simulation
             self.tags = set()
             if not objXml is None:
                 self.parseXml(objXml)
@@ -145,13 +155,19 @@ class Model(object):
     class Solid(object):
         
         def __init__(self, solidXml=None):
+            # id, used to retrieve this solid
             self.id = None
+            # if specified, a user friendly name, default to id
             self.name = None
+            # set of tags of this solid, to be used in sml moulinette to know what to do with this solid
             self.tags = set()
+            # solid position [X,q], default to origin
             self.position = [0,0,0,0,0,0,1]
             self.keyPositions = {} # optional animated keyframed positions {name(string):position(6 floats)}, note 'name' can represent a time (that would need to be casted as a float in your sml moulinette)
+            # list of meshes which participate to this solid
             self.meshes = list()
             self.mesh = self.meshes # alias for compatibility
+            # for each mesh.id, its attributes associated to this solid
             self.meshAttributes = dict() # attributes associated with each mesh
             self.image = list() # list of images
             self.offsets = list()  # list of rigid offsets
@@ -312,8 +328,10 @@ class Model(object):
 
     def __init__(self, filename=None, name=None, checkMeshFilePresence=True):
         self.name = name
+        # where the (last) .sml was read, all relative path in sml files (mesh files) are understood from this path
         self.modelDir = None
         self.units = dict()
+        # all meshes of this model (whether or not they are included in a solid), by mesh.id
         self.meshes = dict()
         self.images = dict()
         self.solids = dict()
@@ -324,6 +342,8 @@ class Model(object):
             self.open( filename, checkMeshFilePresence )
 
     def open(self, filename, checkMeshFilePresence=True):
+        """ parse \a filename and append its content to the current model
+        """
         Sofa.msg_info("SofaPython.sml","Model: opening file: " + filename)
         self.modelDir = os.path.abspath(os.path.dirname(filename))
         with open(filename,'r') as f:
@@ -550,18 +570,29 @@ class BaseScene(object):
     """ Base class for Scene class, creates a node for this Scene
     """
     class Param(object):
+        """ Empty class to store parameters (dynamically created)
+        \todo add some serialization if needed
+        \todo add a virtual method check() that would be called in __init__() to check parameters consistency
+        """
         pass
 
     def __init__(self,parentNode,model,name=None):
         self.root = parentNode
         self.model = model
+        # to store scene parameters
         self.param = BaseScene.Param()
-        self.material = Tools.Material() # a default material set
-        self.solidMaterial = dict() # assign a material to a solid
-        self.nodes = dict() # to store special nodes
-        self.meshExporters = list() # optional components to exports meshes
-        self.collisions = dict() # to store collisions of the scene by [solidId][meshId]
-        self.visuals = dict() # to store visuals of the scene by [solidId][meshId]
+        # a default material set
+        self.material = Tools.Material()
+        # assign a material to a solid
+        self.solidMaterial = dict()
+        # to store special nodes and have access to them
+        self.nodes = dict()
+        # optional components to exports meshes
+        self.meshExporters = list()
+        # to store collisions of the scene by [solidId][meshId]
+        self.collisions = dict()
+        # to store visuals of the scene by [solidId][meshId]
+        self.visuals = dict()
 
         n=name
         if n is None:
@@ -705,6 +736,8 @@ class BaseScene(object):
             visual.visual.setColor(color[0],color[1],color[2],color[3])
 
     def exportMeshes(self):
+        """ call the writeOBJ of each mesh exporter
+        """
         for e in self.meshExporters:
             e.writeOBJ()
 
