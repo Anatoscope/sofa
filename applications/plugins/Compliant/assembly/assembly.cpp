@@ -1,7 +1,22 @@
 #include "assembly.hpp"
 
 #include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/depth_first_search.hpp>
+// #include <boost/graph/depth_first_search.hpp>
+#include <boost/graph/topological_sort.hpp>
+
+
+namespace std {
+
+// range adaptor
+template<class Iterator>
+static Iterator begin(const std::pair<Iterator, Iterator>& range) { return range.first; }
+
+
+template<class Iterator>
+static Iterator end(const std::pair<Iterator, Iterator>& range) { return range.second; }
+
+}
+
 
 namespace sofa {
 namespace component {
@@ -10,9 +25,7 @@ struct vertex_type {
     using state_type = const core::BaseState*;
     state_type state;
 
-    vertex_type(state_type state = nullptr) : state(state) { }
-    
-    bool is_mechanical = false;
+    bool is_mechanical;
 };
 
 
@@ -31,11 +44,14 @@ using graph = boost::adjacency_list<boost::vecS, boost::vecS,
 
 using graph_type = graph<vertex_type, edge_type>;
 
+
+
 struct assembly_error : std::runtime_error {
     using std::runtime_error::runtime_error;
 };
 
 
+// TODO: inherit from Visitor directly?
 struct Visitor : public simulation::MechanicalVisitor {
 
     graph_type& graph;
@@ -48,8 +64,11 @@ struct Visitor : public simulation::MechanicalVisitor {
     virtual Visitor::Result processNodeTopDown(simulation::Node* node) {
         if( auto* state = node->mechanicalState.get() ) {
             const auto err = table.emplace(state, num_vertices(graph));
+
             if(err.second) {
-                const vertex_type prop(state);
+                const bool is_mechanical = node->mass.get() || node->forceField.size();
+                
+                const vertex_type prop = {state, is_mechanical};
                 const std::size_t v = add_vertex(prop, graph);
                 assert(v == err.first->second && "bad vertex index");
             }
@@ -83,13 +102,77 @@ struct Visitor : public simulation::MechanicalVisitor {
 
 
 
+
+static void create_graph(graph_type& res, core::objectmodel::BaseContext* ctx) {
+
+    // fill kinematic graph
+    graph_type graph;
+    
+    Visitor visitor(graph);
+    ctx->executeVisitor(&visitor);
+
+    // topological sort
+    std::vector<std::size_t> bottom_up;
+
+    boost::vector_property_map<boost::default_color_type> cm(num_vertices(graph));    
+    topological_sort(graph, std::back_inserter(bottom_up), boost::color_map(cm));
+
+    // propagate is_mechanical bottom-up
+    for(std::size_t v : bottom_up) {
+        if(graph[v].is_mechanical) {
+            
+            for(std::size_t s : adjacent_vertices(v, graph)) {
+                graph[s].is_mechanical = true;
+            }
+        }
+    }
+
+
+    // prune graph keeping only mechanical nodes
+    std::vector<std::size_t> map;
+    map.reserve(num_vertices(graph));
+    
+    for(std::size_t v : vertices(graph) ) {
+        if(graph[v].is_mechanical) {
+            map.emplace_back(map.size());
+        } else {
+            clear_vertex(v, graph);
+        }
+    }
+
+    // compact graph
+    res = graph_type(map.size());
+    
+    for(std::size_t v : vertices(graph) ) {
+        if(graph[v].is_mechanical) {
+            const std::size_t s = map[v];
+
+            res[s] = graph[v];
+
+            for(auto e : out_edges(v, graph)) {
+                add_edge(s, map[target(e, graph)], graph[e], res);
+            }
+        }            
+    }
+    
+}
+
+
+
 void assemble(linearsolver::AssembledSystem& res,
               core::objectmodel::BaseContext* ctx,
               const core::MechanicalParams *mparams) {
 
-    
-    
+    graph_type graph;
+    create_graph(graph, ctx);
 
+    // TODO obtain mapping chunks
+
+    // TODO obtain mass/stiffness chunks
+
+    // TODO obtain forces + geometric stiffness chunks
+
+    
 }
 
 
