@@ -113,6 +113,7 @@ set(HEADER_FILES
     preconditioner/CompliantJacobiPreconditioner.h
     preconditioner/CompliantLDLTPreconditioner.h
     preconditioner/IncompleteCholeskyPreconditioner.h
+    assembly/assembly.hpp
     utils/anderson.h
     utils/nlnscg.h
     utils/basis.h
@@ -141,6 +142,7 @@ set(HEADER_FILES
 set(SOURCE_FILES
     assembly/AssembledSystem.cpp
     assembly/AssemblyVisitor.cpp
+    assembly/assembly.cpp    
     compliance/DampingCompliance.cpp
     compliance/DiagonalCompliance.cpp
     compliance/LinearDiagonalCompliance.cpp
