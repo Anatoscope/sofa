@@ -326,7 +326,7 @@ class Model(object):
 
     dofIndex={"x": 0, "y": 1, "z": 2, "rx": 3, "ry": 4, "rz": 5}
 
-    def __init__(self, filename=None, name=None, checkMeshFilePresence=True):
+    def __init__(self, filename=None, name=None):
         self.name = name
         # where the (last) .sml was read, all relative path in sml files (mesh files) are understood from this path
         self.modelDir = None
@@ -339,7 +339,7 @@ class Model(object):
         self.surfaceLinks = dict()
 
         if not filename is None:
-            self.open( filename, checkMeshFilePresence )
+            self.open( filename )
 
     def open(self, filename, checkMeshFilePresence=True):
         """ parse \a filename and append its content to the current model
@@ -363,11 +363,11 @@ class Model(object):
                     if m.attrib["id"] in self.meshes:
                         Sofa.msg_warning("SofaPython.sml","Model: mesh id {0} already defined".format(m.attrib["id"]) )
                     mesh = Model.Mesh(m)
-                    if checkMeshFilePresence and not mesh.source is None:
+                    if not mesh.source is None:
                         sourceFullPath = os.path.join(self.modelDir,mesh.source)
                         if os.path.exists(sourceFullPath):
                             mesh.source=sourceFullPath
-                        else:
+                        elif checkMeshFilePresence :
                             Sofa.msg_warning("SofaPython.sml","Model: mesh not found: "+mesh.source )
                     self.meshes[m.attrib["id"]] = mesh
 
