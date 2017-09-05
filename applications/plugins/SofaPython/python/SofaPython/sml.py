@@ -326,14 +326,18 @@ class Model(object):
 
         def parseXml(self, jointXml):
             Model.JointSpecific.parseXml(self, jointXml)
+            dof = Model.Dof(); dof.index = Model.dofIndex['rz']; self.dofs.append(dof)
+            self.set( self.center,
+                      self.normal,
+                      float(jointXml.attrib["angle_min"]) if "angle_min" in jointXml.attrib else None,
+                      float(jointXml.attrib["angle_max"]) if "angle_max" in jointXml.attrib else None )
+
+        def set(self,center,normal,angle_min=None,angle_max=None):
             for i in range(0,2):
-                self.offsets[i].value = self.center + self._orthogonalDirectBasis(2,self.normal) # hinge around z-axis
-            dof = Model.Dof()
-            dof.index = Model.dofIndex['rz']
-            if "angle_min" in jointXml.attrib and "angle_max" in jointXml.attrib:
-                dof.min = math.radians(float(jointXml.attrib["angle_min"]))
-                dof.max = math.radians(float(jointXml.attrib["angle_max"]))
-            self.dofs.append(dof)
+                self.offsets[i].value = center + self._orthogonalDirectBasis(2,normal) # hinge around z-axis
+            if angle_min and angle_max:
+                self.dofs[0].min = math.radians(angle_min)
+                self.dofs[0].max = math.radians(angle_max)
 
     class JointSlider(JointSpecific):
         def __init__(self, jointXml=None):
@@ -341,15 +345,58 @@ class Model(object):
 
         def parseXml(self, jointXml):
             Model.JointSpecific.parseXml(self, jointXml)
-            for i in range(0,2):
-                self.offsets[i].value = self.center + self._orthogonalDirectBasis(0,self.normal) # slider along x-axis
-            dof = Model.Dof()
-            dof.index = Model.dofIndex['x']
-            if "min" in jointXml.attrib and "max" in jointXml.attrib:
-                dof.min = math.radians(float(jointXml.attrib["min"]))
-                dof.max = math.radians(float(jointXml.attrib["max"]))
-            self.dofs.append(dof)
+            dof = Model.Dof(); dof.index = Model.dofIndex['x']; self.dofs.append(dof)
+            self.set( self.center,
+                      self.normal,
+                      float(jointXml.attrib["min"]) if "min" in jointXml.attrib else None,
+                      float(jointXml.attrib["max"]) if "max" in jointXml.attrib else None )
 
+        def set(self,center,normal,min=None,max=None):
+            for i in range(0,2):
+                self.offsets[i].value = center + self._orthogonalDirectBasis(0,normal) # slider along x-axis
+            if min and max:
+                self.dofs[0].min = math.radians(min)
+                self.dofs[0].max = math.radians(max)
+
+    class JointCylindrical(JointSpecific):
+        def __init__(self, jointXml=None):
+            Model.JointSpecific.__init__(self, jointXml)
+
+        def parseXml(self, jointXml):
+            Model.JointSpecific.parseXml(self, jointXml)
+            dof_t = Model.Dof(); dof_t.index = Model.dofIndex['x']; self.dofs.append(dof_t)
+            dof_r = Model.Dof(); dof_r.index = Model.dofIndex['rx']; self.dofs.append(dof_r)
+            self.set( self.center,
+                      self.normal,
+                      float(jointXml.attrib["min"]) if "min" in jointXml.attrib else None,
+                      float(jointXml.attrib["max"]) if "max" in jointXml.attrib else None,
+                      float(jointXml.attrib["angle_min"]) if "angle_min" in jointXml.attrib else None,
+                      float(jointXml.attrib["angle_max"]) if "angle_max" in jointXml.attrib else None
+                      )
+
+        def set(self,center,normal,min=None,max=None,angle_min=None,angle_max=None):
+            for i in range(0,2):
+                self.offsets[i].value = center + self._orthogonalDirectBasis(0,normal) # slider along / hinge around x-axis
+            if min and max:
+                self.dofs[0].min = math.radians(min)
+                self.dofs[0].max = math.radians(max)
+            if angle_min and angle_max:
+                self.dofs[1].min = math.radians(angle_min)
+                self.dofs[1].max = math.radians(angle_max)
+
+    class JointSpherical(JointSpecific):
+        def __init__(self, jointXml=None):
+            Model.JointSpecific.__init__(self, jointXml)
+
+        def parseXml(self, jointXml):
+            Model.JointSpecific.parseXml(self, jointXml)
+            dof_x = Model.Dof(); dof_x.index = Model.dofIndex['rx']; self.dofs.append(dof_x)
+            dof_y = Model.Dof(); dof_y.index = Model.dofIndex['ry']; self.dofs.append(dof_y)
+            dof_z = Model.Dof(); dof_z.index = Model.dofIndex['rz']; self.dofs.append(dof_z)
+
+        def set(self,center):
+            for i in range(0,2):
+                self.offsets[i].value = center + [0,0,0,1]
 
 
 
@@ -539,7 +586,11 @@ class Model(object):
             else:
                 Sofa.msg_error("SofaPython.sml","Model: solid {0} references undefined image {1}".format(obj.name, imageId))
 
-    _joint_type_from_tag = {"jointGeneric":JointGeneric,"jointHinge":JointHinge,"jointSlider":JointSlider}
+    _joint_type_from_tag = {"jointGeneric":JointGeneric,
+                            "jointHinge":JointHinge,
+                            "jointSlider":JointSlider,
+                            "jointCylindrical":JointCylindrical,
+                            "jointSpherical":JointSpherical}
     def parseJointGenerics(self,modelXml):
 
         for k in Model._joint_type_from_tag.iterkeys():
