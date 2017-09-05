@@ -72,15 +72,19 @@ static PyObject * VisualModel_exportOBJ(PyObject *self, PyObject * args)
     }
 
     std::ofstream outfile(filename);
-
+    if(!outfile.good()) {
+        PyErr_SetString(PyExc_IOError, "cannot write to file");
+        return NULL;
+    }
+    
     int vindex = 0;
     int nindex = 0;
     int tindex = 0;
     int count = 0;
 
-    obj->exportOBJ(obj->getName(),&outfile,NULL,vindex,nindex,tindex,count);
-    outfile.close();
-
+    obj->exportOBJ(obj->getName(), &outfile, NULL,
+                   vindex, nindex, tindex, count);
+    
     Py_RETURN_NONE;
 }
 
@@ -100,7 +104,7 @@ static PyObject * VisualModel_initVisual(PyObject *self, PyObject * /*args*/)
 }
 
 SP_CLASS_METHODS_BEGIN(VisualModel)
-SP_CLASS_METHOD(VisualModel,exportOBJ)
+SP_CLASS_METHOD_DOC(VisualModel, exportOBJ, "export an obj file\n :param filename obj filename" )
 SP_CLASS_METHOD(VisualModel,updateVisual)
 SP_CLASS_METHOD(VisualModel,initVisual)
 SP_CLASS_METHODS_END
