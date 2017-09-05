@@ -277,6 +277,7 @@ class Model(object):
                     self.offsets[i].name = "offset_{0}".format(self.name)
             for dof in jointXml.findall("dof"):
                 self.dofs.append(Model.Dof(dof))
+    _joint_type_from_tag = {'jointGeneric':JointGeneric } # todo how to makes this automatic?
 
     class JointSpecific(JointGeneric):
         def __init__(self, jointXml=None):
@@ -338,6 +339,7 @@ class Model(object):
             if angle_min and angle_max:
                 self.dofs[0].min = math.radians(angle_min)
                 self.dofs[0].max = math.radians(angle_max)
+    _joint_type_from_tag['jointHinge'] = JointHinge
 
     class JointSlider(JointSpecific):
         def __init__(self, jointXml=None):
@@ -357,6 +359,7 @@ class Model(object):
             if min and max:
                 self.dofs[0].min = math.radians(min)
                 self.dofs[0].max = math.radians(max)
+    _joint_type_from_tag['jointSlider'] = JointSlider
 
     class JointCylindrical(JointSpecific):
         def __init__(self, jointXml=None):
@@ -383,6 +386,7 @@ class Model(object):
             if angle_min and angle_max:
                 self.dofs[1].min = math.radians(angle_min)
                 self.dofs[1].max = math.radians(angle_max)
+    _joint_type_from_tag['jointCylindrical'] = JointCylindrical
 
     class JointSpherical(JointSpecific):
         def __init__(self, jointXml=None):
@@ -397,6 +401,7 @@ class Model(object):
         def set(self,center):
             for i in range(0,2):
                 self.offsets[i].value = center + [0,0,0,1]
+    _joint_type_from_tag['jointSpherical'] = JointSpherical
 
 
 
@@ -586,11 +591,6 @@ class Model(object):
             else:
                 Sofa.msg_error("SofaPython.sml","Model: solid {0} references undefined image {1}".format(obj.name, imageId))
 
-    _joint_type_from_tag = {"jointGeneric":JointGeneric,
-                            "jointHinge":JointHinge,
-                            "jointSlider":JointSlider,
-                            "jointCylindrical":JointCylindrical,
-                            "jointSpherical":JointSpherical}
     def parseJointGenerics(self,modelXml):
 
         for k in Model._joint_type_from_tag.iterkeys():
