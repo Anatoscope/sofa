@@ -279,23 +279,23 @@ class Model(object):
                 self.dofs.append(Model.Dof(dof))
 
         def symmetrize(self,plane_center,plane_normal):
-            Sofa.msg_warning('SofaPython.sml','JointGeneric.symmetrize is not yet implemented') # not trivial
+            Sofa.msg_warning('SofaPython.sml','JointGeneric.symmetrize is not yet implemented')
+            # not trivial, need to check which dof, to select important axis, and be careful about limits...
+            # but doable
 
     _joint_type_from_tag = {'jointGeneric':JointGeneric } # todo how to makes this automatic?
 
     class JointSpecific(JointGeneric):
         """ @internal
             convenience class to build a JointGeneric based on a center and a normal
-            only for a selected subset of joint types.
+            only for a selected subset of joint types, always based on x-axis of the offsets
             These joints are symmetrizable.
         """
 
-        axis = 0 # 0=>x, 1=>y, 2=>z
-
         def __init__(self, jointXml=None):
-            Model.JointGeneric.__init__(self, jointXml)
             self.center = None
             self.normal = [1,0,0]
+            Model.JointGeneric.__init__(self, jointXml)
 
         def _orthogonalDirectBasis(self,u,n):
             ## returns a quaternion that orients the u-th axis to the given axis n
@@ -336,35 +336,30 @@ class Model(object):
 
         def set(self):
             for i in range(0,2):
-                self.offsets[i].value = self.center + self._orthogonalDirectBasis(self.axis,self.normal) # hinge around z-axis
+                self.offsets[i].value = self.center + self._orthogonalDirectBasis(0,self.normal) # hinge around x-axis
 
 
         def symmetrize(self,plane_center,plane_normal):
             # based on specific joint axis, the symmetrization should always work
-            # x - factor * n * ( (x-o) * n )
             import numpy as np
             from numpy.linalg import norm
             plane_center = np.asarray(plane_center)
             plane_normal = np.asarray(plane_normal); plane_normal=plane_normal/norm(plane_normal) # normalize to be sure
-            self.center = np.asarray(self.center)
-            self.center = self.center - 2 * plane_normal * ( np.dot(self.center-plane_center, plane_normal) )
-            self.center = self.center.tolist()
-            self.normal = np.asarray(self.normal)
-            self.normal = self.normal - 2 * plane_normal * ( np.dot(self.normal-plane_center, plane_normal) )
-            self.normal = self.normal.tolist()
+            self.center = Tools.planarSymmetrization( np.asarray(self.center), plane_center, plane_normal ).tolist()
+            print self.normal
+            self.normal = Tools.planarSymmetrization( np.asarray(self.normal), np.array([0,0,0]), plane_normal ).tolist()
+            print self.normal
             self.set()
 
 
     class JointHinge(JointSpecific):
-
-        axis = 2 # hinge around z-axis
 
         def __init__(self, jointXml=None):
             Model.JointSpecific.__init__(self, jointXml)
 
         def parseXml(self, jointXml):
             Model.JointSpecific.parseXml(self, jointXml)
-            dof = Model.Dof(); dof.index = Model.dofIndex['rz']; self.dofs = [dof]
+            dof = Model.Dof(); dof.index = Model.dofIndex['rx']; self.dofs = [dof]
             if "angle_min" in jointXml.attrib and "angle_max" in jointXml.attrib:
                 self.dofs[0].min = math.radians(float(jointXml.attrib["angle_min"]))
                 self.dofs[0].max = math.radians(float(jointXml.attrib["angle_max"]))
@@ -373,8 +368,6 @@ class Model(object):
 
 
     class JointSlider(JointSpecific):
-
-        axis = 0 # slider along x-axis
 
         def __init__(self, jointXml=None):
             Model.JointSpecific.__init__(self, jointXml)
@@ -390,8 +383,6 @@ class Model(object):
     _joint_type_from_tag['jointSlider'] = JointSlider
 
     class JointCylindrical(JointSpecific):
-
-        axis = 0 # slider along x-axis
 
         def __init__(self, jointXml=None):
             Model.JointSpecific.__init__(self, jointXml)

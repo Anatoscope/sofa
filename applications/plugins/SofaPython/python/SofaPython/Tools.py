@@ -1,10 +1,12 @@
 import Sofa
 
 import os, os.path
+import sys
 import json
 import glob
 
 import units
+import numpy as np
 
 def listToStr(x):
     """ concatenate lists for use with data.
@@ -292,3 +294,14 @@ def localPath( localfile, filename ):
     # this creates lot of troubles
 
     return os.path.join(os.path.dirname(os.path.realpath(localfile)), filename)
+
+def planarSymmetrization( v, plane_center, plane_normal ):
+    """
+    symmetrize point v by a the given plane
+    all params must be numpy arrays
+    :param v: point to symmetrize
+    :param plane_center:
+    :param plane_normal: must be normalized
+    :return: symmetrized v
+    """
+    return np.subtract( v, 2 * plane_normal * ( np.dot( np.subtract(v,plane_center), plane_normal) ) )
