@@ -705,6 +705,8 @@ class BaseScene(object):
             visual.visual.setColor(color[0],color[1],color[2],color[3])
 
     def exportMeshes(self):
+        '''make all meshExporters export their meshes'''
+        
         for e in self.meshExporters:
             e.writeOBJ()
 
