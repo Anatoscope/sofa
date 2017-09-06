@@ -346,9 +346,7 @@ class Model(object):
             plane_center = np.asarray(plane_center)
             plane_normal = np.asarray(plane_normal); plane_normal=plane_normal/norm(plane_normal) # normalize to be sure
             self.center = Tools.planarSymmetrization( np.asarray(self.center), plane_center, plane_normal ).tolist()
-            print self.normal
             self.normal = Tools.planarSymmetrization( np.asarray(self.normal), np.array([0,0,0]), plane_normal ).tolist()
-            print self.normal
             self.set()
 
 
