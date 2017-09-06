@@ -539,6 +539,17 @@ static void process_interaction_forcefields(Full& full, std::size_t size_m, cons
 }
 
 
+template<class OutputIterator, class Matrix>
+static void copy_triplets(OutputIterator out, const Matrix& matrix, int row_offset = 0, int col_offset = 0,
+                          typename Matrix::Scalar factor = 1) {
+    for(int outer = 0, end = matrix.outerSize(); outer < end; ++outer) {
+        for(typename Matrix::InnerIterator it(matrix, outer); it; ++it) {
+            *out++ = {row_offset + it.row(), col_offset + it.col(), factor * it.value()};
+        }        
+    }    
+}
+
+
 AssemblyVisitor::process_type* AssemblyVisitor::process() const {
     scoped::timer step("assembly: mapping processing");
 
@@ -727,6 +738,9 @@ void AssemblyVisitor::assemble(system_type& res) const {
 
     add_shifted add_H(res.H), add_P(res.P), add_C(res.C);
 
+    using triplet_type = Eigen::Triplet<real>;
+    std::vector<triplet_type> Js, Cs;
+    
     const SReal c_factor = 1.0 /
         ( res.dt * res.dt * mparams->implicitVelocity() * mparams->implicitPosition() );
     
@@ -743,6 +757,7 @@ void AssemblyVisitor::assemble(system_type& res) const {
 
 		// independent dofs: fill mass/stiffness
         if( is_master(c) ) {
+            scoped::timer step("assembly: master");                            
             res.master.push_back( c.dofs );
 
             if( !zero(c.H) ) add_H(c.H, off_m);
@@ -767,6 +782,7 @@ void AssemblyVisitor::assemble(system_type& res) const {
 
 			// compliant dofs: fill compliance/phi/lambda
 			if( is_compliant(c) ) {
+                scoped::timer step("assembly: compliant");                
 				res.compliant.push_back( c.dofs );
 				// scoped::timer step("compliant dofs");
 				assert( !zero(Jc) );
@@ -794,15 +810,21 @@ void AssemblyVisitor::assemble(system_type& res) const {
                     c.dofs->getContext()->addObject( constraint.value );
                     constraint.value->init();
                 }
+
                 res.constraints.push_back( constraint );
 
-
 				// mapping
-				res.J.middleRows(off_c, c.size) = Jc;
-
+                {
+                    // scoped::timer step("assembly: set mapping");
+                    copy_triplets(std::back_inserter(Js), Jc, off_c);
+                    // res.J.middleRows(off_c, c.size) = Jc;
+                }
+                
                 // compliance
                 if( !zero( *C ) ) {
-                    add_C(*C, off_c, c_factor);
+                    // scoped::timer step("assembly: add_C");
+                    copy_triplets(std::back_inserter(Cs), *C, off_c, off_c, c_factor);                    
+                    // add_C(*C, off_c, c_factor);
                 }
                 
 				off_c += c.size;
@@ -811,6 +833,9 @@ void AssemblyVisitor::assemble(system_type& res) const {
 	}
     }
 
+    res.J.setFromTriplets(Js.begin(), Js.end());
+    res.C.setFromTriplets(Cs.begin(), Cs.end());
+    
     assert( off_m == _processed->size_m );
     assert( off_c == _processed->size_c );
 
