@@ -14,6 +14,73 @@ namespace component {
 namespace linearsolver {
 
 
+template<class StorageIndex>
+struct test_ordering {
+
+    using perm_type = Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic, StorageIndex>;
+    static std::size_t m, n;
+    
+    template <typename MatrixType>
+    void operator()(const MatrixType& mat, perm_type& perm) const {
+
+        {
+            scoped::timer step("ordering");
+            Eigen::AMDOrdering<StorageIndex> sub;
+            sub(mat, perm);
+            return;
+        }
+        
+        assert(perm.size() == mat.rows());
+
+        perm.resize(m);
+        
+        Eigen::AMDOrdering<StorageIndex> sub;
+        const MatrixType tl = mat.topLeftCorner(m, m);
+        sub(tl, perm);
+
+        perm.indices().conservativeResize(m + n);
+
+        // shift
+        perm.indices().tail(m) = perm.indices().head(m).eval();
+        
+        for(std::size_t i = 0; i < n; ++i) {
+            perm.indices()(i) = i + m;
+        }
+    }
+
+};
+
+template<class StorageIndex>
+std::size_t test_ordering<StorageIndex>::m;
+
+template<class StorageIndex>
+std::size_t test_ordering<StorageIndex>::n;
+
+
+struct test_response : Response {
+
+    using ordering_type = test_ordering<cmat::StorageIndex>;
+
+    using ldlt_type = Eigen::SimplicialLDLT<cmat, Eigen::Upper, ordering_type>;
+    ldlt_type ldlt;
+    
+    
+    void factor(const rmat& matrix) {
+        ldlt.compute(matrix.transpose());
+    }
+    
+    void solve(cmat& lvalue, const cmat& rvalue) const {
+        lvalue = ldlt.solve(rvalue);
+    }
+
+
+    void solve(vec& lvalue, const vec& rvalue) const {
+        lvalue = ldlt.solve(rvalue);        
+    }
+    
+};
+
+
 
 BaseSequentialSolver::BaseSequentialSolver()
 	: omega(initData(&omega, (SReal)1.0, "omega",
@@ -128,11 +195,14 @@ static void add_sparse_product_to_dense(ColDenseMatrix& out,
 
 }
 
+
+
 void BaseSequentialSolver::factor_impl(const system_type& system) {
     // fill and factor sub-kkt system
     SubKKT::projected_primal(sub, system);
 
-	assert( response );    
+	assert( response );
+
     sub.factor(*response);
 	
 	// compute block responses
@@ -236,9 +306,12 @@ void BaseSequentialSolver::init() {
 	// let's find a response 
 	response = this->getContext()->get<Response>( core::objectmodel::BaseContext::Local );
 
+    
 	// fallback in case we missed
 	if( !response ) {
-        response = new LDLTResponse();
+        // response = new LDLTResponse();
+        response = new test_response();
+        
         response->setName("response");
         this->getContext()->addObject( response );
         serr << "fallback Response: "
@@ -622,12 +695,21 @@ void SequentialSolver::factor(const system_type& system) {
             !m_localSub.projected_primal_and_bilateral( m_localSystem, system, d_regularization.getValue(), response->isSymmetric() ) // no bilaterals
             )
     {
+        test_response::ordering_type::m = system.m;
+        test_response::ordering_type::n = 0;
+        
         fetch_blocks( system ); // find blocks
         factor_impl( system );
     }
     else
     {
         fetch_unilateral_blocks( system ); // find unilateral blocks
+
+        // 
+        test_response::ordering_type::m = m_localSub.P.cols();
+        test_response::ordering_type::n = m_localSub.Q.cols();    
+
+        
         factor_impl( m_localSystem );
     }
 }
