@@ -303,14 +303,14 @@ class Model(object):
 
     class JointSpecific(JointGeneric):
         """ @internal
-            convenience class to build a JointGeneric based on a center and a normal
+            convenience class to build a JointGeneric based on a center and a direction
             only for a selected subset of joint types, always based on x-axis of the offsets
             These joints are symmetrizable.
         """
 
         def __init__(self, jointXml=None):
             self.center = None
-            self.normal = [1,0,0]
+            self.direction = [1, 0, 0]
             Model.JointGeneric.__init__(self, jointXml)
 
         def _orthogonalDirectBasis(self,u,n):
@@ -346,13 +346,13 @@ class Model(object):
             for dof in jointXml.findall("dof"):
                 Sofa.msg_warning("SofaPython.sml","JointSpecific: dof are undesirable and won't be used.")
             self.center = Tools.strToListFloat(jointXml.attrib["center"])
-            if "normal" in jointXml.attrib:
-                self.normal = Tools.strToListFloat(jointXml.attrib["normal"])
+            if "direction" in jointXml.attrib:
+                self.direction = Tools.strToListFloat(jointXml.attrib["direction"])
             self.set()
 
         def set(self):
             for i in range(0,2):
-                self.offsets[i].value = self.center + self._orthogonalDirectBasis(0,self.normal) # hinge around x-axis
+                self.offsets[i].value = self.center + self._orthogonalDirectBasis(0, self.direction) # hinge around x-axis
 
 
         def symmetrize(self,plane_center,plane_normal):
@@ -362,7 +362,7 @@ class Model(object):
             plane_center = np.asarray(plane_center)
             plane_normal = np.asarray(plane_normal); plane_normal=plane_normal/norm(plane_normal) # normalize to be sure
             self.center = Tools.planarSymmetrization( np.asarray(self.center), plane_center, plane_normal ).tolist()
-            self.normal = Tools.planarSymmetrization( np.asarray(self.normal), np.array([0,0,0]), plane_normal ).tolist()
+            self.direction = Tools.planarSymmetrization(np.asarray(self.direction), np.array([0, 0, 0]), plane_normal).tolist()
             self.set()
 
 
