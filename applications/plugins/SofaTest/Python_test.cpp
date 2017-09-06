@@ -13,8 +13,6 @@
 #include <SofaPython/PythonMacros.h>
 #include <SofaPython/PythonFactory.h>
 
-#include <SofaPython/helper.hpp>
-
 namespace sofa {
 
 
@@ -108,6 +106,8 @@ struct Listener : core::objectmodel::BaseObject {
 
 
 
+
+
 struct fail {
     const char* message;
     fail(const char* message)
@@ -133,28 +133,17 @@ enum flag : char {
 };
 
 
-
-
-
-// shared data between except_hook and simulation loop
-struct shared_type {
-    char flags = 0;
-    std::string message;
-    PyObject* default_excepthook = nullptr;
-};
-
+PyObject* default_excepthook {nullptr} ;
 
 // TODO FIXME: there's probably a MEMLEAK hiding in there, figure it out
 static PyObject* except_hook(PyObject* self, PyObject* args) {
-
     // raise the stop flag
-    shared_type* shared = reinterpret_cast<shared_type*>(PyCapsule_GetPointer(self, NULL));
-    
-    assert(shared && "cannot get shared_type pointer (wtf?)");
-    if(!shared) std::exit(1);
+    char* flags = reinterpret_cast<char*>(PyCapsule_GetPointer(self, NULL));
+    assert(flags && "cannot get flags pointer (wtf?)");
+    if(!flags) std::exit(1);
 
-    shared->flags |= flag::stop;
-    
+    *flags |= flag::stop;
+
     // switch on exception type
     PyObject* type;
     PyObject* value;
@@ -167,21 +156,14 @@ static PyObject* except_hook(PyObject* self, PyObject* args) {
 
     if( type == PyExc_AssertionError ) {
         // test failure
-        shared->flags |= flag::test_failure;
+        *flags |= flag::test_failure;
     } else {
         // other python error
-        shared->flags |= flag::python_error;
+        *flags |= flag::python_error;
     }
 
-    {
-        // TODO find a way to push traceback as well
-        const py::object value_string = py::ptr(value).str();
-        assert(value_string.c_str());        
-        shared->message = value_string.c_str();
-    }
-    
     // call default excepthook to get traceback etc
-    return PyObject_CallObject(shared->default_excepthook, args);
+    return PyObject_CallObject(default_excepthook, args);
 }
 
 static PyMethodDef except_hook_def = {
@@ -195,24 +177,17 @@ static PyMethodDef except_hook_def = {
 static void install_sys_excepthook(char* flags) {
     if(!default_excepthook){
         sofa::simulation::PythonEnvironment::gil lock(__func__);
-        
+
         default_excepthook = PySys_GetObject((char*)"excepthook") || fail("cannot get default excepthook");
 
-        shared->default_excepthook = default_excepthook;
-        
-        PyObject* self = PyCapsule_New(shared, NULL, NULL) || fail("cant wrap shared_type pointer");
+        PyObject* self = PyCapsule_New(flags, NULL, NULL) || fail("cant wrap flags pointer");
 
-        // build closure
         PyObject* excepthook = PyCFunction_NewEx(&except_hook_def, self, NULL)
                 || fail("cannot create excepthook closure");
-        
+
         PySys_SetObject((char*)"excepthook", excepthook) || fail("cannot set sys.excepthook");
     }
-
-    ~excepthook_installer() {
-        PySys_SetObject((char*)"excepthook", default_excepthook) || fail("cannot restore default excepthook");
-    }
-};
+}
 
 
 Python_scene_test::Python_scene_test()
@@ -235,12 +210,17 @@ void Python_scene_test::run( const Python_test_data& data ) {
         simulation::setSimulation( new sofa::simulation::graph::DAGSimulation() );
     }
 
-    simulation::Node::SPtr root;
-    
+    char flags = 0;
     try {
-        shared_type shared;
-        const excepthook_installer lock(&shared);
-        
+        install_sys_excepthook(&flags);
+    } catch( std::runtime_error& e) {
+        ASSERT_TRUE(false) << "error setting up python excepthook, aborting test" << " ("<<data.filepath<<")";
+    }
+
+    simulation::Node::SPtr root;
+
+    try {
+
         loader.loadSceneWithArguments(data.filepath.c_str(),
                                       data.arguments,
                                       &root);
@@ -252,20 +232,20 @@ void Python_scene_test::run( const Python_test_data& data ) {
 
         // TODO eventually tests should only stop by throwing SystemExit
         unsigned i;
-        for(i = 0; (i < max_steps) && !(shared.flags & flag::stop) && root->isActive(); ++i) {
+        for(i = 0; (i < max_steps) && !(flags & flag::stop) && root->isActive(); ++i) {
             simulation::getSimulation()->animate(root.get(), root->getDt());
         }
 
         ASSERT_TRUE(i != max_steps) << "maximum allowed steps reached: " << max_steps << " ("<<data.filepath<<")";
 
-        if( shared.flags & flag::test_failure ) {
-            FAIL() << "test failure:\n" << shared.message;
+        if( flags & flag::test_failure ) {
+            FAIL() << "test failure";
         }
 
-        if( shared.flags & flag::python_error) {
-            FAIL() << "python error:\n" << shared.message;
+        if( flags & flag::python_error) {
+            FAIL() << "python error";
         }
-        
+
     } catch( simulation::PythonEnvironment::system_exit& e) {
         SUCCEED() << "test terminated normally";
     } catch( const result& test_result ) {
@@ -273,13 +253,9 @@ void Python_scene_test::run( const Python_test_data& data ) {
 
         // TODO raii for unloading
         simulation::getSimulation()->unload( root.get() );
-        
-    } catch( std::runtime_error& e) {
-        ASSERT_TRUE(false) << "error setting up python excepthook, aborting test" << " ("<<data.filepath<<")";
     }
 }
 
 
 
 } // namespace sofa
-
