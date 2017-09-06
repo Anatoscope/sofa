@@ -598,7 +598,7 @@ AssemblyVisitor::process_type* AssemblyVisitor::process() const {
 // this is meant to optimize L^T D L products
 inline const AssemblyVisitor::rmat& AssemblyVisitor::ltdl(const rmat& l, const rmat& d) const
 {
-    scoped::timer advancedTimer("assembly: ltdl");
+    // scoped::timer advancedTimer("assembly: ltdl");
 
     sparse::fast_prod(tmp1, d, l);
     tmp3 = l.transpose();
@@ -610,7 +610,7 @@ inline const AssemblyVisitor::rmat& AssemblyVisitor::ltdl(const rmat& l, const r
 
 inline void AssemblyVisitor::add_ltdl(rmat& res, const rmat& l, const rmat& d)  const
 {
-    scoped::timer advancedTimer("assembly: ltdl");
+    // scoped::timer advancedTimer("assembly: ltdl");
 
     sparse::fast_prod(tmp1, d, l);
     tmp3 = l.transpose();
@@ -757,7 +757,7 @@ void AssemblyVisitor::assemble(system_type& res) const {
 
 		// independent dofs: fill mass/stiffness
         if( is_master(c) ) {
-            scoped::timer step("assembly: master");                            
+            // scoped::timer step("assembly: master");                            
             res.master.push_back( c.dofs );
 
             if( !zero(c.H) ) add_H(c.H, off_m);
@@ -782,7 +782,7 @@ void AssemblyVisitor::assemble(system_type& res) const {
 
 			// compliant dofs: fill compliance/phi/lambda
 			if( is_compliant(c) ) {
-                scoped::timer step("assembly: compliant");                
+                // scoped::timer step("assembly: compliant");                
 				res.compliant.push_back( c.dofs );
 				// scoped::timer step("compliant dofs");
 				assert( !zero(Jc) );
