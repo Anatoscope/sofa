@@ -19,9 +19,10 @@ def parseIdName(obj, objXml):
     """ set id and name of obj
     """
     obj.id = objXml.attrib["id"]
-    obj.name = obj.id
     if not objXml.find("name") is None:
         obj.name = objXml.find("name").text
+    else:
+        obj.name = obj.id
 
 def parseTag(obj, objXml):
     """ set tags of the object
@@ -293,6 +294,140 @@ class Model(object):
             for dof in jointXml.findall("dof"):
                 self.dofs.append(Model.Dof(dof))
 
+        def symmetrize(self,plane_center,plane_normal):
+            Sofa.msg_warning('SofaPython.sml','JointGeneric.symmetrize is not yet implemented')
+            # not trivial, need to check which dof, to select important axis, and be careful about limits...
+            # but doable
+
+    _joint_type_from_tag = {'jointGeneric':JointGeneric } # todo how to makes this automatic?
+
+    class JointSpecific(JointGeneric):
+        """ @internal
+            convenience class to build a JointGeneric based on a center and a normal
+            only for a selected subset of joint types, always based on x-axis of the offsets
+            These joints are symmetrizable.
+        """
+
+        def __init__(self, jointXml=None):
+            self.center = None
+            self.normal = [1,0,0]
+            Model.JointGeneric.__init__(self, jointXml)
+
+        def _orthogonalDirectBasis(self,u,n):
+            ## returns a quaternion that orients the u-th axis to the given axis n
+            # build an orthogonal basis as a column matrix and convert it to a quaternion
+            v=(u+1)%3
+            w=(v+1)%3
+            import numpy as np
+            from numpy.linalg import norm
+            m=np.zeros((3,3))
+            m[:,u]=n
+            m[:,u] = m[:,u]/norm(m[:,u]) # normalize to be sure
+            threshold = 1e-8 # TODO what is the right way to get numeric limits in python?
+            if   abs(n[1]) > threshold: m[:,v] = [0, -n[2], n[1]]
+            elif abs(n[2]) > threshold: m[:,v] = [n[2], 0, -n[0]]
+            elif abs(n[0]) > threshold: m[:,v] = [n[1], -n[0], 0]
+            else: raise Exception("Null normal")
+            m[:,v] = m[:,v]/norm(m[:,v]) # normalize
+            m[:,w] = np.cross(m[:,u],m[:,v])
+            import Quaternion
+            return Quaternion.from_matrix(m)
+
+
+        def parseXml(self, jointXml):
+            parseIdName(self, jointXml)
+            parseTag(self, jointXml)
+            solidsRef = jointXml.findall("jointSolidRef")
+            for i in range(0,2):
+                if not solidsRef[i].find("offset") is None:
+                    Sofa.msg_warning("SofaPython.sml","JointSpecific: offets are undesirable and won't be used.")
+                self.offsets[i] = Model.Offset()
+                self.offsets[i].name = "offset_{0}".format(self.name)
+            for dof in jointXml.findall("dof"):
+                Sofa.msg_warning("SofaPython.sml","JointSpecific: dof are undesirable and won't be used.")
+            self.center = Tools.strToListFloat(jointXml.attrib["center"])
+            if "normal" in jointXml.attrib:
+                self.normal = Tools.strToListFloat(jointXml.attrib["normal"])
+            self.set()
+
+        def set(self):
+            for i in range(0,2):
+                self.offsets[i].value = self.center + self._orthogonalDirectBasis(0,self.normal) # hinge around x-axis
+
+
+        def symmetrize(self,plane_center,plane_normal):
+            # based on specific joint axis, the symmetrization should always work
+            import numpy as np
+            from numpy.linalg import norm
+            plane_center = np.asarray(plane_center)
+            plane_normal = np.asarray(plane_normal); plane_normal=plane_normal/norm(plane_normal) # normalize to be sure
+            self.center = Tools.planarSymmetrization( np.asarray(self.center), plane_center, plane_normal ).tolist()
+            self.normal = Tools.planarSymmetrization( np.asarray(self.normal), np.array([0,0,0]), plane_normal ).tolist()
+            self.set()
+
+
+    class JointHinge(JointSpecific):
+
+        def __init__(self, jointXml=None):
+            Model.JointSpecific.__init__(self, jointXml)
+
+        def parseXml(self, jointXml):
+            Model.JointSpecific.parseXml(self, jointXml)
+            dof = Model.Dof(); dof.index = Model.dofIndex['rx']; self.dofs = [dof]
+            if "angle_min" in jointXml.attrib and "angle_max" in jointXml.attrib:
+                self.dofs[0].min = math.radians(float(jointXml.attrib["angle_min"]))
+                self.dofs[0].max = math.radians(float(jointXml.attrib["angle_max"]))
+
+    _joint_type_from_tag['jointHinge'] = JointHinge
+
+
+    class JointSlider(JointSpecific):
+
+        def __init__(self, jointXml=None):
+            Model.JointSpecific.__init__(self, jointXml)
+
+        def parseXml(self, jointXml):
+            Model.JointSpecific.parseXml(self, jointXml)
+            dof = Model.Dof(); dof.index = Model.dofIndex['x']; self.dofs = [dof]
+            if "min" in jointXml.attrib and "max" in jointXml.attrib:
+                self.dofs[0].min = float(jointXml.attrib["min"])
+                self.dofs[0].max = float(jointXml.attrib["max"])
+
+
+    _joint_type_from_tag['jointSlider'] = JointSlider
+
+    class JointCylindrical(JointSpecific):
+
+        def __init__(self, jointXml=None):
+            Model.JointSpecific.__init__(self, jointXml)
+
+        def parseXml(self, jointXml):
+            Model.JointSpecific.parseXml(self, jointXml)
+            dof_t = Model.Dof(); dof_t.index = Model.dofIndex['x']; self.dofs = [dof_t]
+            dof_r = Model.Dof(); dof_r.index = Model.dofIndex['rx']; self.dofs.append(dof_r)
+            if "min" in jointXml.attrib and "max" in jointXml.attrib:
+                self.dofs[0].min = float(jointXml.attrib["min"])
+                self.dofs[0].max = float(jointXml.attrib["max"])
+            if "angle_min" in jointXml.attrib and "angle_max" in jointXml.attrib:
+                self.dofs[1].min = math.radians(float(jointXml.attrib["angle_min"]))
+                self.dofs[1].max = math.radians(float(jointXml.attrib["angle_max"]))
+
+    _joint_type_from_tag['jointCylindrical'] = JointCylindrical
+
+    class JointSpherical(JointSpecific):
+        def __init__(self, jointXml=None):
+            Model.JointSpecific.__init__(self, jointXml)
+
+        def parseXml(self, jointXml):
+            Model.JointSpecific.parseXml(self, jointXml)
+            dof_x = Model.Dof(); dof_x.index = Model.dofIndex['rx']; self.dofs = [dof_x]
+            dof_y = Model.Dof(); dof_y.index = Model.dofIndex['ry']; self.dofs.append(dof_y)
+            dof_z = Model.Dof(); dof_z.index = Model.dofIndex['rz']; self.dofs.append(dof_z)
+
+    _joint_type_from_tag['jointSpherical'] = JointSpherical
+
+
+
     class Skinning(object):
         """ Skinning definition, vertices index influenced by bone with weight
         """
@@ -484,19 +619,24 @@ class Model(object):
                 Sofa.msg_error("SofaPython.sml","Model: solid {0} references undefined image {1}".format(obj.name, imageId))
 
     def parseJointGenerics(self,modelXml):
-        for j in modelXml.findall("jointGeneric"):
-            if j.attrib["id"] in self.genericJoints:
-                Sofa.msg_error("SofaPython.sml","Model: jointGeneric defined twice, id:", j.attrib["id"])
-                continue
 
-            joint = Model.JointGeneric(j)
-            solids = j.findall("jointSolidRef")
-            for i, o in enumerate(solids):
-                if o.attrib["id"] in self.solids:
-                    joint.solids[i] = self.solids[o.attrib["id"]]
-                else:
-                    Sofa.msg_error("SofaPython.sml","Model: in joint {0}, unknown solid {1} referenced".format(joint.name, o.attrib["id"]))
-            self.genericJoints[joint.id]=joint
+        for k in Model._joint_type_from_tag.iterkeys():
+            for j in modelXml.findall(k):
+
+                if j.attrib["id"] in self.genericJoints:
+                    Sofa.msg_error("SofaPython.sml","Model: jointGeneric defined twice, id:", j.attrib["id"])
+                    continue
+
+                joint = Model._joint_type_from_tag[j.tag](j)
+
+                solids = j.findall("jointSolidRef")
+                for i, o in enumerate(solids):
+                    if o.attrib["id"] in self.solids:
+                        joint.solids[i] = self.solids[o.attrib["id"]]
+                    else:
+                        Sofa.msg_error("SofaPython.sml","Model: in joint {0}, unknown solid {1} referenced".format(joint.name, o.attrib["id"]))
+                self.genericJoints[joint.id]=joint
+
 
     def _setMeshDirectory(self, path, mesh):
         if not mesh.source is None:
