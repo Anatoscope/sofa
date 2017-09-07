@@ -539,7 +539,7 @@ void OglModel::drawGroups(bool transparent)
     }
 }
 
-void OglModel::drawBasic(const core::visual::VisualParams* vparams)
+void OglModel::drawBasic(const core::visual::VisualParams* /*vparams*/)
 {
 
     const VecCoord& vertices = this->getVertices();
