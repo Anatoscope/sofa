@@ -525,6 +525,9 @@ static PyObject * Sofa_loadPythonSceneWithArguments(PyObject * /*self*/, PyObjec
     return PythonFactory::toPython(root.get());
 }
 
+/// load the plugin
+/// given by path, or by name (in the second case, the optional gui lib will be loaded automatically)
+/// returns the plugin lib path
 static PyObject * Sofa_loadPlugin(PyObject * /*self*/, PyObject * args)
 {
     char *pluginName;
@@ -539,16 +542,11 @@ static PyObject * Sofa_loadPlugin(PyObject * /*self*/, PyObject * args)
     {
         if (!PluginManager::getInstance().pluginIsLoaded(path))
         {
-            if (PluginManager::getInstance().loadPlugin(path))
-            {
-                const std::string guiPath = pluginManager.findPlugin( std::string( pluginName ) + "_" + PluginManager::s_gui_postfix);
-                if (guiPath != "")
-                {
-                    PluginManager::getInstance().loadPlugin(guiPath);
-                }
-            }
+            PluginManager::getInstance().loadPlugin(pluginName); // load by name, to load gui lib
         }
-    } else {
+    }
+    else
+    {
         std::stringstream ss;
         ss << "cannot find plugin '" << pluginName  << "'";
         PyErr_SetString(PyExc_EnvironmentError, ss.str().c_str());

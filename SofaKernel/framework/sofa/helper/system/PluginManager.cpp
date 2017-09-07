@@ -195,7 +195,21 @@ bool PluginManager::loadPlugin(const std::string& plugin, std::ostream* errlog)
     if (std::equal(dotExt.rbegin(), dotExt.rend(), plugin.rbegin()))
         return loadPluginByPath(plugin, errlog);
     else
-        return loadPluginByName(plugin, errlog);
+    {
+        bool loaded = loadPluginByName(plugin, errlog);
+        if( loaded )
+        {
+            std::stringstream errloggui;
+            if( loadPluginByName( plugin + "_" + PluginManager::s_gui_postfix, &errloggui ) )
+            {
+                    if( errlog) (*errlog) << errloggui.str();
+                    else msg_info("PluginManager")<<errloggui.str();
+            }
+        }
+        return loaded;
+    }
+
+
 }
 
 bool PluginManager::unloadPlugin(const std::string &pluginPath, std::ostream* errlog)
