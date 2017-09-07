@@ -22,7 +22,7 @@ namespace sofa {
 namespace assembly {
 
 struct vertex_type {
-    using state_type = const core::BaseState*;
+    using state_type = const core::behavior::BaseMechanicalState*;
     state_type state;
 
     // stage1
@@ -66,6 +66,8 @@ struct Visitor : public simulation::MechanicalVisitor {
         graph(graph) { }
     
     virtual Visitor::Result processNodeTopDown(simulation::Node* node) {
+
+        // construct graph vertices
         if( auto* state = node->mechanicalState.get() ) {
             const auto err = table.emplace(state, num_vertices(graph));
 
@@ -73,7 +75,7 @@ struct Visitor : public simulation::MechanicalVisitor {
                 const bool is_mechanical = node->mass.get() || node->forceField.size();
                 
                 const vertex_type prop = {state, is_mechanical};
-                const std::size_t v = add_vertex(prop, graph);
+                const std::size_t v = add_vertex(prop, graph); (void) v;
                 assert(v == err.first->second && "bad vertex index");
             }
         }
@@ -82,21 +84,30 @@ struct Visitor : public simulation::MechanicalVisitor {
     }
     
 	virtual void processNodeBottomUp(simulation::Node* node) {
+
+        // construct graph edges
         if(auto* mapping = node->mechanicalMapping.get()) {
             const auto* state = node->mechanicalState.get();
             if(!state) throw assembly_error("no output dof");
             
-            const auto src = table.find(state);
-            if(src == table.end()) throw assembly_error("unknown output dof");
+            const auto dst = table.find(state);
+            if(dst == table.end()) throw assembly_error("unknown output dof");
             
             std::size_t index = 0;
+            
             for(auto* state : mapping->getFrom()) {
-                const auto dst = table.find(state);
-                if(dst == table.end()) throw assembly_error("unknown input dof");
+                auto* mstate = state->toBaseMechanicalState();
+                if(!mstate) continue;
+                
+                const auto src = table.find(mstate);
+                if(src == table.end()) throw assembly_error("unknown input dof");
                 
                 const edge_type prop = {mapping, index};
-                add_edge(dst->second, src->second, prop, graph);
 
+                // edges go from input to outputs, so that topological sort
+                // treats inputs first
+                add_edge(src->second, dst->second, prop, graph);
+                
                 ++index;
             }
         }
@@ -106,9 +117,9 @@ struct Visitor : public simulation::MechanicalVisitor {
 
 
 
-static void prune_graph(graph_type& graph) {
+static graph_type prune_graph(const graph_type& graph) {
     
-    // clear non-mechanical vertices, store mechanical
+    // associate mechanical vertices
     std::vector<std::size_t> map;
     map.reserve(num_vertices(graph));
     
@@ -116,7 +127,7 @@ static void prune_graph(graph_type& graph) {
         if(graph[v].is_mechanical) {
             map.emplace_back(map.size());
         } else {
-            clear_vertex(v, graph);
+            // clear_vertex(v, graph);
         }
     }
 
@@ -139,6 +150,14 @@ static void prune_graph(graph_type& graph) {
 }
 
 
+static void topological_sort(std::vector<std::size_t>& ordering, const graph_type& graph) {
+    ordering.clear();
+    ordering.reserve(num_vertices(graph));
+    
+    boost::vector_property_map<boost::default_color_type> cm(num_vertices(graph));    
+    topological_sort(graph, std::back_inserter(ordering), boost::color_map(cm));
+}
+                             
 
 
 
@@ -151,13 +170,12 @@ static graph_type create_graph(core::objectmodel::BaseContext* ctx) {
     ctx->executeVisitor(&visitor);
 
     // topological sort
-    std::vector<std::size_t> bottom_up;
+    std::vector<std::size_t> top_down;
 
-    boost::vector_property_map<boost::default_color_type> cm(num_vertices(graph));    
-    topological_sort(graph, std::back_inserter(bottom_up), boost::color_map(cm));
-
+    topological_sort(top_down, graph);
+    
     // propagate is_mechanical bottom-up
-    for(std::size_t v : bottom_up) {
+    for(std::size_t v : top_down) {
         if(graph[v].is_mechanical) {
             
             for(std::size_t s : adjacent_vertices(v, graph)) {
@@ -176,10 +194,59 @@ using real = SReal;
 using triplet = Eigen::Triplet<real>;
 using triplets_type = std::vector<triplet>;
 
+
+
+template<class OutputIterator>
+static void fill_mapping(OutputIterator out, const graph_type& graph) {
+
+}
+
+template<class OutputIterator>
+static void fill_mass(OutputIterator out, const graph_type& graph, real factor = 1) {
+    
+}
+
+
+template<class OutputIterator>
+static void fill_stiffness(OutputIterator out, const graph_type& graph, real factor = 1) {
+
+}
+
+
+template<class OutputIterator>
+static void fill_compliance(OutputIterator out, const graph_type& graph, real factor = 1) {
+    
+}
+
+
+static std::size_t number_vertices(graph_type& graph, const std::vector<std::size_t>& top_down) {
+
+    std::size_t off = 0;
+    for(std::size_t v : top_down) {
+        const std::size_t size = graph[v].state->getMatrixSize();
+
+        graph[v].offset = off;
+        graph[v].size = size;
+
+        off += size;
+    }
+
+    return off;
+}
+
+
+
 system_type assemble_system(core::objectmodel::BaseContext* ctx,
                             const core::MechanicalParams* mparams) {
 
     graph_type graph = create_graph(ctx);
+
+    // order graph
+    std::vector<std::size_t> top_down;
+    topological_sort(top_down, graph);
+
+    // fill offset/size for vertices
+    number_vertices(graph, top_down);
     
     // TODO obtain and concatenate mappings chunks
     triplets_type Js;
