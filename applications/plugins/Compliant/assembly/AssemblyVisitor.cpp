@@ -22,11 +22,12 @@ using namespace component::linearsolver;
 using namespace core::behavior;
 
 
-AssemblyVisitor::AssemblyVisitor(const core::MechanicalParams* mparams)
+AssemblyVisitor::AssemblyVisitor(const core::MechanicalParams* mparams, bool useMask)
 	: base( mparams ),
       mparams( mparams ),
 	  start_node(0),
-	  _processed(0)
+      _processed(0),
+      _useMask(useMask)
 {
     mparamsWithoutStiffness = *mparams;
     mparamsWithoutStiffness.setKFactor(0);
@@ -82,12 +83,18 @@ AssemblyVisitor::chunk::map_type AssemblyVisitor::mapping(simulation::Node* node
 	assert( node->mechanicalMapping->getTo().size() == 1 &&
 	        "only n -> 1 mappings are handled");
 
-    ForceMaskActivate(node->mechanicalMapping->getMechTo());
-    ForceMaskActivate(node->mechanicalMapping->getMechFrom());
+    if( _useMask )
+    {
+        ForceMaskActivate(node->mechanicalMapping->getMechTo());
+        ForceMaskActivate(node->mechanicalMapping->getMechFrom());
+    }
 
     const vector<sofa::defaulttype::BaseMatrix*>* js = node->mechanicalMapping->getJs();
 
-    ForceMaskDeactivate(node->mechanicalMapping->getMechTo());
+    if( _useMask )
+    {
+        ForceMaskDeactivate(node->mechanicalMapping->getMechTo());
+    }
 
 
     vector<core::BaseState*> from = node->mechanicalMapping->getFrom();
@@ -335,10 +342,13 @@ void AssemblyVisitor::fill_prefix(simulation::Node* node) {
             return;
         }
 
-        // does the mask filter every dofs?
-        const sofa::core::behavior::BaseMechanicalState::ForceMask::InternalStorage& mask = node->mechanicalState->forceMask.getEntries();
-        if( std::find(mask.begin(), mask.end(), true) == mask.end() ) {
-            return;
+        if( _useMask )
+        {
+            // does the mask filter every dofs?
+            const sofa::core::behavior::BaseMechanicalState::ForceMask::InternalStorage& mask = node->mechanicalState->forceMask.getEntries();
+            if( std::find(mask.begin(), mask.end(), true) == mask.end() ) {
+                return;
+            }
         }
     }
 

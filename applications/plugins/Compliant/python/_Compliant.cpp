@@ -24,8 +24,46 @@ using namespace sofa::simulation;
 using namespace sofa::component::linearsolver;
 using namespace sofa::component::odesolver;
 using namespace sofa::core::behavior;
+using namespace sofa::simulation;
 
 
+
+///** Update state masks
+//   @TODO move this in the core
+//*/
+//class MechanicalUpdateMaskVisitor : public MechanicalVisitor
+//{
+//public:
+//    MechanicalUpdateMaskVisitor(const MechanicalParams* mparams ) : MechanicalVisitor(mparams) {}
+//    virtual Result fwdForceField(Node* /*node*/, behavior::BaseForceField* ff)
+//    {
+//        ff->updateForceMask();
+//        return RESULT_CONTINUE;
+//    }
+//    virtual const char* getClassName() const {return "MechanicalUpdateMaskVisitor";}
+//    virtual bool isThreadSafe() const  { return true; }
+//};
+
+
+///** Set all mask values to the same value (false=> clear, true=>no mask)
+//   @TODO move this in the core
+//*/
+//class MechanicalSetMaskVisitor : public MechanicalVisitor
+//{
+//    bool _value;
+//public:
+//    MechanicalSetMaskVisitor(const MechanicalParams* mparams, bool value ) : MechanicalVisitor(mparams), _value(value) {}
+//    virtual Result fwdMechanicalState(Node* /*node*/, BaseMechanicalState* mm)
+//    {
+//        mm->forceMask.assign( mm->getSize(), _value );
+//    }
+//    virtual Result fwdMappedMechanicalState(Node* /*node*/, BaseMechanicalState* mm)
+//    {
+//        mm->forceMask.assign( mm->getSize(), _value );
+//    }
+//    virtual const char* getClassName() const {return "MechanicalSetMaskVisitor";}
+//    virtual bool isThreadSafe() const  { return true; }
+//};
 
 /// args are node + factors m,b,k to return the linear combinaison mM+bB+kK
 static PyObject * _Compliant_getAssembledImplicitMatrix(PyObject * /*self*/, PyObject * args)
@@ -52,14 +90,10 @@ static PyObject * _Compliant_getAssembledImplicitMatrix(PyObject * /*self*/, PyO
     mparams.setMFactor( M );
     mparams.setBFactor( B );
     mparams.setKFactor( K );
-    AssemblyVisitor assemblyVisitor(&mparams);
+    AssemblyVisitor assemblyVisitor(&mparams,false);
     node->getContext()->executeVisitor( &assemblyVisitor );
     AssembledSystem sys;
     assemblyVisitor.assemble(sys); // assemble system
-
-
-    SP_MESSAGE_ERROR( "_Compliant_getAssembledImplicitMatrix: does not work anymore because of masks now taken into account during assembly..." );
-
 
     // todo returns a sparse matrix
 
@@ -91,7 +125,7 @@ static PyObject * _Compliant_getImplicitAssembledSystem(PyObject * /*self*/, PyO
         return NULL;
     }
 
-    sofa::core::objectmodel::BaseNode* node = sofa::py::unwrap<BaseNode>(pyNode);
+    BaseNode* node = sofa::py::unwrap<BaseNode>(pyNode);
     if (!node) {
         SP_MESSAGE_ERROR( "_Compliant_getAssembledImplicitMatrix: first argument is not a BaseNode" );
         PyErr_BadArgument();
@@ -107,12 +141,10 @@ static PyObject * _Compliant_getImplicitAssembledSystem(PyObject * /*self*/, PyO
     mparams.setKFactor( -dt*dt );
     mparams.setDt( dt );
 
-    AssemblyVisitor assemblyVisitor(&mparams);
+    AssemblyVisitor assemblyVisitor(&mparams,false);
     node->getContext()->executeVisitor( &assemblyVisitor );
     AssembledSystem* sys = new AssembledSystem();
     assemblyVisitor.assemble(*sys); // assemble system
-
-    SP_MESSAGE_ERROR( "_Compliant_getImplicitAssembledSystem: does not work anymore because of masks now taken into account during assembly..." );
 
     return SP_BUILD_PYPTR(AssembledSystem,AssembledSystem,sys,true);
 }

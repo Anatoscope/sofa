@@ -45,7 +45,7 @@ public:
     // default: row-major
 	typedef Eigen::Matrix<real, Eigen::Dynamic, 1> vec;
 			
-    AssemblyVisitor(const core::MechanicalParams* mparams);
+    AssemblyVisitor(const core::MechanicalParams* mparams, bool useMask=true);
     virtual ~AssemblyVisitor();
 
 //protected:
@@ -248,6 +248,9 @@ private:
     const rmat& ltdl(const rmat& l, const rmat& d) const;
     void add_ltdl(rmat& res, const rmat& l, const rmat& d) const;
 
+    // assemble masked matrices? (or not masked)
+    bool _useMask;
+
 };
 
 
@@ -335,13 +338,17 @@ struct AssemblyVisitor::process_helper {
                     // scoped::timer step("mapping matrix product");
 
 #ifdef SOFA_USE_MASK
-                    // note: Jp is already masked
-                    const std::vector<bool>& child_mask = curr->forceMask.getEntries();
-                    add_prod_mask(Jc, *jc, Jp, child_mask, curr->getDerivDimension() ); 
-#else                    
-                    // TODO optimize this, it is the most costly part
-                    add_prod(Jc, *jc, Jp ); // full mapping
+                    if( owner->_useMask )
+                    {
+                        // note: Jp is already masked
+                        const std::vector<bool>& child_mask = curr->forceMask.getEntries();
+                        add_prod_mask(Jc, *jc, Jp, child_mask, curr->getDerivDimension() );
+                    }
+                    else
 #endif
+                        // TODO optimize this, it is the most costly part
+                        add_prod(Jc, *jc, Jp ); // full mapping
+
                     
                     if( geometricStiffnessJc )
                     {
