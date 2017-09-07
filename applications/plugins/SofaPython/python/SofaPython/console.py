@@ -1,5 +1,10 @@
 """a simple threaded readline console module (unix only)"""
 
+# TODO error if not unix
+
+from __future__ import print_function
+import sys
+
 import rlcompleter
 import readline
 
@@ -35,9 +40,17 @@ def start(local = None, history = '~/.sofa_console'):
             atexit.register( write_history )
 
         namespace = local or None
-        readline.set_completer(rlcompleter.Completer(namespace).complete)            
-        code.interact(local = local)
-        os.kill(os.getpid(), signal.SIGINT)
+        readline.set_completer(rlcompleter.Completer(namespace).complete)
+
+        try:
+            code.interact(local = local)
+        except Exception as e:
+            print('console error:', e)
+        else:
+            os.kill(os.getpid(), signal.SIGINT)
+        finally:
+            print('console exited')
+            
         
     thread = threading.Thread(target = target)
     thread.daemon = True
