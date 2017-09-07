@@ -407,6 +407,110 @@ void OglModel::drawGroup(int ig, bool transparent)
     }
 }
 
+void OglModel::drawBasicGroup(int ig)
+{
+    const ResizableExtVector<Edge>& edges = this->getEdges();
+    const ResizableExtVector<Triangle>& triangles = this->getTriangles();
+    const ResizableExtVector<Quad>& quads = this->getQuads();
+
+    const bool useBufferObjects = (VBOGenDone && useVBO.getValue());
+    FaceGroup g;
+    if (ig < 0)
+    {
+        g.materialId = -1;
+        g.edge0 = 0;
+        g.nbe = edges.size();
+        g.tri0 = 0;
+        g.nbt = triangles.size();
+        g.quad0 = 0;
+        g.nbq = quads.size();
+    }
+    else
+    {
+        g = this->groups.getValue()[ig];
+    }
+
+    if (triangles.size() > 0)
+    {
+        const Triangle* indices = NULL;
+#ifdef SOFA_HAVE_GLEW
+        if (useBufferObjects)
+            glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, iboTriangles);
+        else
+#endif
+            indices = triangles.getData();
+
+        GLenum prim = GL_TRIANGLES;
+        switch (primitiveType.getValue().getSelectedId())
+        {
+        case 1:
+            serr << "LINES_ADJACENCY primitive type invalid for triangular topologies" << sendl;
+            break;
+        case 2:
+#if defined(GL_PATCHES) && defined(SOFA_HAVE_GLEW)
+            if (canUsePatches)
+            {
+                prim = GL_PATCHES;
+                glPatchParameteri(GL_PATCH_VERTICES, 3);
+            }
+#endif
+            break;
+        default:
+            break;
+        }
+
+        glDrawElements(prim, triangles.size() * 3, GL_UNSIGNED_INT, indices + g.tri0);
+
+#ifdef SOFA_HAVE_GLEW
+        if (useBufferObjects)
+            glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
+#endif
+    }
+    if (quads.size()>0)
+    {
+        const Quad* indices = NULL;
+#ifdef SOFA_HAVE_GLEW
+        if (useBufferObjects)
+            glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, iboQuads);
+        else
+#endif
+            indices = quads.getData();
+
+
+        GLenum prim = GL_QUADS;
+        switch (primitiveType.getValue().getSelectedId())
+        {
+        case 1:
+#ifndef GL_LINES_ADJACENCY_EXT
+            serr << "GL_LINES_ADJACENCY_EXT not defined, please activage GLEW" << sendl;
+#else
+            {
+                prim = GL_LINES_ADJACENCY_EXT;
+            }
+#endif
+            break;
+        case 2:
+#if defined(GL_PATCHES) && defined(SOFA_HAVE_GLEW)
+            if (canUsePatches)
+            {
+                prim = GL_PATCHES;
+                glPatchParameteri(GL_PATCH_VERTICES, 4);
+            }
+#endif
+            break;
+        default:
+            break;
+        }
+
+        glDrawElements(prim, quads.size() * 4, GL_UNSIGNED_INT, indices + g.quad0);
+
+#ifdef SOFA_HAVE_GLEW
+        if (useBufferObjects)
+            glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
+#endif
+    }
+}
+
 void OglModel::drawGroups(bool transparent)
 {
     if(isToPrint.getValue()==true) {
@@ -433,6 +537,68 @@ void OglModel::drawGroups(bool transparent)
 
         //    popTransformMatrix();
     }
+}
+
+void OglModel::drawBasic(const core::visual::VisualParams* vparams)
+{
+
+    const VecCoord& vertices = this->getVertices();
+   
+
+#ifdef SOFA_HAVE_GLEW
+    if (VBOGenDone && useVBO.getValue())
+    {
+        glBindBufferARB(GL_ARRAY_BUFFER, vbo);
+
+        glVertexPointer(3, GL_FLOAT, 0, (char*)NULL + 0);
+
+        glBindBufferARB(GL_ARRAY_BUFFER, 0);
+    }
+    else
+#endif // SOFA_HAVE_GLEW
+    {
+        glVertexPointer(3, GL_FLOAT, 0, vertices.getData());
+    }
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+
+    switch (cullFace.getValue())
+    {
+    case 1:
+        glCullFace(GL_BACK);
+        glEnable(GL_CULL_FACE);
+        break;
+    case 2:
+        glCullFace(GL_FRONT);
+        glEnable(GL_CULL_FACE);
+        break;
+    }
+
+
+
+
+    helper::ReadAccessor< Data< helper::vector<FaceGroup> > > groups = this->groups;
+
+    if (groups.empty())
+        drawBasicGroup(-1);
+    else
+    {
+        for (unsigned int i = 0; i<groups.size(); ++i)
+            drawBasicGroup(i);
+    }
+
+
+
+
+    switch (cullFace.getValue())
+    {
+    case 1:
+    case 2:
+        glDisable(GL_CULL_FACE);
+        break;
+    }
+
 }
 
 void OglModel::internalDraw(const core::visual::VisualParams* vparams, bool transparent)

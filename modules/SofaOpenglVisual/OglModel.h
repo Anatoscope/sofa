@@ -82,8 +82,8 @@ protected:
     bool canUseVBO, VBOGenDone, initDone, useEdges, useTriangles, useQuads, canUsePatches;
     unsigned int oldVerticesSize, oldNormalsSize, oldTexCoordsSize, oldTangentsSize, oldBitangentsSize, oldEdgesSize, oldTrianglesSize, oldQuadsSize;
     void internalDraw(const core::visual::VisualParams* vparams, bool transparent);
-
     void drawGroup(int ig, bool transparent);
+    void drawBasicGroup(int ig);
     void drawGroups(bool transparent);
 
     virtual void pushTransformMatrix(float* matrix) { glPushMatrix(); glMultMatrixf(matrix); }
@@ -113,6 +113,8 @@ public:
 
     bool hasTransparent() const;
     bool hasTexture() const;
+
+    void drawBasic(const core::visual::VisualParams* vparams);
 
 public:
     bool isUseEdges()	{ return useEdges; }

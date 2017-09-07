@@ -84,6 +84,11 @@ public:
     virtual void bwdDraw(VisualParams* /*vparams*/) {}
 
     /**
+    *  \brief Display the VisualModel object for picking operation.
+    */
+    virtual void drawBasic(const VisualParams* /*vparams*/) {}
+
+    /**
      *  \brief Display the VisualModel object.
      */
     virtual void drawVisual(const VisualParams* /*vparams*/) {}

@@ -337,6 +337,7 @@ public:
     bool hasOpaque() const;
 
     void drawVisual(const core::visual::VisualParams* vparams);
+    void drawBasic(const core::visual::VisualParams* vparams);
     void drawTransparent(const core::visual::VisualParams* vparams);
     void drawShadow(const core::visual::VisualParams* vparams);
 
