@@ -35,7 +35,7 @@ def createScene(node):
 
     print '\n=== Copy a Sofa.OptionsGroupData in another one ==='
 
-    defaultContactManager2 = node.createObject( 'DefaultContactManager', response="disabled", name="2" )
+    defaultContactManager2 = node.createObject( 'DefaultContactManager', response=5, name="2" )
 
     print "target:", defaultContactManager.response.selectedItem, defaultContactManager.response.selectedId
     print "source before copy:", defaultContactManager2.response.selectedItem, defaultContactManager2.response.selectedId
