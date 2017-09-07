@@ -22,21 +22,22 @@ namespace sofa {
 namespace assembly {
 
 struct vertex_type {
-    using state_type = const core::behavior::BaseMechanicalState*;
-    state_type state;
+
+    using state_type = core::behavior::BaseMechanicalState*;
+    state_type state = nullptr;
 
     // stage1
-    bool is_mechanical;
+    bool is_mechanical = false;
 
+    using mapping_type = core::BaseMapping*;
+    mapping_type mapping = nullptr;
+    
     // stage2
-    std::size_t offset, size;
+    std::size_t offset = 0, size = 0;
 };
 
 
 struct edge_type {
-    using mapping_type = const core::BaseMapping*;
-    mapping_type mapping;
-    
     std::size_t index;
 };
 
@@ -72,9 +73,11 @@ struct Visitor : public simulation::MechanicalVisitor {
             const auto err = table.emplace(state, num_vertices(graph));
 
             if(err.second) {
-                const bool is_mechanical = node->mass.get() || node->forceField.size();
+                vertex_type prop;
                 
-                const vertex_type prop = {state, is_mechanical};
+                prop.state = state;
+                prop.is_mechanical = node->mass.get() || node->forceField.size();
+                
                 const std::size_t v = add_vertex(prop, graph); (void) v;
                 assert(v == err.first->second && "bad vertex index");
             }
@@ -87,14 +90,16 @@ struct Visitor : public simulation::MechanicalVisitor {
 
         // construct graph edges
         if(auto* mapping = node->mechanicalMapping.get()) {
-            const auto* state = node->mechanicalState.get();
+            auto* state = node->mechanicalState.get();
             if(!state) throw assembly_error("no output dof");
             
             const auto dst = table.find(state);
             if(dst == table.end()) throw assembly_error("unknown output dof");
+
+            // remember this dof is mapped
+            graph[dst->second].mapping = mapping;
             
             std::size_t index = 0;
-            
             for(auto* state : mapping->getFrom()) {
                 auto* mstate = state->toBaseMechanicalState();
                 if(!mstate) continue;
@@ -102,7 +107,7 @@ struct Visitor : public simulation::MechanicalVisitor {
                 const auto src = table.find(mstate);
                 if(src == table.end()) throw assembly_error("unknown input dof");
                 
-                const edge_type prop = {mapping, index};
+                const edge_type prop = {index};
 
                 // edges go from input to outputs, so that topological sort
                 // treats inputs first
@@ -178,7 +183,7 @@ static graph_type create_graph(core::objectmodel::BaseContext* ctx) {
     for(std::size_t v : top_down) {
         if(graph[v].is_mechanical) {
             
-            for(std::size_t s : adjacent_vertices(v, graph)) {
+            for(std::size_t s : inv_adjacent_vertices(v, graph)) {
                 graph[s].is_mechanical = true;
             }
         }
@@ -195,10 +200,29 @@ using triplet = Eigen::Triplet<real>;
 using triplets_type = std::vector<triplet>;
 
 
+template<class OutputIterator>
+static void fill_mapping_chunk(OutputIterator out, const defaulttype::BaseMatrix* chunk, 
+                               std::size_t row_off, std::size_t col_off) {
+    // TODO
+}
+
 
 template<class OutputIterator>
 static void fill_mapping(OutputIterator out, const graph_type& graph) {
+    for(std::size_t v : vertices(graph) ) {
+        if(graph[v].mapping) {
 
+            auto* chunks = graph[v].mapping->getJs();
+            
+            for(auto e : in_edges(v, graph) ) {
+                const std::size_t s = source(e, graph);
+                fill_mapping_chunk(out, (*chunks)[graph[e].index], graph[v].offset, graph[s].offset);
+            }
+
+        } else {
+            
+        }
+    }
 }
 
 template<class OutputIterator>
@@ -250,6 +274,7 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
     
     // TODO obtain and concatenate mappings chunks
     triplets_type Js;
+    fill_mapping(std::back_inserter(Js), graph);
     
     // TODO obtain mass/stiffness chunks
     triplets_type Hs;
