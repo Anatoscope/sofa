@@ -35,7 +35,7 @@ def insertLinearMapping(node, dofRigidNode=None, dofAffineNode=None, cell='', as
                 "LinearMultiMapping", cell=cell, shapeFunction = 'shapeFunction',
                 input1="@"+dofRigidNode.getPathName(), input2="@"+dofAffineNode.getPathName(), output="@.", assemble=assemble, geometricStiffness=geometricStiffness, mapForces=isMechanical, mapConstraints=isMechanical, mapMasses=isMechanical)
 
-class Deformable:
+class Deformable(object):
     """ This class represents a deformable object built from a mesh.
         Various cases are handled:
         - collision model :
@@ -259,7 +259,7 @@ class Deformable:
                 if printLog:
                     Sofa.msg_info("Flexible.API.Deformable",'Imported Weights from '+filename)
 
-class AffineMass:
+class AffineMass(object):
 
     def __init__(self, dofAffineNode):
         self.dofAffineNode = dofAffineNode # where the mechanical state is located
@@ -309,7 +309,7 @@ def affineDatatostr(data):
                 L = L+ "] "
         return L
 
-class AffineDof:
+class AffineDof(object):
     def __init__(self, node):
         self.node = node
         self.dof = None
@@ -350,7 +350,7 @@ class AffineDof:
                 Sofa.msg_info("Flexible.API.AffineDof",'Exported Affine Dof to '+filename)
 
 
-class ShapeFunction:
+class ShapeFunction(object):
     """ High-level API to manipulate ShapeFunction
     @todo better handle template
     """
@@ -423,7 +423,7 @@ class ShapeFunction:
         self.node.createObject('ImageViewer', template="ImageD", name="SFViewer", listening=True, image="@SFSelectNode.nodeWeights", transform="@shapeFunction.transform")
 
 
-class FEMDof:
+class FEMDof(object):
     def __init__(self, node):
         self.node = node
         self.dof = None
@@ -537,7 +537,7 @@ class FEMDof:
                 Sofa.msg_info("Flexible.API.FEMDof",'Exported FEM Dof to '+filename)
 
 
-class Behavior:
+class Behavior(object):
     """ High level API to add a behavior
     """
     def __init__(self, node, name, type="331", labelImage=None, labels=None):
