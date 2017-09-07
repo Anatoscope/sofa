@@ -85,8 +85,6 @@ public:
         SceneLoaderListerner(){}
     };
 
-    struct system_exit : std::exception { };
-
     /// use this RAII-class to ensure the gil is properly acquired and released
     /// in a scope. these should be surrounding any python code called from c++,
     /// i.e. in all the methods in PythonEnvironment and all the methods in
@@ -107,7 +105,8 @@ public:
         no_gil(const char* trace = nullptr);
         ~no_gil();
     };
-    
+
+    struct system_exit : std::exception { };
 
 };
 

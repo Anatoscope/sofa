@@ -15,7 +15,7 @@ SOFA_DECL_CLASS(RigidPseudoAngularMomentumMultiMapping);
 using namespace defaulttype;
 
 // Register in the Factory
-const int RigidPseudoAngularMomentumMultiMappingClass = core::RegisterObject("compute advanced stuff")
+int RigidPseudoAngularMomentumMultiMappingClass = core::RegisterObject("compute advanced stuff")
     
 #ifndef SOFA_FLOAT
 .add< RigidPseudoAngularMomentumMultiMapping< Rigid3dTypes, Vec3dTypes > >()

@@ -152,6 +152,7 @@ void PythonEnvironment::Release()
     if ( !Py_IsInitialized() ) return;
 
     // Finish the Python Interpreter
+
     // obviously can't use raii here
     if( Py_IsInitialized() ) {
         PyGILState_Ensure();    
@@ -309,57 +310,66 @@ helper::logging::FileInfo::SPtr PythonEnvironment::getPythonCallingPointAsFileIn
     return SOFA_FILE_INFO_COPIED_FROM("undefined", -1);
 }
 
-bool PythonEnvironment::runFile( const char *filename, const std::vector<std::string>& arguments)
-{
-    gil lock(__func__);
-    
-//    SP_MESSAGE_INFO( "Loading python script \""<<filename<<"\"" )
-    std::string dir = sofa::helper::system::SetDirectory::GetParentDir(filename);
-    std::string bareFilename = sofa::helper::system::SetDirectory::GetFileNameWithoutExtension(filename);
+bool PythonEnvironment::runFile( const char *filename, const std::vector<std::string>& arguments) {
+    const gil lock(__func__);
+    const std::string dir = sofa::helper::system::SetDirectory::GetParentDir(filename);
 
-    if(arguments.size()) {
+    // pro-tip: FileNameWithoutExtension == basename
+    const std::string basename = sofa::helper::system::SetDirectory::GetFileNameWithoutExtension(filename);
+
+    // setup sys.argv if needed
+    if(!arguments.empty() ) {
         std::vector<const char*> argv;
-
-        // not sure we want this
-        argv.push_back(bareFilename.c_str());
+        argv.push_back(basename.c_str());
         
         for(const std::string& arg : arguments) {
             argv.push_back(arg.c_str());
         }
-
-        // TODO check what it is doing exactly        
-        Py_SetProgramName((char*) argv[0]);
-        PySys_SetArgv(argv.size(), (char**) argv.data());
+        
+        Py_SetProgramName((char*) argv[0]); // TODO check what it is doing exactly
+        PySys_SetArgv(argv.size(), (char**)argv.data());
     }
-
-    // Load the scene script
-    PyObject* scriptPyFile = PyFile_FromString((char*)filename, (char*)("r"));
     
-    if( !scriptPyFile ) {
+    // Load the scene script
+    PyObject* script = PyFile_FromString((char*)filename, (char*)("r"));
+    
+    if( !script ) {
         SP_MESSAGE_ERROR("cannot open file:" << filename)
         PyErr_Print();
         return false;
     }
+    
+    PyObject* __main__ = PyModule_GetDict(PyImport_AddModule("__main__"));
 
-    PyObject* pDict = PyModule_GetDict(PyImport_AddModule("__main__"));
-
-    std::string backupFileName;
-    PyObject* backupFileObject = PyDict_GetItemString(pDict, "__file__");
-    if(backupFileObject) {
-        backupFileName = PyString_AsString(backupFileObject);
+    // save/restore __main__.__file__
+    PyObject* __file__ = PyDict_GetItemString(__main__, "__file__");
+    Py_XINCREF(__file__);
+    
+    // temporarily set __main__.__file__ = filename during file loading
+    {
+        PyObject* __tmpfile__ = PyString_FromString(filename);
+        PyDict_SetItemString(__main__, "__file__", __tmpfile__);
+        Py_XDECREF(__tmpfile__);
     }
     
-    PyObject* newFileObject = PyString_FromString(filename);
-    PyDict_SetItemString(pDict, "__file__", newFileObject);
+    const int error = PyRun_SimpleFileEx(PyFile_AsFile(script), filename, 0);
+    
+    // don't wait for gc to close the file
+    PyObject_CallMethod(script, (char*) "close", NULL);
+    Py_XDECREF(script);
+    
+    // restore backup if needed
+    if(__file__) {
+        PyDict_SetItemString(__main__, "__file__", __file__);
+    } else {
+        const int err = PyDict_DelItemString(__main__, "__file__");
+        assert(!err); (void) err;
+    }
 
-    int error = PyRun_SimpleFileEx(PyFile_AsFile(scriptPyFile), filename, 1);
-
-    backupFileObject = PyString_FromString(backupFileName.c_str());
-    PyDict_SetItemString(pDict, "__file__", backupFileObject);
-
-    if(0 != error)
-    {
-        SP_MESSAGE_ERROR("Script (file:" << bareFilename << ") import error")
+    Py_XDECREF(__file__);  
+    
+    if(error) {
+        SP_MESSAGE_ERROR("Script (file:" << basename << ") import error")
         PyErr_Print();
         return false;
     }

@@ -14,7 +14,7 @@ class Cloth:
         clothNode.createObject('LDLTSolver',schur=False)
         clothNode.createObject('LDLTResponse')
 
-        clothNode.createObject('GridMeshCreator', name="loader", filename="nofile", resolution="20 20", trianglePattern="0", translation=str(x)+" 0 0", rotation="90 0 0 ", scale="10 10 0" )
+        clothNode.createObject('GridMeshCreator', name="loader", filename="nofile", resolution="20 20", trianglePattern="0", translation=str(x)+" 0 0", rotation="90 0 0 ", scale3d="10 10 1" )
         clothNode.createObject('MeshTopology', name="mesh", src="@loader" )
         clothNode.createObject('MechanicalObject', name="defoDOF", template="Vec3d",  src="@loader", showObject="1", showObjectScale="1")
         clothNode.createObject('BoxROI', name="box", box="-0.005 -0.005 -0.005    "+str(x+11)+" 0.005 0.005  " )
@@ -24,8 +24,7 @@ class Cloth:
 
         self.extensionNode = clothNode.createChild("extensionNode")
         self.extensionNode.createObject('MechanicalObject', template="Vec1d",  name="extensionsDOF" )
-        self.extensionNode.createObject('EdgeSetTopologyContainer', edges="@../mesh.edges" )
-        self.distancemapping = self.extensionNode.createObject('DistanceMapping', geometricStiffness="2" )
+        self.distancemapping = self.extensionNode.createObject('DistanceMapping', geometricStiffness="2", pairs="@../mesh.edges" )
         self.extensionNode.createObject('UniformCompliance', name="ucomp", template="Vec1d", compliance="1e-15", isCompliance="1" )
 
 

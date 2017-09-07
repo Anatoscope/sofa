@@ -124,8 +124,8 @@ void PythonScriptFunction::onCall(const ScriptFunctionParameter* parameter, Scri
     
 	PyObject* pyResult = PyObject_CallObject(m_pyCallableObject, pyParameter);
 	if(!pyResult) {
-		SP_MESSAGE_EXCEPTION("in PythonScriptFunction: python function call failed");
-        PyErr_Print();
+          SP_MESSAGE_EXCEPTION("in PythonScriptFunction: python function call failed");
+          PyErr_Print();
 	} else if(pythonScriptResult) {
 		pythonScriptResult->setData(pyResult, true);
     }

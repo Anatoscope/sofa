@@ -70,14 +70,7 @@ void RequiredPlugin::loadPlugin( const std::string& pluginName )
     {
         if (!PluginManager::getInstance().pluginIsLoaded(path))
         {
-            if (PluginManager::getInstance().loadPlugin(path))
-            {
-                const std::string guiPath = pluginManager.findPlugin(pluginName + "_" + PluginManager::s_gui_postfix);
-                if (guiPath != "")
-                {
-                    PluginManager::getInstance().loadPlugin(guiPath);
-                }
-            }
+            PluginManager::getInstance().loadPlugin(pluginName); // load by name to automatically load the gui lib
         }
     }
     else
