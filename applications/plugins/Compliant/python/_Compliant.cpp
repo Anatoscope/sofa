@@ -58,7 +58,7 @@ static PyObject * _Compliant_getAssembledImplicitMatrix(PyObject * /*self*/, PyO
     assemblyVisitor.assemble(sys); // assemble system
 
 
-//    SP_MESSAGE_INFO( "_ompliant_getAssembledImplicitMatrix: "<<sys.H );
+    SP_MESSAGE_ERROR( "_Compliant_getAssembledImplicitMatrix: does not work anymore because of masks now taken into account during assembly..." );
 
 
     // todo returns a sparse matrix
@@ -111,6 +111,8 @@ static PyObject * _Compliant_getImplicitAssembledSystem(PyObject * /*self*/, PyO
     node->getContext()->executeVisitor( &assemblyVisitor );
     AssembledSystem* sys = new AssembledSystem();
     assemblyVisitor.assemble(*sys); // assemble system
+
+    SP_MESSAGE_ERROR( "_Compliant_getImplicitAssembledSystem: does not work anymore because of masks now taken into account during assembly..." );
 
     return SP_BUILD_PYPTR(AssembledSystem,AssembledSystem,sys,true);
 }

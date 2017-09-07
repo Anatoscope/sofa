@@ -14,7 +14,7 @@ SP_DECLARE_CLASS_TYPE(AssembledSystem)
 using namespace sofa::component::linearsolver;
 
 
-PyObject* getMatrice( const AssembledSystem::rmat& A )
+PyObject* getMatrix( const AssembledSystem::rmat& A )
 {
     PyObject* pyA = PyList_New(A.rows());
     for( AssembledSystem::rmat::Index row=0 ; row<A.rows() ; ++row )
@@ -42,7 +42,7 @@ static PyObject* AssembledSystem_getH(PyObject * self, PyObject * /*args*/)
         return NULL;
     }
 
-    return getMatrice( sys->H );
+    return getMatrix( sys->H );
 }
 
 static PyObject* AssembledSystem_getP(PyObject * self, PyObject * /*args*/)
@@ -54,7 +54,7 @@ static PyObject* AssembledSystem_getP(PyObject * self, PyObject * /*args*/)
         return NULL;
     }
 
-    return getMatrice( sys->P );
+    return getMatrix( sys->P );
 }
 
 static PyObject* AssembledSystem_getJ(PyObject * self, PyObject * /*args*/)
@@ -66,7 +66,7 @@ static PyObject* AssembledSystem_getJ(PyObject * self, PyObject * /*args*/)
         return NULL;
     }
 
-    return getMatrice( sys->J );
+    return getMatrix( sys->J );
 }
 
 static PyObject* AssembledSystem_getC(PyObject * self, PyObject * /*args*/)
@@ -78,7 +78,7 @@ static PyObject* AssembledSystem_getC(PyObject * self, PyObject * /*args*/)
         return NULL;
     }
 
-    return getMatrice( sys->C );
+    return getMatrix( sys->C );
 }
 
 
