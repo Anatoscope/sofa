@@ -4,11 +4,12 @@
 #include <Compliant/assembly/AssembledSystem.h>
 
 namespace sofa {
-namespace component {
+namespace assembly {
 
-void assemble(linearsolver::AssembledSystem& res,
-              core::objectmodel::BaseContext* ctx,
-              const core::MechanicalParams *mparams);
+using system_type = component::linearsolver::AssembledSystem;
+
+system_type assemble_system(core::objectmodel::BaseContext* ctx,
+                            const core::MechanicalParams *mparams);
 
 }
 }

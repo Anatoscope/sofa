@@ -19,7 +19,7 @@ static Iterator end(const std::pair<Iterator, Iterator>& range) { return range.s
 
 
 namespace sofa {
-namespace component {
+namespace assembly {
 
 struct vertex_type {
     using state_type = const core::BaseState*;
@@ -103,7 +103,7 @@ struct Visitor : public simulation::MechanicalVisitor {
 
 
 
-static void create_graph(graph_type& res, core::objectmodel::BaseContext* ctx) {
+static graph_type create_graph(core::objectmodel::BaseContext* ctx) {
 
     // fill kinematic graph
     graph_type graph;
@@ -141,7 +141,7 @@ static void create_graph(graph_type& res, core::objectmodel::BaseContext* ctx) {
     }
 
     // compact graph
-    res = graph_type(map.size());
+    graph_type res(map.size());
     
     for(std::size_t v : vertices(graph) ) {
         if(graph[v].is_mechanical) {
@@ -154,25 +154,24 @@ static void create_graph(graph_type& res, core::objectmodel::BaseContext* ctx) {
             }
         }            
     }
-    
+
+    return res;
 }
 
 
 
-void assemble(linearsolver::AssembledSystem& res,
-              core::objectmodel::BaseContext* ctx,
-              const core::MechanicalParams *mparams) {
+system_type assemble_system(core::objectmodel::BaseContext* ctx,
+                            const core::MechanicalParams* mparams) {
 
-    graph_type graph;
-    create_graph(graph, ctx);
-
+    graph_type graph = create_graph(ctx);
+    
     // TODO obtain mapping chunks
 
     // TODO obtain mass/stiffness chunks
 
     // TODO obtain forces + geometric stiffness chunks
 
-    
+    return {};
 }
 
 

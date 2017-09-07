@@ -109,6 +109,7 @@ set(HEADER_FILES
     odesolver/CompliantPseudoStaticSolver.inl
     odesolver/CompliantStaticSolver.h
     odesolver/ConstantCompliantImplicitSolver.h
+    odesolver/simple_solver.hpp
     preconditioner/BasePreconditioner.h
     preconditioner/CompliantJacobiPreconditioner.h
     preconditioner/CompliantLDLTPreconditioner.h
@@ -225,6 +226,7 @@ set(SOURCE_FILES
     odesolver/CompliantPseudoStaticSolver.cpp
     odesolver/CompliantStaticSolver.cpp
     odesolver/ConstantCompliantImplicitSolver.cpp
+    odesolver/simple_solver.cpp    
     preconditioner/CompliantJacobiPreconditioner.cpp
     preconditioner/CompliantLDLTPreconditioner.cpp
     preconditioner/IncompleteCholeskyPreconditioner.cpp
