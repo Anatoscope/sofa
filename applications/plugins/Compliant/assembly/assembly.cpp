@@ -25,7 +25,11 @@ struct vertex_type {
     using state_type = const core::BaseState*;
     state_type state;
 
+    // stage1
     bool is_mechanical;
+
+    // stage2
+    std::size_t offset, size;
 };
 
 
@@ -102,6 +106,41 @@ struct Visitor : public simulation::MechanicalVisitor {
 
 
 
+static void prune_graph(graph_type& graph) {
+    
+    // clear non-mechanical vertices, store mechanical
+    std::vector<std::size_t> map;
+    map.reserve(num_vertices(graph));
+    
+    for(std::size_t v : vertices(graph) ) {
+        if(graph[v].is_mechanical) {
+            map.emplace_back(map.size());
+        } else {
+            clear_vertex(v, graph);
+        }
+    }
+
+    // connect compacted graph
+    graph_type res(map.size());
+    
+    for(std::size_t v : vertices(graph) ) {
+        if(graph[v].is_mechanical) {
+            const std::size_t s = map[v];
+
+            res[s] = graph[v];
+
+            for(auto e : out_edges(v, graph)) {
+                add_edge(s, map[target(e, graph)], graph[e], res);
+            }
+        }            
+    }
+    
+    return res;
+}
+
+
+
+
 
 static graph_type create_graph(core::objectmodel::BaseContext* ctx) {
 
@@ -127,48 +166,27 @@ static graph_type create_graph(core::objectmodel::BaseContext* ctx) {
         }
     }
 
-
-    // prune graph keeping only mechanical nodes
-    std::vector<std::size_t> map;
-    map.reserve(num_vertices(graph));
-    
-    for(std::size_t v : vertices(graph) ) {
-        if(graph[v].is_mechanical) {
-            map.emplace_back(map.size());
-        } else {
-            clear_vertex(v, graph);
-        }
-    }
-
-    // compact graph
-    graph_type res(map.size());
-    
-    for(std::size_t v : vertices(graph) ) {
-        if(graph[v].is_mechanical) {
-            const std::size_t s = map[v];
-
-            res[s] = graph[v];
-
-            for(auto e : out_edges(v, graph)) {
-                add_edge(s, map[target(e, graph)], graph[e], res);
-            }
-        }            
-    }
-
-    return res;
+    // prune non-mechanical nodes
+    return prune_graph(graph);
 }
 
 
+
+using real = SReal;
+using triplet = Eigen::Triplet<real>;
+using triplets_type = std::vector<triplet>;
 
 system_type assemble_system(core::objectmodel::BaseContext* ctx,
                             const core::MechanicalParams* mparams) {
 
     graph_type graph = create_graph(ctx);
     
-    // TODO obtain mapping chunks
-
+    // TODO obtain and concatenate mappings chunks
+    triplets_type Js;
+    
     // TODO obtain mass/stiffness chunks
-
+    triplets_type Hs;
+    
     // TODO obtain forces + geometric stiffness chunks
 
     return {};
