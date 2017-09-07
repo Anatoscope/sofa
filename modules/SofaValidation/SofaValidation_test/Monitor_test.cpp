@@ -83,36 +83,11 @@ struct Monitor_test : public sofa::Sofa_test<>
     void testModif()
     {
         std::string str_x =
-                "# Gnuplot File : positions of 1 particle(s) Monitored\n# 1st Column : "
-                "time, others : particle(s) number 0 \n1	-3.5 -12.4182 -3.5 0 0 "
-                "0 1	\n2	-3.5 -29.4438 -3.5 0 0 0 1	\n3	-3.5 -53.8398 "
-                "-3.5 0 0 0 1	\n4	-3.5 -84.9362 -3.5 0 0 0 1	\n5	-3.5 "
-                "-122.124 -3.5 0 0 0 1	\n6	-3.5 -164.849 -3.5 0 0 0 1	"
-                "\n7	"
-                "-3.5 -212.608 -3.5 0 0 0 1	\n8	-3.5 -264.944 -3.5 0 0 0 "
-                "1	"
-                "\n9	-3.5 -321.44 -3.5 0 0 0 1	\n10	-3.5 -381.718 -3.5 0 0 "
-                "0 1	\n";
+                "# Gnuplot File : positions of 1 particle(s) Monitored\n# 1st Column : time, others : particle(s) number 0 \n1\t[-3.5, -12.4182, -3.5, 0, 0, 0, 1]\t\n2\t[-3.5, -29.4438, -3.5, 0, 0, 0, 1]\t\n3\t[-3.5, -53.8398, -3.5, 0, 0, 0, 1]\t\n4\t[-3.5, -84.9362, -3.5, 0, 0, 0, 1]\t\n5\t[-3.5, -122.124, -3.5, 0, 0, 0, 1]\t\n6\t[-3.5, -164.849, -3.5, 0, 0, 0, 1]\t\n7\t[-3.5, -212.608, -3.5, 0, 0, 0, 1]\t\n8\t[-3.5, -264.944, -3.5, 0, 0, 0, 1]\t\n9\t[-3.5, -321.44, -3.5, 0, 0, 0, 1]\t\n10\t[-3.5, -381.718, -3.5, 0, 0, 0, 1]\t\n";
         std::string str_f =
-                "# Gnuplot File : forces of 1 particle(s) Monitored\n# 1st Column : "
-                "time, others : particle(s) number 0 \n1	0 -0.363333 0 0 0 "
-                "0	"
-                "\n2	0 -0.363333 0 0 0 0	\n3	0 -0.363333 0 0 0 0	"
-                "\n4	"
-                "0 -0.363333 0 0 0 0	\n5	0 -0.363333 0 0 0 0	\n6	0 "
-                "-0.363333 0 0 0 0	\n7	0 -0.363333 0 0 0 0	\n8	0 "
-                "-0.363333 0 0 0 0	\n9	0 -0.363333 0 0 0 0	\n10	0 "
-                "-0.363333 0 0 0 0	\n";
+                "# Gnuplot File : forces of 1 particle(s) Monitored\n# 1st Column : time, others : particle(s) number 0 \n1\t[0, -0.363333, 0, 0, 0, 0]\t\n2\t[0, -0.363333, 0, 0, 0, 0]\t\n3\t[0, -0.363333, 0, 0, 0, 0]\t\n4\t[0, -0.363333, 0, 0, 0, 0]\t\n5\t[0, -0.363333, 0, 0, 0, 0]\t\n6\t[0, -0.363333, 0, 0, 0, 0]\t\n7\t[0, -0.363333, 0, 0, 0, 0]\t\n8\t[0, -0.363333, 0, 0, 0, 0]\t\n9\t[0, -0.363333, 0, 0, 0, 0]\t\n10\t[0, -0.363333, 0, 0, 0, 0]\t\n";
         std::string str_v =
-                "# Gnuplot File : velocities of 1 particle(s) Monitored\n# 1st Column "
-                ": time, others : particle(s) number 0 \n1	0 -8.91818 0 0 0 "
-                "0	"
-                "\n2	0 -17.0256 0 0 0 0	\n3	0 -24.396 0 0 0 0	"
-                "\n4	"
-                "0 -31.0964 0 0 0 0	\n5	0 -37.1876 0 0 0 0	\n6	0 "
-                "-42.7251 0 0 0 0	\n7	0 -47.7592 0 0 0 0	\n8	0 "
-                "-52.3356 0 0 0 0	\n9	0 -56.496 0 0 0 0	\n10	0 "
-                "-60.2782 0 0 0 0	\n";
+                "# Gnuplot File : velocities of 1 particle(s) Monitored\n# 1st Column : time, others : particle(s) number 0 \n1\t[0, -8.91818, 0, 0, 0, 0]\t\n2\t[0, -17.0256, 0, 0, 0, 0]\t\n3\t[0, -24.396, 0, 0, 0, 0]\t\n4\t[0, -31.0964, 0, 0, 0, 0]\t\n5\t[0, -37.1876, 0, 0, 0, 0]\t\n6\t[0, -42.7251, 0, 0, 0, 0]\t\n7\t[0, -47.7592, 0, 0, 0, 0]\t\n8\t[0, -52.3356, 0, 0, 0, 0]\t\n9\t[0, -56.496, 0, 0, 0, 0]\t\n10\t[0, -60.2782, 0, 0, 0, 0]\t\n";
 
         // make a few steps before checkinf if values are correctly updated in
         // Monitor
