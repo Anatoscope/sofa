@@ -128,8 +128,13 @@ def insertJoint(jointModel, rigids, scale=1, param=None):
             if d.min==None or d.max==None:
                 isLimited = False # as soon as a limit is not defined, the limits cannot work
             else:
-                limits.append(d.min)
-                limits.append(d.max)
+                if d.index < 3: # translation dofs have to be scaled based on units
+                    limits.append(d.min*scale)
+                    limits.append(d.max*scale)
+                else: # rotation dofs do not need to be scaled
+                    limits.append(d.min)
+                    limits.append(d.max)
+
         mask[d.index] = 0
 
     joint = StructuralAPI.GenericRigidJoint(jointModel.name, frames[0].node, frames[1].node, mask,
