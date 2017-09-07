@@ -208,6 +208,15 @@ static void fill_mapping_chunk(OutputIterator out, const defaulttype::BaseMatrix
 
 
 template<class OutputIterator>
+static void fill_identity_chunk(OutputIterator out, std::size_t row_off, std::size_t col_off, std::size_t size) {
+    for(std::size_t i = 0; i < size; ++i) {
+        *out++ = {row_off + i, col_off + i, 1};
+    }
+}
+
+
+
+template<class OutputIterator>
 static void fill_mapping(OutputIterator out, const graph_type& graph) {
     for(std::size_t v : vertices(graph) ) {
         if(graph[v].mapping) {
@@ -220,7 +229,7 @@ static void fill_mapping(OutputIterator out, const graph_type& graph) {
             }
 
         } else {
-            
+            fill_identity_chunk(out, graph[v].offset, graph[v].offset, graph[v].size);
         }
     }
 }
@@ -270,7 +279,7 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
     topological_sort(top_down, graph);
 
     // fill offset/size for vertices
-    number_vertices(graph, top_down);
+    const std::size_t size = number_vertices(graph, top_down);
     
     // TODO obtain and concatenate mappings chunks
     triplets_type Js;
