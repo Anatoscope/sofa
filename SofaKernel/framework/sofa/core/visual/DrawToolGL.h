@@ -185,6 +185,7 @@ protected:
     bool mLightEnabled;
     int  mPolygonMode;      //0: no cull, 1 front (CULL_CLOCKWISE), 2 back (CULL_ANTICLOCKWISE)
     bool mWireFrameEnabled;
+    bool mUpdateCapabilities;
 
     helper::gl::BasicShapesGL_Sphere<Vector3> m_sphereUtil;
     helper::gl::BasicShapesGL_FakeSphere<Vector3> m_fakeSphereUtil;
@@ -229,6 +230,9 @@ public:
 
     int getPolygonMode() {return mPolygonMode;}
     bool getWireFrameEnabled() {return mWireFrameEnabled;}
+
+    virtual void setUpdateCapabilities(bool value) { mUpdateCapabilities = value; }
+    int getUpdateCapabilities() { return mUpdateCapabilities; }
 };
 
 //#if defined(SOFA_EXTERN_TEMPLATE) && !defined(SOFA_HELPER_GL_DRAWTOOLGL_CPP)

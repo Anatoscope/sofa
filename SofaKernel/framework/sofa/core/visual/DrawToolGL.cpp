@@ -63,6 +63,7 @@ DrawToolGL::DrawToolGL()
     mLightEnabled = false;
     mWireFrameEnabled = false;
     mPolygonMode = 1;
+    mUpdateCapabilities = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1095,16 +1096,19 @@ void DrawToolGL::setMaterial(const Vec<4,float> &colour)
     glMaterialfv (GL_FRONT_AND_BACK, GL_EMISSION, emissive);
     glMaterialfv (GL_FRONT_AND_BACK, GL_SPECULAR, specular);
     glMaterialf  (GL_FRONT_AND_BACK, GL_SHININESS, 20);
-    if (colour[3] < 1)
+    if (mUpdateCapabilities)
     {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDepthMask(0);
-    }
-    else
-    {
-        glDisable(GL_BLEND);
-        glDepthMask(1);
+        if (colour[3] < 1)
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDepthMask(0);
+        }
+        else
+        {
+            glDisable(GL_BLEND);
+            glDepthMask(1);
+        }
     }
 }
 
@@ -1120,8 +1124,11 @@ void DrawToolGL::resetMaterial(const Vec<4,float> &colour)
 
 void DrawToolGL::resetMaterial()
 {
-    glDisable(GL_BLEND);
-    glDepthMask(1);
+    if (mUpdateCapabilities)
+    {
+        glDisable(GL_BLEND);
+        glDepthMask(1);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
