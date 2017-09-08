@@ -95,24 +95,24 @@ struct Visitor : public simulation::MechanicalVisitor {
             auto* state = node->mechanicalState.get();
             if(!state) throw assembly_error("no output dof");
             
-            const auto dst = table.find(state);
-            if(dst == table.end()) throw assembly_error("unknown output dof");
+            const auto src = table.find(state);
+            if(src == table.end()) throw assembly_error("unknown output dof");
 
             // remember this dof is mapped
-            graph[dst->second].mapping = mapping;
+            graph[src->second].mapping = mapping;
             
             std::size_t index = 0;
             for(auto* state : mapping->getFrom()) {
                 auto* mstate = state->toBaseMechanicalState();
                 if(!mstate) continue;
                 
-                const auto src = table.find(mstate);
-                if(src == table.end()) throw assembly_error("unknown input dof");
+                const auto dst = table.find(mstate);
+                if(dst == table.end()) throw assembly_error("unknown input dof");
                 
                 const edge_type prop = {index};
 
-                // edges go from input to outputs, so that topological sort
-                // treats inputs first
+                // boost::graph topological sort orders nodes for a *dependency*
+                // graph: edges go from outputs to inputs
                 add_edge(src->second, dst->second, prop, graph);
                 
                 ++index;
@@ -230,7 +230,7 @@ public:
 
     func_type get(Base* base) const {
 
-        // try fast lookup
+        // lookup cached result
         auto it = table.find( typeid(*base) );
         if(it != table.end() ) return it->second;
 
@@ -310,9 +310,9 @@ static void fill_mapping(OutputIterator out, const graph_type& graph) {
 
             auto* chunks = graph[v].mapping->getJs();
             
-            for(auto e : in_edges(v, graph) ) {
-                const std::size_t s = source(e, graph);
-                fill_matrix_chunk(out, (*chunks)[graph[e].index], graph[v].offset, graph[s].offset);
+            for(auto e : out_edges(v, graph) ) {
+                const std::size_t t = target(e, graph);
+                fill_matrix_chunk(out, (*chunks)[graph[e].index], graph[v].offset, graph[t].offset);
             }
 
         } else {
@@ -321,22 +321,84 @@ static void fill_mapping(OutputIterator out, const graph_type& graph) {
     }
 }
 
+struct unimplemented : std::logic_error {
+    unimplemented() : std::logic_error("unimplemented lol") { }
+};
+
+
 template<class OutputIterator>
-static void fill_mass(OutputIterator out, const graph_type& graph, real factor = 1) {
+struct base_matrix_adaptor : defaulttype::BaseMatrix {
+
+    OutputIterator out;
     
-}
+    base_matrix_adaptor(OutputIterator out) : out(out) { }
 
+    // lol
+    Index rowSize() const { throw unimplemented(); }
+    Index colSize() const { throw unimplemented(); }
+    SReal element(Index, Index) const { throw unimplemented(); }
+    void set(Index, Index, SReal) { throw unimplemented(); }    
+    void resize(Index, Index) { throw unimplemented(); }
+    void clear() { throw unimplemented(); }                
 
-template<class OutputIterator>
-static void fill_stiffness(OutputIterator out, const graph_type& graph, real factor = 1) {
-
-}
-
-
-template<class OutputIterator>
-static void fill_compliance(OutputIterator out, const graph_type& graph, real factor = 1) {
+    void add(Index row, Index col, double value) {
+        *out++ = {row, col, value};
+    };
     
+};
+
+
+
+template<class OutputIterator>
+struct multi_matrix_adaptor : core::behavior::MultiMatrixAccessor {
+    // that's gotta be one of the crappiest APIs in the entire codebase, it's
+    // really fascinating
+    multi_matrix_adaptor(OutputIterator out, std::size_t offset)
+        : bm(out),
+          offset(offset) {
+
+    }
+    
+    mutable base_matrix_adaptor<OutputIterator> bm;
+    const std::size_t offset;
+    
+    int getGlobalDimension() const { throw unimplemented(); }
+    int getGlobalOffset(const core::behavior::BaseMechanicalState*) const { 
+        throw unimplemented();
+    }
+    
+    InteractionMatrixRef getMatrix(const core::behavior::BaseMechanicalState* mstate1,
+                                   const core::behavior::BaseMechanicalState* mstate2) const {
+        throw unimplemented();
+    }
+
+    MatrixRef getMatrix(const core::behavior::BaseMechanicalState* mstate) const {
+        // you gotta be f*cking kidding me, there's not even a suitable
+        // constructor for using this thing
+        MatrixRef res;
+        res.matrix = &bm;
+        res.offset = offset;
+        return res;        
+    }
+    
+};
+
+
+template<class OutputIterator>
+static void fill_forcefield(OutputIterator out, const graph_type& graph, const core::MechanicalParams* mp) {
+    for(std::size_t v : vertices(graph) ) {
+        auto* ctx = graph[v].state->getContext();
+
+        assert(dynamic_cast<simulation::Node*>(ctx));        
+        auto* node = static_cast<simulation::Node*>(ctx); 
+        
+        for(auto* ff : node->forceField) {
+            const multi_matrix_adaptor<OutputIterator> matrix(out, graph[v].offset);
+            ff->addMBKToMatrix(mp, &matrix);
+        }
+    }
 }
+
 
 
 static std::size_t number_vertices(graph_type& graph, const std::vector<std::size_t>& top_down) {
@@ -375,19 +437,20 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
     // TODO obtain mass/stiffness chunks
     triplets_type Hs;
     
-    // TODO obtain forces + geometric stiffness chunks
-
-
+    fill_forcefield(std::back_inserter(Hs), graph, mp);
+    
+    // TODO compliance
+    
     // build actul matrices
     rmat J(size, size);
     J.setFromTriplets(Js.begin(), Js.end());
 
-    std::clog << "J: " << J << std::endl;
+    std::clog << "J:\n" << J << std::endl;
     
     rmat H(size, size);
     H.setFromTriplets(Hs.begin(), Hs.end());
 
-    std::clog << "H: " << H << std::endl;    
+    std::clog << "H:\n" << H << std::endl;    
     
     return {};
 }

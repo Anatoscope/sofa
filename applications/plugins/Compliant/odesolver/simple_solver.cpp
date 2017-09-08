@@ -34,8 +34,13 @@ simple_solver::~simple_solver() { }
 
 
 static core::MechanicalParams mechanical_params(const core::ExecParams& ep, SReal dt) {
-    // TODO
-    return ep;
+    core::MechanicalParams res(ep);
+
+    res.setMFactor(1.0);
+    res.setBFactor(dt);
+    res.setKFactor(dt * dt);        
+    
+    return res;
 }
 
 void simple_solver::solve(const core::ExecParams* ep,
