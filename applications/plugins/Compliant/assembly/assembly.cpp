@@ -167,7 +167,7 @@ static void topological_sort(std::vector<std::size_t>& ordering, const graph_typ
                              
 
 
-
+// post-condition: all vertices have non-null state
 static graph_type create_graph(core::objectmodel::BaseContext* ctx, const core::MechanicalParams* mp) {
 
     // fill kinematic graph
@@ -384,13 +384,34 @@ struct multi_matrix_adaptor : core::behavior::MultiMatrixAccessor {
 };
 
 
+static simulation::Node* node_cast(core::objectmodel::BaseContext* ctx) {
+    assert(dynamic_cast<simulation::Node*>(ctx));        
+    return static_cast<simulation::Node*>(ctx); 
+}
+
+using forcefield_type = core::behavior::BaseForceField*;
+
+static forcefield_type node_compliance(simulation::Node* node) {
+    for(auto* ff : node->forceField) {
+        
+        if(ff->isCompliance.getValue()) {
+            if(node->forceField.size() > 1) {
+                throw assembly_error("compliance must be the only forcefield in its node");
+            }
+            
+            return ff;
+        }
+    }
+    
+    return nullptr;
+}
+
+
+
 template<class OutputIterator>
 static void fill_forcefield(OutputIterator out, const graph_type& graph, const core::MechanicalParams* mp) {
     for(std::size_t v : vertices(graph) ) {
-        auto* ctx = graph[v].state->getContext();
-
-        assert(dynamic_cast<simulation::Node*>(ctx));        
-        auto* node = static_cast<simulation::Node*>(ctx); 
+        auto* node = node_cast(graph[v].state->getContext());
         
         for(auto* ff : node->forceField) {
             const multi_matrix_adaptor<OutputIterator> matrix(out, graph[v].offset);
@@ -398,6 +419,30 @@ static void fill_forcefield(OutputIterator out, const graph_type& graph, const c
         }
     }
 }
+
+
+template<class OutputIterator>
+static void fill_compliance(OutputIterator out, const graph_type& graph, const core::MechanicalParams* mp) {
+    for(std::size_t v : vertices(graph) ) {
+
+        if(!graph[v].state) {
+            // pairing node: fill pairing matrix
+            throw unimplemented();
+        } else if(!out_degree(v, graph) ) {
+            // independent node
+            auto* node = node_cast(graph[v].state->getContext());
+
+            if(auto* ff = node_compliance(node) ) {
+                // TODO obtain and fill compliance chunk
+                throw unimplemented();
+            }
+        }
+        
+    }
+}
+
+
+
 
 
 
@@ -418,11 +463,49 @@ static std::size_t number_vertices(graph_type& graph, const std::vector<std::siz
 
 
 
+// extend graph with compliance nodes
+// precondition: all vertices have non-null state
+static void extend_graph(graph_type& graph) {
+
+    // find compliant nodes
+    std::vector< std::size_t > compliant;
+    for(std::size_t v : vertices(graph) ) {
+        assert(graph[v].state);
+
+        auto* node = node_cast(graph[v].state->getContext());
+        if( node_compliance(node) ) {
+            compliant.emplace_back(v);
+        }
+    }
+
+    // create lambda + pairing nodes
+    for(std::size_t c : compliant) {
+
+        // lambda node
+        vertex_type vprop;
+        vprop.state = graph[c].state;
+        
+        const std::size_t v = add_vertex(vprop, graph);
+
+        // pairing node
+        const std::size_t p = add_vertex(graph);
+        
+        // pairing edges
+        add_edge(p, v, graph);
+        add_edge(p, c, graph);        
+    }
+    
+};
+
+
 system_type assemble_system(core::objectmodel::BaseContext* ctx,
                             const core::MechanicalParams* mp) {
 
     graph_type graph = create_graph(ctx, mp);
 
+    // extend graph with lambda/pairing nodes
+    extend_graph(graph);
+    
     // order graph
     std::vector<std::size_t> top_down;
     topological_sort(top_down, graph);
@@ -434,14 +517,13 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
     triplets_type Js;
     fill_mapping(std::back_inserter(Js), graph);
     
-    // TODO obtain mass/stiffness chunks
+    // obtain mass/stiffness chunks
     triplets_type Hs;
-    
+
     fill_forcefield(std::back_inserter(Hs), graph, mp);
+    fill_compliance(std::back_inserter(Hs), graph, mp);
     
-    // TODO compliance
-    
-    // build actul matrices
+    // build actual matrices
     rmat J(size, size);
     J.setFromTriplets(Js.begin(), Js.end());
 
