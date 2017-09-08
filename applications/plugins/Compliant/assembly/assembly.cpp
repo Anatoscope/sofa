@@ -64,8 +64,8 @@ struct Visitor : public simulation::MechanicalVisitor {
     graph_type& graph;
     std::map< vertex_type::state_type, std::size_t > table;
 
-    Visitor(graph_type& graph)
-        : simulation::MechanicalVisitor(nullptr),
+    Visitor(graph_type& graph, const core::MechanicalParams* mp)
+        : simulation::MechanicalVisitor(mp),
         graph(graph) { }
     
     virtual Visitor::Result processNodeTopDown(simulation::Node* node) {
@@ -168,12 +168,12 @@ static void topological_sort(std::vector<std::size_t>& ordering, const graph_typ
 
 
 
-static graph_type create_graph(core::objectmodel::BaseContext* ctx) {
+static graph_type create_graph(core::objectmodel::BaseContext* ctx, const core::MechanicalParams* mp) {
 
     // fill kinematic graph
     graph_type graph;
     
-    Visitor visitor(graph);
+    Visitor visitor(graph, mp);
     ctx->executeVisitor(&visitor);
 
     // topological sort
@@ -200,6 +200,10 @@ static graph_type create_graph(core::objectmodel::BaseContext* ctx) {
 using real = SReal;
 using triplet = Eigen::Triplet<real>;
 using triplets_type = std::vector<triplet>;
+
+using rmat = Eigen::SparseMatrix<real, Eigen::RowMajor>;
+using cmat = Eigen::SparseMatrix<real, Eigen::ColMajor>;
+    
 
 
 template<class F> class jump_table;
@@ -353,9 +357,9 @@ static std::size_t number_vertices(graph_type& graph, const std::vector<std::siz
 
 
 system_type assemble_system(core::objectmodel::BaseContext* ctx,
-                            const core::MechanicalParams* mparams) {
+                            const core::MechanicalParams* mp) {
 
-    graph_type graph = create_graph(ctx);
+    graph_type graph = create_graph(ctx, mp);
 
     // order graph
     std::vector<std::size_t> top_down;
@@ -373,6 +377,18 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
     
     // TODO obtain forces + geometric stiffness chunks
 
+
+    // build actul matrices
+    rmat J(size, size);
+    J.setFromTriplets(Js.begin(), Js.end());
+
+    std::clog << "J: " << J << std::endl;
+    
+    rmat H(size, size);
+    H.setFromTriplets(Hs.begin(), Hs.end());
+
+    std::clog << "H: " << H << std::endl;    
+    
     return {};
 }
 
