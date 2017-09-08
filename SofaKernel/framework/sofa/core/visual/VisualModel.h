@@ -86,7 +86,10 @@ public:
     /**
     *  \brief Display the VisualModel object for picking operation.
     */
-    virtual void drawBasic(const VisualParams* /*vparams*/) {}
+    virtual void drawBasic(const VisualParams* vparams) 
+    {
+        drawVisual(vparams);
+    }
 
     /**
      *  \brief Display the VisualModel object.

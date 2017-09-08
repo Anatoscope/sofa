@@ -13,8 +13,7 @@ def createSceneAndController(root):
     node.createObject('CompliantImplicitSolver')
     node.createObject('LDLTSolver',schur=False)
 
-    global mstate
-    mstate = node.createObject('MechanicalObject',position="0 0 0  1 0 0  1 1 0" , showObject=True, showObjectScale=10)
+    node.createObject('MechanicalObject',position="0 0 0  1 0 0  1 1 0" , showObject=True, showObjectScale=10)
     node.createObject('FixedConstraint',indices="0")
     node.createObject('UniformMass',totalMass=100 )
     node.createObject('StiffSpringForceField',spring="0 1 100 5 1.5   0 2 100 5 1.5   1 2 100 5 1.5")
@@ -34,13 +33,12 @@ def createSceneAndController(root):
 def onEndAnimationStep(dt):
 
     global node
-    global mstate
 
     print "getAssembledImplicitMatrix",Compliant.getAssembledImplicitMatrix(node,1,1,1)
 
     assembledSystem = Compliant.getImplicitAssembledSystem(node)
     print assembledSystem
-    print "nb independent dofs:",assembledSystem.m, len(mstate.position)
+    print "nb independent dofs:",assembledSystem.m
     print "nb constraints:",assembledSystem.n
     print "H", assembledSystem.getH()
     print "P", assembledSystem.getP()

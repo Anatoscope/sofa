@@ -37,6 +37,7 @@
 #include <sofa/simulation/VisualVisitor.h>
 #include <sofa/core/ObjectFactory.h>
 #include <sofa/helper/system/FileRepository.h>
+#include <sofa/core/visual/DrawToolGL.h>
 
 
 namespace sofa
@@ -469,6 +470,8 @@ void VisualOITDrawVisitor::processVisualModel(Node*, VisualModel* vm)
     if(!vm->getTags().includes(subsetsToManage))
         return;
 
+    static_cast<core::visual::DrawToolGL*>(visualParams->drawTool())->setUpdateCapabilities(false);
+
     OglModel* oglModel = dynamic_cast<OglModel*>(vm);
     if(oglModel)
         oglModel->blendTransparency.setValue(false);
@@ -485,6 +488,8 @@ void VisualOITDrawVisitor::processVisualModel(Node*, VisualModel* vm)
 #ifdef DEBUG_DRAW
         std::cerr << "<" << vm->getClassName() << "::drawVisual() of " << vm->getName() << std::endl;
 #endif
+
+    static_cast<core::visual::DrawToolGL*>(visualParams->drawTool())->setUpdateCapabilities(true);
 }
 
 } // namespace visualmodel

@@ -198,9 +198,9 @@ class ShearlessAffineBody:
         self.collision = ShearlessAffineBody.CollisionMesh(self.affineNode, filepath, scale3d, (self.bodyOffset*Frame.Frame(offset)).offset(), name_suffix, generatedDir=generatedDir)
         return self.collision
 
-    def addVisualModel(self, filepath, scale3d=[1,1,1], offset=[0,0,0,0,0,0,1], name_suffix='', generatedDir=None):
+    def addVisualModel(self, filepath, scale3d=[1,1,1], offset=[0,0,0,0,0,0,1], name_suffix='', generatedDir=None, color=[1,1,1,1]):
         ## adding a visual model to the rigid body with a relative offset
-        self.visual = ShearlessAffineBody.VisualModel(self.affineNode, filepath, scale3d, (self.bodyOffset*Frame.Frame(offset)).offset(), name_suffix, generatedDir=generatedDir)
+        self.visual = ShearlessAffineBody.VisualModel(self.affineNode, filepath, scale3d, (self.bodyOffset*Frame.Frame(offset)).offset(), name_suffix, generatedDir=generatedDir, color=concat(color))
         return self.visual
 
     def addOffset(self, name, offset=[0,0,0,0,0,0,1], index=-1):
@@ -296,26 +296,28 @@ class ShearlessAffineBody:
             ## add a component to compute mesh normals at each timestep
             self.normals = self.node.createObject('NormalsFromPoints', template='Vec3'+template_suffix, name='normalsFromPoints', position='@'+self.dofs.name+'.position', triangles='@'+self.topology.name+'.triangles', quads='@'+self.topology.name+'.quads', invertNormals=invert)
 
-        def addVisualModel(self):
+        def addVisualModel(self, color=[1,1,1,1]):
             ## add a visual model identical to the collision model
-            return ShearlessAffineBody.CollisionMesh.VisualModel(self.node)
+            return ShearlessAffineBody.CollisionMesh.VisualModel(self.node, color)
 
         class VisualModel:
 
-            def __init__(self, node):
+            def __init__(self, node, color=[1,1,1,1]):
                 global idxVisualModel;
                 self.node = node.createChild('visual')  # node
-                self.model = self.node.createObject('VisualModel', name='model'+str(idxVisualModel)) # @to do: Add the filename in order to keep the texture coordinates otherwise we lost them ...
+                self.visual = self.node.createObject('VisualModel', name='model'+str(idxVisualModel), color=concat(color)) # @to do: Add the filename in order to keep the texture coordinates otherwise we lost them ...
+                self.model = self.visual # backward compatibility
                 self.mapping = self.node.createObject('IdentityMapping', name='mapping')
                 idxVisualModel+=1
 
     class VisualModel:
 
-        def __init__(self, node, filepath, scale3d, offset, name_suffix='', generatedDir=None):
+        def __init__(self, node, filepath, scale3d, offset, name_suffix='', generatedDir=None, color=[1,1,1,1]):
             r = Quaternion.to_euler(offset[3:]) * 180.0 / math.pi
             global idxVisualModel;
             self.node = node.createChild('visual'+name_suffix)  # node
-            self.model = self.node.createObject('VisualModel', name='visual'+str(idxVisualModel), fileMesh=filepath, scale3d=concat(scale3d), translation=concat(offset[:3]), rotation=concat(r))
+            self.visual = self.node.createObject('VisualModel', name='visual'+str(idxVisualModel), fileMesh=filepath, scale3d=concat(scale3d), translation=concat(offset[:3]), rotation=concat(r), color=concat(color))
+            self.model = self.visual # backward compatibility
             if generatedDir is None:
                 self.mapping = self.node.createObject('LinearMapping', template='Affine,ExtVec3f', name='mapping')
             else:
