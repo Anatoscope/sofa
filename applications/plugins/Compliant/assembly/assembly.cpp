@@ -4,6 +4,8 @@
 // #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/topological_sort.hpp>
 
+#include <SofaEigen2Solver/EigenBaseSparseMatrix.h>
+
 
 namespace std {
 
@@ -200,10 +202,91 @@ using triplet = Eigen::Triplet<real>;
 using triplets_type = std::vector<triplet>;
 
 
+template<class F> class jump_table;
+
+template<class Ret, class Base, class ... Args>
+class jump_table< Ret (*)(Base*, Args...) > {
+
+    using func_type = Ret (*)(Base*, Args...);
+    using table_type = std::map< std::type_index, func_type >;
+    
+    mutable table_type table;
+
+    using check_type = bool (*)(Base*);
+    std::vector< std::pair<check_type, func_type> > check;
+
+public:
+    
+    template<class T>
+    jump_table& add(func_type func) {
+        // register type-erased check function
+        check.emplace_back([](const Base* base) -> bool { return dynamic_cast<const T*>(base); }, func);
+        return *this;
+    }
+
+    func_type get(Base* base) const {
+
+        // try fast lookup
+        auto it = table.find( typeid(*base) );
+        if(it != table.end() ) return it->second;
+
+        // slow checks + cache
+        for(const auto& c : check) {
+            if(c.first(base)) {
+                table[ typeid(*base) ] = c.second;
+                return c.second;
+            }
+        }
+        
+        throw std::runtime_error("no function registered");
+    };
+    
+};
+
+
+template<class Real, class OutputIterator>
+static void fill_eigenbase_sparse_matrix_chunk(const defaulttype::BaseMatrix* self, OutputIterator out,
+                                               std::size_t row_off, std::size_t col_off, real factor) {
+    using cast_type = component::linearsolver::EigenBaseSparseMatrix<Real>;
+    const auto& matrix = static_cast< const cast_type* >(self)->compressedMatrix;
+    
+    using matrix_type = typename std::decay<decltype(matrix)>::type;
+    
+    for(int i = 0, n = matrix.outerSize(); i < n; ++i) {
+        for(typename matrix_type::InnerIterator it(matrix, i); it; ++it) {
+            *out++ = {row_off + it.row(), col_off + it.col(), factor * it.value()};
+        }
+    }
+    
+};
+
+
 template<class OutputIterator>
-static void fill_mapping_chunk(OutputIterator out, const defaulttype::BaseMatrix* chunk, 
-                               std::size_t row_off, std::size_t col_off) {
-    // TODO
+static void fill_base_matrix_chunk(const defaulttype::BaseMatrix* self, OutputIterator out,
+                                   std::size_t row_off, std::size_t col_off, real factor) {
+    throw std::logic_error("unimplemented");
+};
+
+
+template<class OutputIterator>
+static void fill_matrix_chunk(OutputIterator out, const defaulttype::BaseMatrix* chunk, 
+                              std::size_t row_off, std::size_t col_off, real factor = 1) {
+    
+    using func_type = void (*) (const defaulttype::BaseMatrix*, OutputIterator, std::size_t, std::size_t, real);
+    
+    static const jump_table<func_type> jump = jump_table<func_type>()
+        
+        .template add<component::linearsolver::EigenBaseSparseMatrix<double> >
+        ( fill_eigenbase_sparse_matrix_chunk<double, OutputIterator>)
+
+        .template add<component::linearsolver::EigenBaseSparseMatrix<float> >
+        ( fill_eigenbase_sparse_matrix_chunk<float, OutputIterator>)
+
+        .template add<defaulttype::BaseMatrix>( fill_base_matrix_chunk<OutputIterator>);
+
+
+    // dipatch
+    jump.get(chunk)(chunk, out, row_off, col_off, factor);
 }
 
 
@@ -225,7 +308,7 @@ static void fill_mapping(OutputIterator out, const graph_type& graph) {
             
             for(auto e : in_edges(v, graph) ) {
                 const std::size_t s = source(e, graph);
-                fill_mapping_chunk(out, (*chunks)[graph[e].index], graph[v].offset, graph[s].offset);
+                fill_matrix_chunk(out, (*chunks)[graph[e].index], graph[v].offset, graph[s].offset);
             }
 
         } else {
@@ -281,7 +364,7 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
     // fill offset/size for vertices
     const std::size_t size = number_vertices(graph, top_down);
     
-    // TODO obtain and concatenate mappings chunks
+    // obtain and concatenate mappings chunks
     triplets_type Js;
     fill_mapping(std::back_inserter(Js), graph);
     
