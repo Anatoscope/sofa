@@ -135,16 +135,24 @@ SReal UniformCompliance<DataTypes>::getPotentialEnergy( const core::MechanicalPa
 template<class DataTypes>
 const sofa::defaulttype::BaseMatrix* UniformCompliance<DataTypes>::getComplianceMatrix(const core::MechanicalParams*)
 {
-    if( resizable.getValue() && (defaulttype::BaseMatrix::Index)this->mstate->getSize() != matC.rows() ) reinit();
-
+  if(this->isCompliance.getValue() ) {
+    if( resizable.getValue() && (defaulttype::BaseMatrix::Index)this->mstate->getSize() != matC.rows() ) {
+      reinit();
+    }
+    
     return &matC;
+  }
+
+  return nullptr;
 }
 
 
 template<class DataTypes>
 void UniformCompliance<DataTypes>::addKToMatrix( sofa::defaulttype::BaseMatrix * matrix, SReal kFact, unsigned int &offset )
 {
+  if(!this->isCompliance.getValue() ) {
     matK.addToBaseMatrix( matrix, kFact, offset );
+  }
 }
 
 template<class DataTypes>
