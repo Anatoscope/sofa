@@ -1,7 +1,6 @@
 #include "assembly.hpp"
 
 #include <boost/graph/adjacency_list.hpp>
-// #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/topological_sort.hpp>
 
 #include <SofaEigen2Solver/EigenBaseSparseMatrix.h>
@@ -424,7 +423,10 @@ static void fill_forcefield(OutputIterator out, const graph_type& graph, const c
 
 template<class OutputIterator>
 static void fill_compliance(OutputIterator out, const graph_type& graph, const core::MechanicalParams* mp) {
-    const real factor = -1 / mp->kFactor();
+
+    // note: kfactor is already negative since stiffness is negative
+    // definite (wtf)
+    const real factor = 1 / mp->kFactor();
     
     for(std::size_t v : vertices(graph) ) {
         
@@ -633,34 +635,39 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
     fill_compliance(std::back_inserter(Hs), graph, mp);
     std::clog << "compliance fetched" << std::endl;
     
-    // build actual matrices
+    // fetch matrix data
     rmat J(size, size);
     J.setFromTriplets(Js.begin(), Js.end());
     std::clog << "J:\n" << J << std::endl;
     
+    rmat H(size, size);
+    H.setFromTriplets(Hs.begin(), Hs.end());
+    std::clog << "H:\n" << H << std::endl;    
+    
+    // note: matrix-free solvers can stop here
+    
+    // mapping concatenation
     rmat L;
     concatenate(L, J);
     std::clog << "mappings concatenated" << std::endl;
     std::clog << "L:\n" << L << std::endl;
     
-    rmat H(size, size);
-    H.setFromTriplets(Hs.begin(), Hs.end());
-    std::clog << "H:\n" << H << std::endl;    
-
     // primal/dual selection
     triplets_type Ps, Ds;
     std::size_t p, d;
     select_primal_dual(std::back_inserter(Ps), p, std::back_inserter(Ds), d, graph);
-    std::clog << "primal/dual selected: " << p << " / " << d << std::endl;
+    std::clog << "primal/dual dofs: " << p << " / " << d << std::endl;
 
-    // TODO fetch projectors    
-    
+    // TODO fetch projectors for dual variables
+
+    // assemble kkt matrix
     // TODO which side is the fastest?
     const rmat K = ((L.transpose() * H) * L).triangularView<Eigen::Lower>();
     std::clog << "K:\n" << K << std::endl;
-
+    
+    // project relevant kkt parts
     system_type res;
-
+    
     if( p ) {
         rmat P(size, p); P.setFromTriplets(Ps.begin(), Ps.end());
         std::clog << "P:\n" << P << std::endl;
@@ -669,7 +676,6 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
         res.H = ((P.transpose() * K) * P).triangularView<Eigen::Lower>();
         std::clog << "res.H\n" << res.H << std::endl;
     
-
         if( d ) {
             rmat D(size, d); D.setFromTriplets(Ds.begin(), Ds.end());
             std::clog << "D:\n" << D << std::endl;
@@ -679,7 +685,7 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
             std::clog << "res.J\n" << res.J << std::endl;        
 
             // TODO optimize selection
-            res.C = ((D.transpose() * K) * D).triangularView<Eigen::Lower>();
+            res.C = -((D.transpose() * K) * D).triangularView<Eigen::Lower>();
             std::clog << "res.C\n" << res.C << std::endl;                
         }
     }

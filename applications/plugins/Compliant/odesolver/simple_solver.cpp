@@ -36,9 +36,11 @@ simple_solver::~simple_solver() { }
 static core::MechanicalParams mechanical_params(const core::ExecParams& ep, SReal dt) {
     core::MechanicalParams res(ep);
 
+    // note: in the sofa universe, negative definite matrices are the
+    // norm (wtf)
     res.setMFactor(1.0);
-    res.setBFactor(dt);
-    res.setKFactor(dt * dt);        
+    res.setBFactor(-dt);
+    res.setKFactor(-dt * dt);        
     
     return res;
 }
