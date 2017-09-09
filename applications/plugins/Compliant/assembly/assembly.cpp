@@ -303,7 +303,7 @@ static void fill_identity_chunk(OutputIterator out, std::size_t row_off, std::si
 }
 
 
-
+// TODO exploit projectors/masks
 template<class OutputIterator>
 static void fill_mapping(OutputIterator out, const graph_type& graph) {
     for(std::size_t v : vertices(graph) ) {
@@ -447,7 +447,8 @@ static void fill_compliance(OutputIterator out, const graph_type& graph, const c
             auto* node = node_cast(graph[v].state->getContext());
 
             if(auto* ff = node_compliance(node) ) {
-                fill_matrix_chunk(out, ff->getComplianceMatrix(mp), graph[v].offset, graph[v].offset, factor);
+                fill_matrix_chunk(out, ff->getComplianceMatrix(mp), 
+                                  graph[v].offset, graph[v].offset, factor);
             }
         }
         
@@ -513,6 +514,94 @@ static void extend_graph(graph_type& graph) {
 };
 
 
+static void concatenate(rmat& res, const rmat& src) {
+    res.resize(src.rows(), src.cols());
+
+    // TODO externalize these guys?
+    std::vector<bool> mask(src.cols());
+    std::vector<real> values(src.cols());
+    std::vector<int> indices(src.cols());  
+    
+    // TODO better estimate? 
+    const std::size_t estimated_nnz = src.nonZeros() + src.nonZeros() / 2;
+    res.reserve(estimated_nnz);
+    
+    std::fill(mask.begin(), mask.end(), false);
+
+    // compute result row-wise: res_0 = src; res_{i+1} = src * res_i;
+    for(int i = 0, n = res.rows(); i < n; ++i) {
+        std::size_t nnz = 0;
+
+        // ith row in src
+        for(rmat::InnerIterator src_it(src, i); src_it; ++src_it) {
+            const real y = src_it.value();
+            const int k = src_it.col();
+
+            // take row from previously computed rows if possible
+            const rmat& from = k < i ? res : src;
+            
+            for(rmat::InnerIterator res_it(from, k); res_it; ++res_it) {
+                const int j = res_it.col();
+                const real x = res_it.value();
+                
+                if(!mask[j]) {
+                    mask[j] = true;
+                    values[j] = x * y;
+                    indices[nnz] = j;
+                    ++nnz;
+                } else {
+                    values[j] += x * y;
+                }
+            }
+        }
+
+        std::sort(indices.data(), indices.data() + nnz);
+
+        res.startVec(i);
+        for(std::size_t k = 0; k < nnz; ++k) {
+            const std::size_t j = indices[k];
+            res.insertBack(i, j) = values[j];
+            mask[j] = false;
+        }
+        
+    }
+
+    res.finalize();
+}
+
+
+template<class OutputIterator>
+static void select_primal_dual(OutputIterator pout, std::size_t& p,
+                               OutputIterator dout, std::size_t& d,
+                               const graph_type& graph) {
+    p = 0; d = 0;
+    
+    for(std::size_t v : vertices(graph)) {
+        if(out_degree(v, graph) > 0) continue;
+
+        assert(graph[v].state);
+        
+        // TODO store primal/dual status in stage3
+        auto* node = node_cast(graph[v].state->getContext());
+
+        if( node_compliance(node) ) {
+            std::clog << "compliant: " << graph[v].size << " " << graph[v].offset << std::endl;
+            // dual
+            fill_identity_chunk(dout, graph[v].offset, d, graph[v].size);
+            d += graph[v].size;
+        } else {
+            // primal
+
+            // TODO optionally include bilaterals
+            // TODO exclude projected dofs
+            fill_identity_chunk(pout, graph[v].offset, p, graph[v].size);
+            p += graph[v].size;            
+        }
+        
+    }
+    
+}
+
 system_type assemble_system(core::objectmodel::BaseContext* ctx,
                             const core::MechanicalParams* mp) {
 
@@ -535,9 +624,6 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
     fill_mapping(std::back_inserter(Js), graph);
     std::clog << "mappings fetched" << std::endl;
 
-    // TODO concatenate mappings!
-
-    
     // obtain mass/stiffness chunks
     triplets_type Hs;
 
@@ -550,23 +636,55 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
     // build actual matrices
     rmat J(size, size);
     J.setFromTriplets(Js.begin(), Js.end());
-
     std::clog << "J:\n" << J << std::endl;
+    
+    rmat L;
+    concatenate(L, J);
+    std::clog << "mappings concatenated" << std::endl;
+    std::clog << "L:\n" << L << std::endl;
     
     rmat H(size, size);
     H.setFromTriplets(Hs.begin(), Hs.end());
-
     std::clog << "H:\n" << H << std::endl;    
 
+    // primal/dual selection
+    triplets_type Ps, Ds;
+    std::size_t p, d;
+    select_primal_dual(std::back_inserter(Ps), p, std::back_inserter(Ds), d, graph);
+    std::clog << "primal/dual selected: " << p << " / " << d << std::endl;
+
     // TODO fetch projectors    
-    // TODO primal/dual selection matrices
     
     // TODO which side is the fastest?
-    // TODO keep only lower part
-    const rmat K = (J.transpose() * H) * J;
+    const rmat K = ((L.transpose() * H) * L).triangularView<Eigen::Lower>();
     std::clog << "K:\n" << K << std::endl;
+
+    system_type res;
+
+    if( p ) {
+        rmat P(size, p); P.setFromTriplets(Ps.begin(), Ps.end());
+        std::clog << "P:\n" << P << std::endl;
+
+        // TODO optimize selection        
+        res.H = ((P.transpose() * K) * P).triangularView<Eigen::Lower>();
+        std::clog << "res.H\n" << res.H << std::endl;
     
-    return {};
+
+        if( d ) {
+            rmat D(size, d); D.setFromTriplets(Ds.begin(), Ds.end());
+            std::clog << "D:\n" << D << std::endl;
+            
+            // TODO optimize selection
+            res.J = (D.transpose() * K) * P;
+            std::clog << "res.J\n" << res.J << std::endl;        
+
+            // TODO optimize selection
+            res.C = ((D.transpose() * K) * D).triangularView<Eigen::Lower>();
+            std::clog << "res.C\n" << res.C << std::endl;                
+        }
+    }
+    
+    return res;
 }
 
 
