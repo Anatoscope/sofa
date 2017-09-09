@@ -9,10 +9,9 @@
 
 namespace std {
 
-// range adaptor
+// range adaptors
 template<class Iterator>
 static Iterator begin(const std::pair<Iterator, Iterator>& range) { return range.first; }
-
 
 template<class Iterator>
 static Iterator end(const std::pair<Iterator, Iterator>& range) { return range.second; }
@@ -39,9 +38,8 @@ struct vertex_type {
 };
 
 
-struct edge_type {
-    std::size_t index;
-};
+
+struct edge_type { };
 
 template<class Vertex, class Edge>
 using graph = boost::adjacency_list<boost::vecS, boost::vecS,
@@ -56,6 +54,11 @@ using graph_type = graph<vertex_type, edge_type>;
 struct assembly_error : std::runtime_error {
     using std::runtime_error::runtime_error;
 };
+
+struct unimplemented : std::logic_error {
+    unimplemented() : std::logic_error("unimplemented lol") { }
+};
+
 
 
 // TODO: inherit from Visitor directly?
@@ -101,7 +104,6 @@ struct Visitor : public simulation::MechanicalVisitor {
             // remember this dof is mapped
             graph[src->second].mapping = mapping;
             
-            std::size_t index = 0;
             for(auto* state : mapping->getFrom()) {
                 auto* mstate = state->toBaseMechanicalState();
                 if(!mstate) continue;
@@ -109,13 +111,9 @@ struct Visitor : public simulation::MechanicalVisitor {
                 const auto dst = table.find(mstate);
                 if(dst == table.end()) throw assembly_error("unknown input dof");
                 
-                const edge_type prop = {index};
-
                 // boost::graph topological sort orders nodes for a *dependency*
                 // graph: edges go from outputs to inputs
-                add_edge(src->second, dst->second, prop, graph);
-                
-                ++index;
+                add_edge(src->second, dst->second, graph);
             }
         }
     }
@@ -157,7 +155,8 @@ static graph_type prune_graph(const graph_type& graph) {
 }
 
 
-static void topological_sort(std::vector<std::size_t>& ordering, const graph_type& graph) {
+static void topological_sort(std::vector<std::size_t>& ordering, 
+                             const graph_type& graph) {
     ordering.clear();
     ordering.reserve(num_vertices(graph));
     
@@ -168,7 +167,8 @@ static void topological_sort(std::vector<std::size_t>& ordering, const graph_typ
 
 
 // post-condition: all vertices have non-null state
-static graph_type create_graph(core::objectmodel::BaseContext* ctx, const core::MechanicalParams* mp) {
+static graph_type create_graph(core::objectmodel::BaseContext* ctx, 
+                               const core::MechanicalParams* mp) {
 
     // fill kinematic graph
     graph_type graph;
@@ -185,7 +185,7 @@ static graph_type create_graph(core::objectmodel::BaseContext* ctx, const core::
     for(std::size_t v : top_down) {
         if(graph[v].is_mechanical) {
             
-            for(std::size_t s : inv_adjacent_vertices(v, graph)) {
+            for(std::size_t s : adjacent_vertices(v, graph)) {
                 graph[s].is_mechanical = true;
             }
         }
@@ -224,7 +224,8 @@ public:
     template<class T>
     jump_table& add(func_type func) {
         // register type-erased check function
-        check.emplace_back([](const Base* base) -> bool { return dynamic_cast<const T*>(base); }, func);
+        check.emplace_back([](const Base* base) -> bool { return dynamic_cast<const T*>(base); }, 
+                           func);
         return *this;
     }
 
@@ -268,7 +269,7 @@ static void fill_eigenbase_sparse_matrix_chunk(const defaulttype::BaseMatrix* se
 template<class OutputIterator>
 static void fill_base_matrix_chunk(const defaulttype::BaseMatrix* self, OutputIterator out,
                                    std::size_t row_off, std::size_t col_off, real factor) {
-    throw std::logic_error("unimplemented");
+    throw unimplemented();
 };
 
 
@@ -309,21 +310,19 @@ static void fill_mapping(OutputIterator out, const graph_type& graph) {
         if(graph[v].mapping) {
 
             auto* chunks = graph[v].mapping->getJs();
-            
+
+            std::size_t index = 0;
             for(auto e : out_edges(v, graph) ) {
                 const std::size_t t = target(e, graph);
-                fill_matrix_chunk(out, (*chunks)[graph[e].index], graph[v].offset, graph[t].offset);
+                fill_matrix_chunk(out, (*chunks)[index], graph[v].offset, graph[t].offset);
+                ++index;
             }
-
-        } else {
+            
+        } else if(graph[v].state) {
             fill_identity_chunk(out, graph[v].offset, graph[v].offset, graph[v].size);
         }
     }
 }
-
-struct unimplemented : std::logic_error {
-    unimplemented() : std::logic_error("unimplemented lol") { }
-};
 
 
 template<class OutputIterator>
@@ -367,12 +366,12 @@ struct multi_matrix_adaptor : core::behavior::MultiMatrixAccessor {
         throw unimplemented();
     }
     
-    InteractionMatrixRef getMatrix(const core::behavior::BaseMechanicalState* mstate1,
-                                   const core::behavior::BaseMechanicalState* mstate2) const {
+    InteractionMatrixRef getMatrix(const core::behavior::BaseMechanicalState* ,
+                                   const core::behavior::BaseMechanicalState* ) const {
         throw unimplemented();
     }
 
-    MatrixRef getMatrix(const core::behavior::BaseMechanicalState* mstate) const {
+    MatrixRef getMatrix(const core::behavior::BaseMechanicalState* ) const {
         // you gotta be f*cking kidding me, there's not even a suitable
         // constructor for using this thing
         MatrixRef res;
@@ -411,6 +410,8 @@ static forcefield_type node_compliance(simulation::Node* node) {
 template<class OutputIterator>
 static void fill_forcefield(OutputIterator out, const graph_type& graph, const core::MechanicalParams* mp) {
     for(std::size_t v : vertices(graph) ) {
+        if(!graph[v].state) continue;
+        
         auto* node = node_cast(graph[v].state->getContext());
         
         for(auto* ff : node->forceField) {
@@ -423,18 +424,30 @@ static void fill_forcefield(OutputIterator out, const graph_type& graph, const c
 
 template<class OutputIterator>
 static void fill_compliance(OutputIterator out, const graph_type& graph, const core::MechanicalParams* mp) {
+    const real factor = -1 / mp->kFactor();
+    
     for(std::size_t v : vertices(graph) ) {
-
+        
         if(!graph[v].state) {
             // pairing node: fill pairing matrix
-            throw unimplemented();
+            auto it = adjacent_vertices(v, graph).first;
+
+            assert(out_degree(v) == 2);            
+            const std::size_t p1 = *it++, p2 = *it++;
+            assert( graph[p1].size == graph[p2].size );
+            assert( graph[p1].state == graph[p2].state );            
+
+            const std::size_t size = graph[p1].size;
+
+            fill_identity_chunk(out, graph[p1].offset, graph[p2].offset, size);
+            fill_identity_chunk(out, graph[p2].offset, graph[p1].offset, size);            
+
         } else if(!out_degree(v, graph) ) {
             // independent node
             auto* node = node_cast(graph[v].state->getContext());
 
             if(auto* ff = node_compliance(node) ) {
-                // TODO obtain and fill compliance chunk
-                throw unimplemented();
+                fill_matrix_chunk(out, ff->getComplianceMatrix(mp), graph[v].offset, graph[v].offset, factor);
             }
         }
         
@@ -450,6 +463,8 @@ static std::size_t number_vertices(graph_type& graph, const std::vector<std::siz
 
     std::size_t off = 0;
     for(std::size_t v : top_down) {
+        if(!graph[v].state) continue;
+        
         const std::size_t size = graph[v].state->getMatrixSize();
 
         graph[v].offset = off;
@@ -505,6 +520,7 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
 
     // extend graph with lambda/pairing nodes
     extend_graph(graph);
+    std::clog << "graph extended" << std::endl;
     
     // order graph
     std::vector<std::size_t> top_down;
@@ -512,16 +528,24 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
 
     // fill offset/size for vertices
     const std::size_t size = number_vertices(graph, top_down);
+    std::clog << "graph numbered" << std::endl;
     
-    // obtain and concatenate mappings chunks
+    // obtain mapping chunks
     triplets_type Js;
     fill_mapping(std::back_inserter(Js), graph);
+    std::clog << "mappings fetched" << std::endl;
+
+    // TODO concatenate mappings!
+
     
     // obtain mass/stiffness chunks
     triplets_type Hs;
 
     fill_forcefield(std::back_inserter(Hs), graph, mp);
+    std::clog << "forcefields fetched" << std::endl;
+    
     fill_compliance(std::back_inserter(Hs), graph, mp);
+    std::clog << "compliance fetched" << std::endl;
     
     // build actual matrices
     rmat J(size, size);
@@ -533,6 +557,14 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
     H.setFromTriplets(Hs.begin(), Hs.end());
 
     std::clog << "H:\n" << H << std::endl;    
+
+    // TODO fetch projectors    
+    // TODO primal/dual selection matrices
+    
+    // TODO which side is the fastest?
+    // TODO keep only lower part
+    const rmat K = (J.transpose() * H) * J;
+    std::clog << "K:\n" << K << std::endl;
     
     return {};
 }
