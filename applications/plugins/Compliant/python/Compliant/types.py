@@ -388,12 +388,12 @@ class Quaternion(np.ndarray):
 
         dot = x.dot(y)
 
-        yx.real = dot
-        yx.imag = np.cross(x, y)
-
-        # add ||yx|| to xy.real, then normalize
+        yx.real = -y.dot(x)
+        yx.imag = np.cross(y, x)
+        
+        # add ||yx|| to xy.real
         yx.real += norm(yx)
-
+        
         theta = norm(yx)
         if theta < Quaternion.epsilon:
             
