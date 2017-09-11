@@ -432,7 +432,7 @@ static void fill_compliance(OutputIterator out, const graph_type& graph, const c
             // pairing node: fill pairing matrix
             auto it = adjacent_vertices(v, graph).first;
 
-            assert(out_degree(v) == 2);            
+            assert(out_degree(v, graph) == 2);            
             const std::size_t p1 = *it++, p2 = *it++;
             assert( graph[p1].size == graph[p2].size );
             assert( graph[p1].state == graph[p2].state );            
