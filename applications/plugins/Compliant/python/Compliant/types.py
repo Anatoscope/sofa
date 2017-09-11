@@ -248,10 +248,30 @@ class Quaternion(np.ndarray):
 
     def matrix(self):
         '''rotation matrix conversion'''
-
         K = Quaternion.hat(self.imag)
-        return np.identity(3) + (2*self.real) * K + 2 * K.dot(K)
+        return np.identity(3) + (2.0 * self.real) * K + 2.0 * K.dot(K)
+
+    @staticmethod
+    def from_matrix(R):
+        v = Quaternion.hat_inv( (R - R.T) / 2.0 )
+        n = norm(v)
+
+        if n < sys.float_info.epsilon:
+            # TODO gnomonic projection
+            return Quaternion()
+
+        # note: we can't simply get theta from asin(n) since we's miss half the
+        # values
+        theta = math.acos( (np.trace(R) - 1) / 2.0) 
         
+        res = Quaternion()
+        res.real = math.cos( theta / 2 )
+        res.imag = math.sin( theta / 2 ) * (v / n)
+        
+        return res
+
+    
+    
 
     @staticmethod
     def exp(x):
@@ -335,13 +355,15 @@ class Quaternion(np.ndarray):
         '''rotation axis/angle'''
 
         q = self if self.real >= 0 else -self
+        assert q.real >= 0
         
         half_angle = math.acos( min(q.real, 1.0) )
 
         if half_angle > Quaternion.epsilon:
-            return q.imag / math.sin(half_angle), 2 * half_angle
+            return q.imag / math.sin(half_angle), 2.0 * half_angle
 
         n = norm(q.imag)
+        
         if n > Quaternion.epsilon:
             sign = 1.0 if half_angle > 0 else -1.0
             return q.imag * (sign / n), 2 * half_angle
@@ -387,7 +409,6 @@ class Quaternion(np.ndarray):
     @staticmethod
     def hat(v):
         '''cross-product matrix'''
-        
         res = np.zeros( (3, 3) )
 
         res[:] = [[    0, -v[2],  v[1]],
@@ -396,6 +417,12 @@ class Quaternion(np.ndarray):
         
         return res
 
+    @staticmethod
+    def hat_inv(omega):
+        '''skew-symmetric mat33 -> vec3'''
+        return vec( omega[2, 1], omega[0, 2], omega[1, 0] )
+
+    
     def slerp(self, q2, t):
         '''spherical linear interpolation between q1 and q2'''
         # TODO optimize
