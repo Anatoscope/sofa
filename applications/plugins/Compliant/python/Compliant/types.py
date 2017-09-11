@@ -256,7 +256,7 @@ class Quaternion(np.ndarray):
         v = Quaternion.hat_inv( (R - R.T) / 2.0 )
         n = norm(v)
 
-        if n < sys.float_info.epsilon:
+        if n < Quaternion.epsilon:
             # TODO gnomonic projection
             return Quaternion()
 
@@ -282,7 +282,7 @@ class Quaternion(np.ndarray):
 
         res = Quaternion()
         
-        if math.fabs(theta) < sys.float_info.epsilon:
+        if math.fabs(theta) < Quaternion.epsilon:
             # fallback to gnomonic projection: (1 + x) / || 1 + x ||
             res.imag = x / 2.0
             res.normalize()
@@ -382,19 +382,21 @@ class Quaternion(np.ndarray):
     @staticmethod
     def from_vectors(x, y):
         '''rotation sending x to y'''
-        
-        res = Quaternion()
+
+        # compute yx
+        yx = Quaternion()
 
         dot = x.dot(y)
-        res.real = dot
-        res.imag = np.cross(x, y)
 
-        theta = norm(res)
-        res.real += theta
+        yx.real = dot
+        yx.imag = np.cross(x, y)
 
-        theta = norm(res)
+        # add ||yx|| to xy.real, then normalize
+        yx.real += norm(yx)
+
+        theta = norm(yx)
         if theta < Quaternion.epsilon:
-
+            
             # x == y
             if dot >= 0: return Quaternion()
             
@@ -402,8 +404,8 @@ class Quaternion(np.ndarray):
             # TODO make up vector configurable
             return Quaternion.exp( math.pi * ey )
             
-        res /= theta
-        return res
+        yx /= theta
+        return yx
 
     
     @staticmethod
