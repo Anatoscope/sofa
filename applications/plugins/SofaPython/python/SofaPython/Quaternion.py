@@ -103,12 +103,46 @@ def normalized(q):
     return q / numpy.linalg.norm(q)
 
 
+def from_vectors(x, y):
+    '''quaternion sending x to y'''
+    import numpy as np
+
+    # no rotation
+    if np.linalg.norm(x - y) < sys.float_info.epsilon:
+        return [0, 0, 0, 1]
+
+    # half-turn: any unit vector not along e will do
+    if np.linalg.norm(x + y) < sys.float_info.epsilon:
+        v = np.random.rand(3)
+        v /= np.linalg.norm(v)
+        return v.tolist() + [0]
+
+    # q = yx
+    q = np.zeros(4)            
+    q[:3] = np.cross(y, x)
+    q[-1] = -np.dot(y, x)
+    
+    # q = yx + ||yx||
+    q[-1] += np.linalg.norm(q)
+
+    # normalize q and we're good
+    theta = np.linalg.norm(q)
+
+    assert theta > sys.float_info.epsilon
+    return (q / theta).tolist()
+
+
+
+
+
 def from_matrix(M, isprecise=False):
     """Return quaternion from rotation matrix.
     If isprecise is True, the input matrix is assumed to be a precise rotation
     matrix and a faster algorithm is used.
     """
 
+    # TODO: wtf you don't need to compute eigenvectors to get rotation axis
+    
     if isprecise:
         q = numpy.empty((4, ))
         t = numpy.trace(M)

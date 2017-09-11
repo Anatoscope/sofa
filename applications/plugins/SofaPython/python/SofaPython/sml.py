@@ -313,7 +313,18 @@ class Model(object):
             self.direction = [1, 0, 0]
             Model.JointGeneric.__init__(self, jointXml)
 
-        def _orthogonalDirectBasis(self,u,n):
+        @staticmethod
+        def joint_quaternion(u, n):
+            import numpy as np
+            import Quaternion
+            
+            # basis vector
+            e = np.identity(3)[u]
+            
+            return Quaternion.from_vectors(e, n)
+            
+
+            ## mtournier: ????
             ## returns a quaternion that orients the u-th axis to the given axis n
             # build an orthogonal basis as a column matrix and convert it to a quaternion
             v=(u+1)%3
@@ -348,13 +359,13 @@ class Model(object):
             self.center = Tools.strToListFloat(jointXml.attrib["center"])
             if "direction" in jointXml.attrib:
                 self.direction = Tools.strToListFloat(jointXml.attrib["direction"])
-            self.set()
-
-        def set(self):
-            for i in range(0,2):
-                self.offsets[i].value = self.center + self._orthogonalDirectBasis(0, self.direction) # hinge around x-axis
+            self.update()
 
 
+        def update(self):
+            for off in self.offsets:
+                off.value = self.center + Model.JointSpecific.joint_quaternion(0, self.direction) 
+                
         def symmetrize(self,plane_center,plane_normal):
             # based on specific joint axis, the symmetrization should always work
             import numpy as np
@@ -363,7 +374,7 @@ class Model(object):
             plane_normal = np.asarray(plane_normal); plane_normal=plane_normal/norm(plane_normal) # normalize to be sure
             self.center = Tools.planarSymmetrization( np.asarray(self.center), plane_center, plane_normal ).tolist()
             self.direction = Tools.planarSymmetrization(np.asarray(self.direction), np.array([0, 0, 0]), plane_normal).tolist()
-            self.set()
+            self.update()
 
 
     class JointHinge(JointSpecific):
