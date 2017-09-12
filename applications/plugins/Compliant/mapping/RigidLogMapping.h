@@ -57,6 +57,10 @@ public:
     using se3 = ::SE3<U>;
     
 protected:
+
+
+    virtual void check() const { } 
+    
     virtual void apply(const core::MechanicalParams*,
                        coord_view< output_types > out_pos,
                        coord_view< const input_types > in_pos) {
