@@ -366,16 +366,17 @@ class Model(object):
             for off in self.offsets:
                 off.value = self.center + Model.JointSpecific.joint_quaternion(0, self.direction) 
                 
-        def symmetrize(self,plane_center,plane_normal):
-            # based on specific joint axis, the symmetrization should always work
+        def symmetrize(self, origin, normal):
             import numpy as np
-            from numpy.linalg import norm
-            plane_center = np.asarray(plane_center)
-            plane_normal = np.asarray(plane_normal); plane_normal=plane_normal/norm(plane_normal) # normalize to be sure
-            self.center = Tools.planarSymmetrization( np.asarray(self.center), plane_center, plane_normal ).tolist()
-            self.direction = Tools.planarSymmetrization(np.asarray(self.direction), np.array([0, 0, 0]), plane_normal).tolist()
-            self.update()
 
+            alpha = np.dot(origin, normal)
+            M = np.identity(3) - 2 * np.outer(normal, normal) 
+
+            self.center = (M.dot(self.center) + (2 * alpha) * normal).tolist()
+            self.direction = M.T.dot(self.direction).tolist()
+            
+            self.update()
+            
 
     class JointHinge(JointSpecific):
 
