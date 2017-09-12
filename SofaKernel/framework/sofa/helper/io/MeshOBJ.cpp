@@ -76,7 +76,8 @@ void MeshOBJ::readOBJ (std::istream &stream, const std::string &filename)
     while( std::getline(stream,line) )
     {
         if (line.empty()) continue;
-        std::istringstream values(line);
+        std::istringstream values( std::move(line));
+        
         std::string token;
         values >> token;
         if (token == "#")
