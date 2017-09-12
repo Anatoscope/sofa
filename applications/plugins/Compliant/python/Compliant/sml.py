@@ -125,11 +125,11 @@ def insertJoint(jointModel, rigids, scale=1, param=None):
     frames=list()
     for i,offset in enumerate(jointModel.offsets):
         if not jointModel.solids[i].id in rigids:
-            Sofa.msg_warning("Compliant.sml","insertJoint "+jointModel.name+" failed: "+jointModel.solids[i].id+" is not a rigid body")
+            log_warning("insertJoint "+jointModel.name+" failed: "+jointModel.solids[i].id+" is not a rigid body")
             return None
         rigid = rigids[jointModel.solids[i].id] # shortcut
         if rigid is None:
-            Sofa.msg_warning("Compliant.sml", "in joint {0}, solid {1} is missing, ignored".format(jointModel.name, jointModel.solids[i].id))
+            log_warning("in joint {0}, solid {1} is missing, ignored".format(jointModel.name, jointModel.solids[i].id))
             return
         if not offset is None:
             if offset.isAbsolute():
@@ -143,7 +143,7 @@ def insertJoint(jointModel, rigids, scale=1, param=None):
             frames.append(rigid)
 
     if printLog:
-        Sofa.msg_info("Compliant.sml","insertJoint "+jointModel.name)
+        log_info("insertJoint "+jointModel.name)
 
     mask = [1]*6
     limits=[] # mask for limited dofs
@@ -222,7 +222,7 @@ class SceneArticulatedRigid(SofaPython.sml.BaseScene):
 
         for solid in self.model.getSolidsByTags(_tags):
             if not solid.id in self.rigids:
-                Sofa.msg_warning("Compliant.sml","SceneArticulatedRigid.insertMergeRigid: "+solid.name+" is not a rigid")
+                log_warning("SceneArticulatedRigid.insertMergeRigid: "+solid.name+" is not a rigid")
                 continue
             rigid = self.rigids[solid.id]
             if mergeNode is None:
@@ -238,7 +238,7 @@ class SceneArticulatedRigid(SofaPython.sml.BaseScene):
             mergeNode.createObject("MechanicalObject", template = "Rigid3", name="dofs")
             mergeNode.createObject('SubsetMultiMapping', template = "Rigid3,Rigid3", name="mapping", input = input , output = '@./', indexPairs=indexPairs, applyRestPosition=True )
         else:
-            Sofa.msg_warning("Compliant.sml", "insertMergeRigid: no rigid merged")
+            log_warning("insertMergeRigid: no rigid merged")
         return mergeNode
 
     def createScene(self):
