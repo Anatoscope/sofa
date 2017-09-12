@@ -19,6 +19,56 @@ import Sofa
 
 printLog = True
 
+
+def log_info(*args): Sofa.msg_info("Compliant.sml", ' '.join(args))
+def log_warning(*args): Sofa.msg_warning("Compliant.sml", ' '.join(args))
+
+
+def model_mass_info(model):
+    '''construct a mass info from a rigid model with all the needed info'''
+    assert model.mass is not None and model.com is not None and model.inertia is not None
+    mi = SofaPython.mass.RigidMassInfo()
+
+    mi.mass = model.mass # TODO: convert units ?
+    mi.com = model.com # TODO: convert units ?
+
+    rotation = model.inertia_rotation
+    if rotation is None: rotation = [0, 0, 0, 1]
+    
+    assert len(model.inertia) in [3, 6]
+
+    if len(model.inertia) == 6:
+        mi.setFromInertia(*rigidModel.inertia)
+    elif model.inertia_rotation is not None:
+        mi.diagonal_inertia = model.inertia
+        mi.inertia_rotation = rotation
+        
+    return mi
+
+        
+def rigid_mass_info_offset(rigidModel, density, scale):
+    '''compute mass info and offset from rigid model'''
+    if not rigidModel.mass is None and not rigidModel.com is None and not rigidModel.inertia is None:
+        # sml model has all the info needed
+        if scale != 1: log_info('scale is not supported in that case')
+        return model_mass_info(rigidModel), rigidModel.position
+    
+    elif rigidModel.mesh:
+        # there is a mesh: compute from it
+        mi = rigidModel.getRigidMassInfo(density, scale)
+        offset = StructuralAPI.scaleOffset(scale, rigidModel.position)
+        return mi, offset
+    else:
+        # default
+        log_warning("using default rigid mass distribution")        
+        mi = SofaPython.mass.RigidMassInfo()
+        mi.mass = rigidModel.mass if rigidModel.mass is not None else SofaPython.units.mass_from_SI(1.)
+        mi.inertia = [scale * scale] * 3
+        mi.com = scale * rigidModel.position # TODO does this even work?
+
+        return mi, None
+        
+    
 def insertRigid(parentNode, rigidModel, density, scale=1, param=None, color=[1,1,1,1]):
     """ create a StructuralAPI.RigidBody from the rigidModel. The model geometry is scaled with scale.
     The rigidMass is computed from:
@@ -28,71 +78,46 @@ def insertRigid(parentNode, rigidModel, density, scale=1, param=None, color=[1,1
     """
 
     if printLog:
-        Sofa.msg_info("Compliant.sml","insertRigid "+rigidModel.name)
-        for mesh in rigidModel.mesh :
-            if rigidModel.meshAttributes[mesh.id].collision is True:
-                Sofa.msg_info("Compliant.sml","     collision mesh: "+mesh.name)
+        log_info("insertRigid", rigidModel.name)
 
+        for mesh in rigidModel.mesh:
+            if rigidModel.meshAttributes[mesh.id].collision:
+                log_info("\tcollision mesh:", mesh.name)
+            
     rigid = StructuralAPI.RigidBody(parentNode, rigidModel.name)
 
-    if not rigidModel.mass is None and not rigidModel.com is None and not rigidModel.inertia is None:
-        if not 1==scale:
-            Sofa.msg_info("Compliant.sml","scale is not supported in that case")
-        # all inertial data is present, let's use it
-        massinfo = SofaPython.mass.RigidMassInfo()
-        massinfo.mass = rigidModel.mass # TODO: convert units ?
-        massinfo.com = rigidModel.com # TODO: convert units ?
-
-        if len(rigidModel.inertia)==3 and not rigidModel.inertia_rotation is None:
-            massinfo.diagonal_inertia = rigidModel.inertia
-            massinfo.inertia_rotation = rigidModel.inertia_rotation
-        else:
-            massinfo.setFromInertia(rigidModel.inertia[0], rigidModel.inertia[1], rigidModel.inertia[2], # Ixx, Ixy, Ixz
-                                    rigidModel.inertia[3], rigidModel.inertia[4], # Iyy, Iyz
-                                    rigidModel.inertia[5] ) # Izz
-        rigid.setFromRigidInfo(massinfo, offset=rigidModel.position, inertia_forces = 0 )    # TODO: handle inertia_forces ?
-    elif len(rigidModel.mesh)!=0 :
-        # get inertia from meshes and density
-        rigid.setFromRigidInfo(rigidModel.getRigidMassInfo(density, scale), offset=StructuralAPI.scaleOffset(scale, rigidModel.position), inertia_forces = 0 )    # TODO: handle inertia_forces ?
-
-        #if not rigidModel.mass is None :
-            ## no density but a mesh let's normalise computed mass with specified mass
-            #mass= SofaPython.units.mass_from_SI(rigidModel.mass)
-            #inertia = []
-            #for inert,m in zip(rigid.mass.inertia, rigid.mass.mass):
-                #for i in inert:
-                    #inertia.append( i/m[0]*mass)
-            #rigid.mass.inertia = concat(inertia)
-            #rigid.mass.mass = mass
+    # mass
+    mi, offset = rigid_mass_info_offset(rigidModel, density, scale)
+    if offset is None:
+        rigid.setManually(mi.com, mi.mass, mi.inertia)        
     else:
-        # no mesh, get mass/inertia if present, default to a unit sphere
-        Sofa.msg_warning("Compliant.sml","insertRigid: using default rigidMass")
-        mass = rigidModel.mass  if not rigidModel.mass is None else SofaPython.units.mass_from_SI(1.)
-        inertia = scale*scale*[1,1,1]
-        t = scale*rigidModel.position
-        if not rigidModel.com is None:
-            t[0] += scale*rigidModel.com[0]
-            t[1] += scale*rigidModel.com[1]
-            t[2] += scale*rigidModel.com[2]
-        rigid.setManually(t, mass, inertia)
+        rigid.setFromRigidInfo(mi, offset = offset, inertia_forces = 0)
 
+    # drawing
     if not param is None:
         rigid.dofs.showObject = param.showRigid
         rigid.dofs.showObjectScale = SofaPython.units.length_from_SI(param.showRigidScale)
 
-    # walk around to handle multiple meshes
-    # @todo: handle them in StructuralAPI ?
-    rigid.collisions=dict()
-    rigid.visuals=dict()
-    for mesh in rigidModel.mesh :
-        if rigidModel.meshAttributes[mesh.id].collision is True:
-            rigid.collisions[mesh.id] = rigid.addCollisionMesh(mesh.source,name_suffix='_'+mesh.name, scale3d=[scale]*3)
-            if rigidModel.meshAttributes[mesh.id].visual is True:
-                rigid.visuals[mesh.id] = rigid.collisions[mesh.id].addVisualModel(color=color)
-        elif rigidModel.meshAttributes[mesh.id].visual is True:
-            rigid.visuals[mesh.id] = rigid.addVisualModel(mesh.source,name_suffix='_'+mesh.name, scale3d=[scale]*3, color=color)
 
+    # add collision/visual meshes (visual points to collision when
+    # possible)
+    rigid.collisions = {}
+    rigid.visuals = {}
+    
+    for mesh in rigidModel.mesh :
+        if rigidModel.meshAttributes[mesh.id].collision:
+            rigid.collisions[mesh.id] = rigid.addCollisionMesh(mesh.source,name_suffix='_'+mesh.name, 
+                                                               scale3d=[scale] * 3)
+            if rigidModel.meshAttributes[mesh.id].visual:
+                rigid.visuals[mesh.id] = rigid.collisions[mesh.id].addVisualModel(color=color)
+                
+        elif rigidModel.meshAttributes[mesh.id].visual:
+            rigid.visuals[mesh.id] = rigid.addVisualModel(mesh.source,name_suffix='_'+mesh.name,
+                                                          scale3d=[scale]*3, color=color)
+            
     return rigid
+
+
 
 def insertJoint(jointModel, rigids, scale=1, param=None):
     """ create a StructuralAPI.GenericRigidJoint from the jointModel """
