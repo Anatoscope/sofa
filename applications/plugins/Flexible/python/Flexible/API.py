@@ -259,6 +259,19 @@ class Deformable(object):
                 if printLog:
                     Sofa.msg_info("Flexible.API.Deformable",'Imported Weights from '+filename)
 
+
+    @property
+    def vertices(self):
+        # TODO return a numpy view?
+        if self.visual:
+            return self.visual.position
+        if self.dofs:
+            return self.dofs.position
+
+        assert False, 'deformable should be either collsion or visual'
+
+
+                    
 class AffineMass(object):
 
     def __init__(self, dofAffineNode):
