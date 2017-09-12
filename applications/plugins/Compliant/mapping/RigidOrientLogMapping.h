@@ -27,7 +27,6 @@ class RigidOrientLogMapping
     using input_types = typename base::template input_types<0>;
     using jacobian_type = typename base::template jacobian_type<input_types>;        
 
-    using typename base::error;
 public:
 
     SOFA_CLASS(SOFA_TEMPLATE(RigidOrientLogMapping, U), 
@@ -40,17 +39,11 @@ public:
     using se3 = ::SE3<U>;
     
 protected:
-
-    void check(coord_view< output_types > out_pos, coord_view< const input_types > in_pos) {
-        if( out_pos.size() != in_pos.size() ) {
-            throw error("output dofs size error");
-        }
-    }
     
     virtual void apply(const core::MechanicalParams*,
                        coord_view< output_types > out_pos,
                        coord_view< const input_types > in_pos) {
-        check(out_pos, in_pos);
+        if(this->has_errors()) return;
         
         for(unsigned i = 0, n = in_pos.size(); i < n; ++i){
             // use maps to convert RigidDeriv to Vec6
@@ -58,6 +51,12 @@ protected:
         }
     }
 
+    virtual void init() {
+        this->to_model->resize( std::get<0>(this->from_models)->getSize() );
+    }
+
+    virtual void check() const { }
+    
     
     virtual void assemble(jacobian_type& jacobian, 
                           coord_view< const input_types > in_pos) {

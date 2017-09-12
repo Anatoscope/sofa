@@ -423,6 +423,19 @@ void CompliantMapping<TOut (T...) >::init() {
 
 }
 
+template<class TOut, class ... T>
+bool CompliantMapping<TOut (T...) >::has_errors() const {
+    
+    try {
+        check();
+    } catch(mapping_error& e) {
+        msg_error() << e.what();
+        return true;
+    }
+    
+    return false;
+    
+}
 
 template<class TOut, class ... T>
 void CompliantMapping<TOut (T...) >::applyJT(const core::ConstraintParams* /*mparams*/, 
@@ -444,12 +457,7 @@ template<class TOut, class ... T>
 void CompliantMapping<TOut (T...) >::apply(const core::MechanicalParams* mparams,
                                            core::MultiVecCoordId out_pos_id,
                                            core::ConstMultiVecCoordId in_pos_id)  {
-    try{
-        impl::apply_assemble(this, mparams, out_pos_id, in_pos_id);
-    } catch( error& e ) {
-        msg_error() << e.what() << ", aborting";
-    }
-
+    impl::apply_assemble(this, mparams, out_pos_id, in_pos_id);
 }
 
 template<class TOut, class ... T>

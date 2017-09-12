@@ -29,6 +29,10 @@ template<class T>
 class CompliantMapping;
 
 
+struct mapping_error : std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
+
 
 
 template<class TOut, class ... T>
@@ -105,9 +109,6 @@ public:
     
 protected:
 
-    struct error : std::runtime_error {
-        using std::runtime_error::runtime_error;
-    };
     
     // derived classes need to implement this
     virtual void apply(const core::MechanicalParams* mparams,
@@ -121,7 +122,15 @@ protected:
                              deriv_view<const TOut> out_force,
                              coord_view<const T> ... in_pos);
 
+
+    // convenience
+    bool has_errors() const;
+    
 public:
+
+    // perform consitency checks and throw mapping_error if needed
+    virtual void check() const = 0;
+    
     
     virtual void updateK(const core::MechanicalParams* mparams,
                          core::ConstMultiVecDerivId out_force_id );
