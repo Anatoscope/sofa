@@ -92,7 +92,10 @@ PyObject *GetDataValuePython(BaseData* data)
         /// this is a vector; return a python list of the corresponding type (ints, scalars or strings)
         if( !typeinfo->Text() && !typeinfo->Scalar() && !typeinfo->Integer() )
         {
-            SP_MESSAGE_WARNING( "BaseData_getAttr_value unsupported native type="<<data->getValueTypeString()<<" for data "<<data->getName()<<" ; returning string value" )
+            SP_MESSAGE_WARNING( "BaseData_getAttr_value unsupported native type="
+                                <<data->getValueTypeString()
+                                <<" for data "<<data->getName()<<" ; returning string value" );
+            
             return PyString_FromString(data->getValueString().c_str());
         }
 
@@ -139,6 +142,8 @@ static int SetDataValuePythonList(BaseData* data, PyObject* args,
                             const int rowWidth, int nbRows) {
     const AbstractTypeInfo *typeinfo = data->getValueTypeInfo(); // info about the data value
 
+    // TODO this function is 200 lines. that's 20x more than needed.
+    
     /// If list is empty we can safely exit.
     if (PyList_Size(args)==0)
     {
@@ -165,9 +170,12 @@ static int SetDataValuePythonList(BaseData* data, PyObject* args,
                 {
                     /// resizing was not possible
                     /// only a warning and not an exception because we have a fallback solution.
-                    SP_MESSAGE_WARNING( "list size mismatch for data \""<<data->getName()<<"\" (incorrect rows count)" )
-                        if (newNbRows<nbRows)
-                            nbRows = newNbRows;
+                    SP_MESSAGE_WARNING( "list size mismatch for data \""
+                                        << data->getOwner()->getPathName() 
+                                        << "." << data->getName()<<"\" (incorrect rows count)" );
+                    
+                    if (newNbRows<nbRows)
+                        nbRows = newNbRows;
                 }
                 else
                 {
@@ -187,7 +195,10 @@ static int SetDataValuePythonList(BaseData* data, PyObject* args,
             if (PyList_Size(row)!=size)
             {
                 /// only a warning and not an exception because we have a fallback solution.
-                SP_MESSAGE_WARNING( "row "<<i<<" size mismatch for data \""<<data->getName()<<"\"" )
+                SP_MESSAGE_WARNING( "row "<<i<<" size mismatch for data \""
+                                    << data->getOwner()->getPathName()
+                                    << "." << data->getName()<<"\"" );
+                
                     if (PyList_Size(row)<size)
                         size = PyList_Size(row);
             }
@@ -269,9 +280,12 @@ static int SetDataValuePythonList(BaseData* data, PyObject* args,
                 {
                     /// resizing was not possible
                     /// only a warning; do not raise an exception...
-                    SP_MESSAGE_WARNING( "list size mismatch for data \""<<data->getName()<<"\" (incorrect rows count)" )
-                        if (newSize<size)
-                            size = newSize;
+                    SP_MESSAGE_WARNING( "list size mismatch for data \""
+                                        << data->getOwner()->getPathName() << "." 
+                                        << data->getName()<<"\" (incorrect rows count)" );
+                    
+                    if (newSize<size)
+                        size = newSize;
                 }
                 else
                 {
@@ -355,7 +369,9 @@ int SetDataValuePython(BaseData* data, PyObject* args)
         else
         {
             if (!data->read(str))
-                SP_MESSAGE_WARNING("SetDataValue FAILED, data: " + data->getName() + " " + data->getOwnerClass() + " input string: " + str);
+                SP_MESSAGE_WARNING("SetDataValue FAILED, data: "
+                                   << data->getOwner()->getPathName() << "." << data->getName()
+                                   << ", input string: " << str);
         }
         return 0;
     }
@@ -377,7 +393,8 @@ int SetDataValuePython(BaseData* data, PyObject* args)
         else
         {
             if (!data->read(str))
-                SP_MESSAGE_WARNING("SetDataValue FAILED, data at: " + data->getLinkPath() + " input unicode: " + str);
+                SP_MESSAGE_WARNING("SetDataValue FAILED, data at: "
+                                   << data->getLinkPath() << " input unicode: " << str);
         }
         return 0;
     }
@@ -602,7 +619,9 @@ static PyObject * Data_read(PyObject *self, PyObject * args)
     if (PyString_Check(value))
     {
         if (!data->read(PyString_AsString(value)))
-            SP_MESSAGE_WARNING("Data.read FAILED, data at: " + data->getName() + " " + data->getOwnerClass() + " input string: " + PyString_AsString(value));
+            SP_MESSAGE_WARNING("Data.read FAILED, data at: "
+                               << data->getOwner()->getPathName() << "." << data->getName()
+                               << " input string: " << PyString_AsString(value));
     }
     else
     {
