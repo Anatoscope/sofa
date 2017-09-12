@@ -116,28 +116,33 @@ bool MeshObjLoader::readOBJ (istream &stream, const char* filename)
     my_edges.clear();
     my_triangles.clear();
     my_quads.clear();
-    d_edgesGroups.beginWriteOnly()->clear(); d_edgesGroups.endEdit();
-    d_trianglesGroups.beginWriteOnly()->clear(); d_trianglesGroups.endEdit();
-    d_quadsGroups.beginWriteOnly()->clear(); d_quadsGroups.endEdit();
+
 
     int vtn[3];
     Vector3 result;
-    WriteAccessor<Data<vector< PrimitiveGroup> > > my_faceGroups[NBFACETYPE] =
-    {
-        d_edgesGroups,
-        d_trianglesGroups,
-        d_quadsGroups
+
+    using vec_pg_type = vector< PrimitiveGroup>;
+
+    vec_pg_type*  my_faceGroups[NBFACETYPE] = {
+        &*d_edgesGroups.beginWriteOnly(),
+        &*d_trianglesGroups.beginWriteOnly(),
+        &*d_quadsGroups.beginWriteOnly()
     };
+
+    // clear them too
+    for(auto* pg : my_faceGroups) { pg->clear(); }
+
     string curGroupName = "Default_Group";
     string curMaterialName;
     int curMaterialId = -1;
     int nbFaces[NBFACETYPE] = {0}; // number of edges, triangles, quads
     int groupF0[NBFACETYPE] = {0}; // first primitives indices in current group for edges, triangles, quads
     string line;
+    
     while( std::getline(stream,line) )
     {
         if (line.empty()) continue;
-        std::istringstream values(line);
+        std::istringstream values(std::move(line));
         string token;
 
         values >> token;
@@ -164,7 +169,11 @@ bool MeshObjLoader::readOBJ (istream &stream, const char* filename)
             for (int ft = 0; ft < NBFACETYPE; ++ft)
                 if (nbFaces[ft] > groupF0[ft])
                 {
-                    my_faceGroups[ft].push_back(PrimitiveGroup(groupF0[ft], nbFaces[ft]-groupF0[ft], curMaterialName, curGroupName, curMaterialId));
+                    my_faceGroups[ft]->emplace_back(groupF0[ft],
+                                                    nbFaces[ft]-groupF0[ft],
+                                                    curMaterialName,
+                                                    curGroupName,
+                                                    curMaterialId);
                     groupF0[ft] = nbFaces[ft];
                 }
             if (token == "g")
@@ -254,7 +263,11 @@ bool MeshObjLoader::readOBJ (istream &stream, const char* filename)
         for (size_t ft = 0; ft < NBFACETYPE; ++ft)
             if (nbFaces[ft] > groupF0[ft])
             {
-                my_faceGroups[ft].push_back(PrimitiveGroup(groupF0[ft], nbFaces[ft]-groupF0[ft], curMaterialName, curGroupName, curMaterialId));
+                my_faceGroups[ft]->emplace_back(groupF0[ft], 
+                                                nbFaces[ft]-groupF0[ft],
+                                                curMaterialName,
+                                                curGroupName,
+                                                curMaterialId);
                 groupF0[ft] = nbFaces[ft];
             }
     }
@@ -289,9 +302,11 @@ bool MeshObjLoader::readOBJ (istream &stream, const char* filename)
         vNormals[i].normalize();
     }
 
+
     d_edgesGroups.endEdit();
     d_trianglesGroups.endEdit();
     d_quadsGroups.endEdit();
+    
     d_positions.endEdit();
     d_edges.endEdit();
     d_triangles.endEdit();
