@@ -10,7 +10,7 @@ GL = None
 def vec(*coords):
     return np.array(coords)
 
-deg = 180.0 / math.pi
+deg = math.pi / 180.0
 
 ex = vec(1, 0, 0)
 ey = vec(0, 1, 0)
