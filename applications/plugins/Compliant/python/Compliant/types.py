@@ -161,6 +161,19 @@ class Rigid3(np.ndarray):
         return res
 
 
+    @staticmethod
+    def rotation( q ):
+        res = Rigid3()
+        res.orient = q;
+        return res
+
+
+    @staticmethod
+    def translation( v ):
+        res = Rigid3()
+        res.center = v;
+        return res
+    
         
 class Quaternion(np.ndarray):
 
@@ -251,6 +264,7 @@ class Quaternion(np.ndarray):
         K = Quaternion.hat(self.imag)
         return np.identity(3) + (2.0 * self.real) * K + 2.0 * K.dot(K)
 
+
     @staticmethod
     def from_matrix(R):
         v = Quaternion.hat_inv( (R - R.T) / 2.0 )
@@ -270,6 +284,23 @@ class Quaternion(np.ndarray):
         
         return res
 
+
+    @staticmethod
+    def from_euler(xyz, order = 'zyx'):
+        '''q = qz qy qx, xyz in radians'''
+        
+        qs = [ Quaternion.exp(xyz * ex),
+               Quaternion.exp(xyz * ey),
+               Quaternion.exp(xyz * ez) ]
+
+        q = Quaternion()
+        
+        for a in order:
+            index = ord(a) - ord('x')
+            q = q * qs[index]
+
+        return q
+        
     
     
 
