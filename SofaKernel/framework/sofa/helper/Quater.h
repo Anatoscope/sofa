@@ -230,17 +230,33 @@ public:
     }
 
     /// Create a quaternion from Euler angles (rad)
+    // mtournier: WHAT THE FUCKING FUCK IS THE ORDER ?
     static Quater createQuaterFromEuler( defaulttype::Vec<3,Real> v)
     {
-        Real quat[4];      Real a0 = v.elems[0];
-        Real a1 = v.elems[1];
-        Real a2 = v.elems[2];
-        quat[3] = cos(a0/2)*cos(a1/2)*cos(a2/2) + sin(a0/2)*sin(a1/2)*sin(a2/2);
-        quat[0] = sin(a0/2)*cos(a1/2)*cos(a2/2) - cos(a0/2)*sin(a1/2)*sin(a2/2);
-        quat[1] = cos(a0/2)*sin(a1/2)*cos(a2/2) + sin(a0/2)*cos(a1/2)*sin(a2/2);
-        quat[2] = cos(a0/2)*cos(a1/2)*sin(a2/2) - sin(a0/2)*sin(a1/2)*cos(a2/2);
-        Quater quatResult( quat[0], quat[1], quat[2], quat[3] );
-        return quatResult;
+        // mtournier: figured it out:
+        // mtournier: v = [x, y, z]
+        // mtournier: q = qz * qy * qx
+        const Real a0 = v.elems[0] / 2;
+        const Real a1 = v.elems[1] / 2;
+        const Real a2 = v.elems[2] / 2;
+
+        const Real c0 = cos(a0);
+        const Real s0 = sin(a0);        
+
+        const Real c1 = cos(a1);
+        const Real s1 = sin(a1);        
+        
+        const Real c2 = cos(a2);
+        const Real s2 = sin(a2);        
+
+        Real quat[4];
+        quat[3] = c0*c1*c2 + s0*s1*s2;
+        
+        quat[0] = s0*c1*c2 - c0*s1*s2;
+        quat[1] = c0*s1*c2 + s0*c1*s2;
+        quat[2] = c0*c1*s2 - s0*s1*c2;
+
+        return Quater( quat[0], quat[1], quat[2], quat[3] );
     }
 
 
