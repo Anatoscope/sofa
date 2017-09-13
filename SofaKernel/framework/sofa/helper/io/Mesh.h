@@ -80,8 +80,13 @@ public:
 protected:
 
     sofa::helper::vector<Vector3> vertices;
-    sofa::helper::vector<Vector3> texCoords; // for the moment, we suppose that texCoords is order 2 (2 texCoords for a vertex)
+
+    // for the moment, we suppose that texCoords is order 2 (2 texCoords for a
+    // vertex)
+    sofa::helper::vector<Vector3> texCoords; 
     sofa::helper::vector<Vector3> normals;
+
+    // mtournier: WHAT THE FUCKING FUCK ARE FACETS SUPPOSED TO BE
     sofa::helper::vector< sofa::helper::vector < sofa::helper::vector <int> > > facets;
     //sofa::core::objectmodel::Data< Material > material;
     Material material;
