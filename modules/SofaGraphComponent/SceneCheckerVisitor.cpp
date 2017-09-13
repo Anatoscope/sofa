@@ -41,6 +41,8 @@ using sofa::core::ExecParams ;
 using sofa::helper::system::PluginRepository ;
 using sofa::helper::system::PluginManager ;
 
+static std::set<std::string> plugin_warned;
+
 SceneCheckerVisitor::SceneCheckerVisitor(const ExecParams* params) : Visitor(params)
 {
     std::stringstream version;
@@ -134,14 +136,21 @@ Visitor::Result SceneCheckerVisitor::processNodeTopDown(Node* node)
                 if(entry.creatorMap.end() != it && *it->second->getTarget()){
                     std::string pluginName = it->second->getTarget() ;
                     std::string path = PluginManager::getInstance().findPlugin(pluginName) ;
+                    
                     if( PluginManager::getInstance().pluginIsLoaded(path)
-                            && m_requiredPlugins.find(pluginName) == m_requiredPlugins.end() )
-                    {
-                        msg_warning("SceneChecker")
-                            << "This scene is using component '" << object->getClassName() << "'. " << msgendl
-                            << "This component is part of the '" << pluginName << "' plugin but there is no <RequiredPlugin name='" << pluginName << "'> directive in your scene." << msgendl
-                            << "Your scene may not work on a sofa environment that does not have pre-loaded the plugin." << msgendl
-                            << "To fix your scene and remove this warning you need to add the RequiredPlugin directive at the beginning of your scene. ";
+                            && m_requiredPlugins.find(pluginName) == m_requiredPlugins.end() ) {
+                        if(plugin_warned.find(pluginName) == plugin_warned.end()) {
+                        
+                            msg_warning("SceneChecker")
+                                << "This scene is using component '" << object->getClassName() << "'. " << msgendl
+                                << "This component is part of the '" << pluginName 
+                                << "' plugin but there is no <RequiredPlugin name='" 
+                                << pluginName << "'> directive in your scene." << msgendl
+                                << "Your scene may not work on a sofa environment that does not have pre-loaded the plugin." << msgendl
+                                << "To fix your scene and remove this warning you need to add the RequiredPlugin directive at the beginning of your scene. ";
+                        
+                            plugin_warned.insert(pluginName);
+                        }
                     }
                 }
             }
