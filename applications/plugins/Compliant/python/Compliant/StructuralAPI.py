@@ -404,18 +404,33 @@ class RigidBody(RigidDOF):
                 self.mapping = self.node.createObject('IdentityMapping', name="mapping")
                 idxVisualModel+=1
 
+            @property
+            def visual(self):
+                # harmonize with Flexible.API.Deformable
+                return self.model 
+                
 
     class VisualModel(object):
         def __init__(self, node, filepath, scale3d, offset, name_suffix='', color=[1,1,1,1]):
             global idxVisualModel
+            
             self.node = node.createChild( "visual"+name_suffix )  # node
             r = Quaternion.to_euler(offset[3:])  * 180.0 / math.pi
+
             self.model = self.node.createObject('VisualModel', name="visual"+str(idxVisualModel), fileMesh=filepath,
                                                 scale3d=concat(scale3d), translation=concat(offset[:3]) , rotation=r.tolist(),
                                                 color=concat(color) )
             self.mapping = self.node.createObject('RigidMapping', name="mapping")
             idxVisualModel+=1
 
+
+        @property
+        def visual(self):
+            # harmonize with Flexible.API.Deformable
+            return self.model 
+
+        
+            
     class Offset(object):
         def __init__(self, node, name, offset, isMechanical=True):
             ## @param isMechanical:
