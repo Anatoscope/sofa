@@ -13,15 +13,16 @@ namespace forcefield
 
 
 template<class DataTypes>
-const typename UniformCompliance<DataTypes>::Real UniformCompliance<DataTypes>::s_complianceEpsilon = std::numeric_limits<Real>::epsilon();
+const typename UniformCompliance<DataTypes>::Real
+UniformCompliance<DataTypes>::epsilon = std::numeric_limits<Real>::epsilon();
 
 
 template<class DataTypes>
 UniformCompliance<DataTypes>::UniformCompliance( core::behavior::MechanicalState<DataTypes> *mm )
     : Inherit(mm)
-    , compliance( initData(&compliance, (Real)0, "compliance", "Compliance value uniformly applied to all the DOF."))
-     , damping( initData(&damping, Real(0), "damping", "uniform viscous damping."))
-    , resizable( initData(&resizable, false, "resizable", "can the associated dofs can be resized? (in which case the matrices must be updated)"))
+    , compliance( initData(&compliance, Real(0), "compliance", 
+                           "Compliance value uniformly applied to all the DOF."))
+    , damping( initData(&damping, Real(0), "damping", "uniform viscous damping."))
 	  
 {
     this->isCompliance.setValue(true);
@@ -31,8 +32,11 @@ template<class DataTypes>
 void UniformCompliance<DataTypes>::init()
 {
     Inherit::init();
-    if( this->getMState()==NULL ) serr<<"UniformCompliance<DataTypes>::init(), no mstate !" << sendl;
-    reinit();
+    if( !this->getMState() ) {
+        msg_error() << "no mechanical state";
+    } else {
+        reinit();
+    }
 }
 
 template<class DataTypes>
@@ -41,15 +45,14 @@ void UniformCompliance<DataTypes>::reinit()
     core::behavior::BaseMechanicalState* state = this->getContext()->getMechanicalState();
     assert(state);
 
-    const SReal& c = compliance.getValue();
+    const Real c = compliance.getValue();
 
-    if( this->isCompliance.getValue() )
-    {
+    if( this->isCompliance.getValue() ) {
         matC.resize(state->getMatrixSize(), state->getMatrixSize());
 
-        if( c ) // only fill the matrix for not null compliance, otherwise let play the sparsity
-        {
-            for(unsigned i=0, n = state->getMatrixSize(); i < n; i++) {
+        if( c ) {
+            
+            for(unsigned i = 0, n = state->getMatrixSize(); i < n; i++) {
                 matC.beginRow(i);
                 matC.insertBack(i, i, c);
             }
@@ -57,44 +60,36 @@ void UniformCompliance<DataTypes>::reinit()
             matC.finalize();
         }
 
-        if( helper::rabs(c) <= std::numeric_limits<Real>::epsilon() && this->rayleighStiffness.getValue() )
-        {
-            serr<<"Warning: a null compliance can not generate rayleighDamping, forced to 0"<<sendl;
-            this->rayleighStiffness.setValue(0);
+        matK.compressedMatrix.resize(0,0);        
+    } else {
+        const Real clamped_c = std::max<Real>(c, epsilon);
+
+        if(clamped_c == epsilon) {
+            msg_warning() << "clamped compliance to avoid infinite stiffness";
         }
-    }
-    else matC.compressedMatrix.resize(0,0);
-
-    // matK must be computed since it is used by MechanicalComputeComplianceForceVisitor to compute the compliance forces
-//    if( !this->isCompliance.getValue() || this->rayleighStiffness.getValue() )
-//    {
-        // the stiffness df/dx is the opposite of the inverse compliance
-        Real k = c > std::numeric_limits<Real>::epsilon() ?
-                (c < 1 / std::numeric_limits<Real>::epsilon() ? -1 / c : 0 ) : // if the compliance is really large, let's consider the stiffness is null
-                 -1 / std::numeric_limits<Real>::epsilon(); // if the compliance is too small, we have to take a huge stiffness in the numerical limits
-
+        
+        const Real k = -1 / clamped_c;
+        
         matK.resize(state->getMatrixSize(), state->getMatrixSize());
 
-        if( k )
-        {
-            for(unsigned i=0, n = state->getMatrixSize(); i < n; i++) {
-                matK.beginRow(i);
-                matK.insertBack(i, i, k);
-            }
-
-            matK.finalize();
+        for(unsigned i = 0, n = state->getMatrixSize(); i < n; ++i) {
+            matK.beginRow(i);
+            matK.insertBack(i, i, k);
         }
-
-//    }
-//    else matK.compressedMatrix.resize(0,0);
-
-
-    // TODO if(this->isCompliance.getValue() && this->rayleighStiffness.getValue()) mettre rayleigh dans B mais attention à kfactor avec/sans rayleigh factor
-
-
+        
+        matK.finalize();
+        
+        matC.compressedMatrix.resize(0,0);
+    }
+    
+    if( this->rayleighStiffness.getValue() ) {
+        msg_warning() << "rayleighStiffness ignored, use 'damping' instead";
+    }
+    
+    
 	if( damping.getValue() > 0 ) {
-        const SReal& d = damping.getValue();
-		
+        const Real& d = damping.getValue();
+
 		matB.resize(state->getMatrixSize(), state->getMatrixSize());
 		
 		for(unsigned i=0, n = state->getMatrixSize(); i < n; i++) {
@@ -103,29 +98,28 @@ void UniformCompliance<DataTypes>::reinit()
 		}
 
         matB.finalize();
-	}
-    else matB.compressedMatrix.resize(0,0);
+	} else {
+        matB.compressedMatrix.resize(0,0);
+    }
 	
-//    std::cerr<<SOFA_CLASS_METHOD<<matC<<" "<<matK<<std::endl;
 }
 
 template<class DataTypes>
 SReal UniformCompliance<DataTypes>::getPotentialEnergy( const core::MechanicalParams* /*mparams*/, const DataVecCoord& x ) const
 {
     const VecCoord& _x = x.getValue();
-    unsigned int m = this->mstate->getMatrixBlockSize();
+    const unsigned m = this->mstate->getMatrixBlockSize();
 
-    const SReal& c = compliance.getValue();
-    Real k = c > s_complianceEpsilon ?
-            1. / c :
-            1. / s_complianceEpsilon;
+    const Real c = compliance.getValue();
+    
+    const Real clamped_c = std::max<Real>(c, epsilon);
+    const Real k = 1 / clamped_c;
 
+    // TODO this makes little to no sense when c is that small
     SReal e = 0;
-    for( unsigned int i=0 ; i<_x.size() ; ++i )
-    {
-        for( unsigned int j=0 ; j<m ; ++j )
-        {
-            e += .5 * k * _x[i][j]*_x[i][j];
+    for( unsigned int i=0, n = _x.size(); i < n ; ++i ){
+        for( unsigned int j=0 ; j<m ; ++j ) {
+            e += .5 * k * _x[i][j] * _x[i][j];
         }
     }
     return e;
@@ -133,17 +127,16 @@ SReal UniformCompliance<DataTypes>::getPotentialEnergy( const core::MechanicalPa
 
 
 template<class DataTypes>
-const sofa::defaulttype::BaseMatrix* UniformCompliance<DataTypes>::getComplianceMatrix(const core::MechanicalParams*)
-{
-  if(this->isCompliance.getValue() ) {
-    if( resizable.getValue() && (defaulttype::BaseMatrix::Index)this->mstate->getSize() != matC.rows() ) {
-      reinit();
-    }
+const sofa::defaulttype::BaseMatrix* UniformCompliance<DataTypes>::getComplianceMatrix(const core::MechanicalParams*) {
+    if(this->isCompliance.getValue() ) {
+        if( this->mstate->getSize() != std::size_t(matC.rows()) ) {
+            reinit();
+        }
     
-    return &matC;
-  }
+        return &matC;
+    }
 
-  return nullptr;
+    return nullptr;
 }
 
 
@@ -158,37 +151,36 @@ void UniformCompliance<DataTypes>::addKToMatrix( sofa::defaulttype::BaseMatrix *
 template<class DataTypes>
 void UniformCompliance<DataTypes>::addBToMatrix( sofa::defaulttype::BaseMatrix * matrix, SReal bFact, unsigned int &offset )
 {
-//	if( damping.getValue() > 0 ) // B is empty in that case
-    {
+	if( damping.getValue() > 0 ) { // B is empty in that case
 		matB.addToBaseMatrix( matrix, bFact, offset );
 	}
 }
 
 template<class DataTypes>
-void UniformCompliance<DataTypes>::addForce(const core::MechanicalParams *, DataVecDeriv& f, const DataVecCoord& x, const DataVecDeriv& /*v*/)
-{
-    if( resizable.getValue() &&  (defaulttype::BaseMatrix::Index)x.getValue().size() != matK.compressedMatrix.rows() ) reinit();
+void UniformCompliance<DataTypes>::addForce(const core::MechanicalParams *, DataVecDeriv& f, const DataVecCoord& x, const DataVecDeriv& /*v*/) {
 
-//    if( matK.compressedMatrix.nonZeros() )
-        matK.addMult( f, x  );
-
-//    cerr<<SOFA_CLASS_METHOD<< f << endl;
+    if(!this->isCompliance.getValue()) {
+        if( x.getValue().size() != std::size_t(matK.compressedMatrix.rows()) )  {
+            reinit();
+        }
+        
+        matK.addMult(f, x);
+    }
 }
 
 template<class DataTypes>
-void UniformCompliance<DataTypes>::addDForce(const core::MechanicalParams *mparams, DataVecDeriv& df, const DataVecDeriv& dx)
-{
-    Real kfactor = (Real)mparams->kFactorIncludingRayleighDamping(this->rayleighStiffness.getValue());
-
-    if( kfactor )
-    {
+void UniformCompliance<DataTypes>::addDForce(const core::MechanicalParams *mparams, DataVecDeriv& df, const DataVecDeriv& dx) {
+    // mtournier: wtf? the rayleihtStiffness should be used to generate the damping matrix
+    // const Real kfactor = mparams->kFactorIncludingRayleighDamping(this->rayleighStiffness.getValue());
+    const Real kfactor = mparams->kFactor();
+    
+    if( kfactor && !this->isCompliance.getValue() ) {
         matK.addMult( df, dx, kfactor );
     }
 
-    if( damping.getValue() > 0 )
-    {
-        Real bfactor = (Real)mparams->bFactor();
-        matB.addMult( df, dx, bfactor );
+    if( damping.getValue() > 0 ) {
+        const Real bfactor = mparams->bFactor();
+        if(bfactor) matB.addMult( df, dx, bfactor );
     }
 }
 

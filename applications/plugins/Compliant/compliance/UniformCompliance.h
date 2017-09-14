@@ -34,11 +34,7 @@ public:
 //    typedef defaulttype::Mat<N,N,Real> Block;
 
     Data< Real > compliance;    ///< Same compliance applied to all the DOFs
-
     Data< Real > damping;
-
-    Data< bool > resizable;
-
 
     virtual void init();
 
@@ -70,8 +66,7 @@ protected:
     block_matrix_type matK; ///< stiffness matrix (Negative S.D.)
     block_matrix_type matB; /// damping matrix (Negative S.D.)
 
-    static const Real s_complianceEpsilon; /// threshold for which stiffness can be computed by inverting compliance
-
+    static const Real epsilon; /// threshold for which stiffness can be computed by inverting compliance
 };
 
 }

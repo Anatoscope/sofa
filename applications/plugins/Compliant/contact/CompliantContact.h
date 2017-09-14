@@ -152,7 +152,6 @@ protected:
         contact_node->addObject( compliance.get() );
         compliance->compliance.setValue( this->compliance_value.getValue() );
         compliance->damping.setValue( this->damping_ratio.getValue() );
-        compliance->resizable.setValue( true );
         compliance->init();
 
 
