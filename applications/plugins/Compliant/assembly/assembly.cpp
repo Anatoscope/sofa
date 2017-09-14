@@ -620,6 +620,7 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
     std::clog << "graph numbered" << std::endl;
     
     // obtain mapping chunks
+    // TODO fetch projectors/masks and fill masked mapping chunks
     triplets_type Js;
     fill_mapping(std::back_inserter(Js), graph);
     std::clog << "mappings fetched" << std::endl;
@@ -648,12 +649,13 @@ system_type assemble_system(core::objectmodel::BaseContext* ctx,
     std::clog << "H:\n" << H << std::endl;    
 
     // primal/dual selection
+    // TODO use projectors
     triplets_type Ps, Ds;
     std::size_t p, d;
     select_primal_dual(std::back_inserter(Ps), p, std::back_inserter(Ds), d, graph);
     std::clog << "primal/dual selected: " << p << " / " << d << std::endl;
 
-    // TODO fetch projectors    
+
     
     // TODO which side is the fastest?
     const rmat K = ((L.transpose() * H) * L).triangularView<Eigen::Lower>();
