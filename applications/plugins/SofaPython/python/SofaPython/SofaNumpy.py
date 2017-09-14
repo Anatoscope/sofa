@@ -115,3 +115,16 @@ def vec_as_numpy( (ptr, size, typename) ):
     array_type = type * size
     array = array_type.from_address(ptr)
     return numpy.ctypeslib.as_array(array)
+
+
+
+
+
+
+
+# mtournier: don't use if you're not me :D
+def numpify(obj, name):
+    # i very much want to alias data buffers in a read-write way without
+    # triggering anything data-related, so please leave this be
+    return as_numpy( obj.findData(name), True )
+

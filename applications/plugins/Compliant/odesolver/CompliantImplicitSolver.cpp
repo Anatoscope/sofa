@@ -93,6 +93,9 @@ using namespace core::behavior;
         constraint_forcesOptions.setItemName( 3, "propagate" );
         constraint_forcesOptions.setSelectedItem( 0 );
         constraint_forces.setValue( constraint_forcesOptions );
+
+        // hehe
+        this->addAlias(&neglecting_compliance_forces_in_geometric_stiffness, "gs_hack");
     }
 
 

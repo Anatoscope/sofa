@@ -45,7 +45,9 @@ class CompliantPseudoStaticSolver : public CompliantOdeSolver {
                        core::MultiVecDerivId velId);
 
     virtual std::string getTemplateName() const { return templateName(this); }
-    static std::string templateName(const CompliantPseudoStaticSolver<CompliantOdeSolver>* x= NULL) { return CompliantOdeSolver::className( (CompliantOdeSolver*)x ); }
+    static std::string templateName(const CompliantPseudoStaticSolver<CompliantOdeSolver>* x= NULL) {
+        return CompliantOdeSolver::className( (CompliantOdeSolver*)x );
+    }
 };
 
 }
