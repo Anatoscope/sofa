@@ -38,12 +38,11 @@
 #include <sofa/helper/decompose.h>
 
 #include <sofa/simulation/Simulation.h>
+#include <Eigen/Geometry>
 
-#include <string.h>
 #include <iostream>
 #include <cassert>
 #include <numeric>
-#include <istream>
 
 namespace sofa
 {
@@ -86,40 +85,38 @@ public:
 };
 
 template <class TIn, class TOut>
-void RigidMapping<TIn, TOut>::load(const char *filename)
+void RigidMapping<TIn, TOut>::load(const char *c_filename)
 {
     points.beginEdit()->resize(0);
     points.endEdit();
 
-    if (strlen(filename) > 4
-            && !strcmp(filename + strlen(filename) - 4, ".xs3"))
-    {
-        Loader loader(this);
-        loader.helper::io::MassSpringLoader::load(filename);
-    }
-    else if (strlen(filename) > 4
-             && !strcmp(filename + strlen(filename) - 4, ".sph"))
-    {
-        Loader loader(this);
-        loader.helper::io::SphereLoader::load(filename);
-    }
-    else if (strlen(filename) > 0)
-    {
+    const std::string filename(c_filename);
+    const std::size_t size = filename.size();
+    if( size > 3 ) {
+        const std::string ext = filename.substr(size - 4);
+        if( ext == ".xs3" ) {
+            Loader loader(this);
+            loader.helper::io::MassSpringLoader::load(c_filename);
+        }
+        
+        if(ext == ".sph") {
+            Loader loader(this);
+            loader.helper::io::SphereLoader::load(c_filename);
+        }
+        
+    } else {
         // Default to mesh loader
-        helper::io::Mesh* mesh = helper::io::Mesh::Create(filename);
-        if (mesh != NULL)
-        {
+        std::unique_ptr<helper::io::Mesh> mesh(helper::io::Mesh::Create(c_filename));
+        if (mesh) {
             helper::WriteAccessor<Data<VecCoord> > points = this->points;
-
+            
             points.resize(mesh->getVertices().size());
-            for (unsigned int i = 0; i < mesh->getVertices().size(); i++)
-            {
+            for (unsigned int i = 0; i < mesh->getVertices().size(); i++) {
                 Out::set(points[i],
                          mesh->getVertices()[i][0],
                          mesh->getVertices()[i][1],
                          mesh->getVertices()[i][2]);
             }
-            delete mesh;
         }
     }
 }
@@ -136,20 +133,22 @@ RigidMapping<TIn, TOut>::RigidMapping()
     , rigidIndexPerPoint(initData(&rigidIndexPerPoint, "rigidIndexPerPoint", "For each mapped point, the index of the Rigid it is mapped from"))
     , globalToLocalCoords(initData(&globalToLocalCoords, "globalToLocalCoords", "are the output DOFs initially expressed in global coordinates"))
     , geometricStiffness(initData(&geometricStiffness, 0, "geometricStiffness", "assemble (and use) geometric stiffness (0=no GS, 1=non symmetric, 2=symmetrized)"))
+    , matrix_rotation(initData(&matrix_rotation, false, "matrix_rotation",
+                               "convert quaternion to matrices during apply (faster for many points)"))
     , matrixJ()
     , updateJ(false)
+      
 {
-    //std::cout << "RigidMapping Creation\n";
     this->addAlias(&fileRigidMapping, "filename");
 }
 
 template <class TIn, class TOut>
 unsigned int RigidMapping<TIn, TOut>::getRigidIndex( unsigned int pointIndex ) const
 {
-    // do we really need this crap?
-    if( points.getValue().size() == rigidIndexPerPoint.getValue().size() ) return rigidIndexPerPoint.getValue()[pointIndex];
-    else
-    {
+    // mtournier: do we really need this crap?
+    if( points.getValue().size() == rigidIndexPerPoint.getValue().size() ) {
+        return rigidIndexPerPoint.getValue()[pointIndex];
+    } else {
         if( !indexFromEnd.getValue() ) return index.getValue();
         else return this->fromModel->getSize()-1-index.getValue();
     }
@@ -324,6 +323,26 @@ const typename RigidMapping<TIn, TOut>::VecCoord & RigidMapping<TIn, TOut>::getP
     return points.getValue();
 }
 
+
+
+template<class U>
+typename rigid_mapping_traits< defaulttype::StdRigidTypes<3, U> >::rotation_type
+rigid_mapping_traits< defaulttype::StdRigidTypes<3, U> >::rotation(const coord_type& coord) {
+    const auto& q = coord.getOrientation();
+    return Eigen::Quaternion<real>(q[3], q[0], q[1], q[2]).toRotationMatrix();
+}
+
+template<class U>
+typename rigid_mapping_traits< defaulttype::StdRigidTypes<3, U> >::vec3_type
+rigid_mapping_traits< defaulttype::StdRigidTypes<3, U> >::rotate(const rotation_type& q, const vec3_type& x) {
+    vec3_type res;
+    using map_type = Eigen::Map< Eigen::Matrix<real, 3, 1> >;
+    using const_map_type = Eigen::Map< const Eigen::Matrix<real, 3, 1> >;
+    map_type(res.ptr()).noalias() = q * const_map_type(x.ptr());
+    return res;
+}
+
+
 template <class TIn, class TOut>
 void RigidMapping<TIn, TOut>::apply(const core::MechanicalParams * /*mparams*/, Data<VecCoord>& dOut, const Data<InVecCoord>& dIn)
 {
@@ -337,13 +356,23 @@ void RigidMapping<TIn, TOut>::apply(const core::MechanicalParams * /*mparams*/, 
     rotatedPoints.resize(pts.size());
     this->toModel->resize(pts.size());
     // out.resize(pts.size());
+    
+    if(matrix_rotation.getValue()) {
+        rotation.resize(in.size());
+        for(std::size_t i = 0, n = in.size(); i < n; ++i) {
+            rotation[i] = traits_type::rotation(in[i]);
+        }
+    }
 
-    for (unsigned int i = 0; i < pts.size(); i++)
-    {
-        unsigned int rigidIndex = getRigidIndex(i);
+    const unsigned n = pts.size();
 
-        rotatedPoints[i] = in[rigidIndex].rotate( pts[i] );
-        out[i] = in[rigidIndex].translate( rotatedPoints[i] );
+    for (unsigned int i = 0; i < n; i++) {
+        const unsigned int index = getRigidIndex(i);
+
+        rotatedPoints[i] = matrix_rotation.getValue() ?
+            traits_type::rotate(rotation[index], pts[i]) : in[index].rotate(pts[i]);
+        
+        out[i] = in[index].translate( rotatedPoints[i] );
     }
 
     //    cerr<<"RigidMapping<TIn, TOut>::apply, " << this->getName() << endl;

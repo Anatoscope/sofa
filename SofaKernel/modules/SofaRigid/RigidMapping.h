@@ -51,6 +51,38 @@ class RigidMappingInternalData
 public:
 };
 
+
+template<class TIn>
+struct rigid_mapping_traits {
+    using real = typename TIn::Real;
+
+    using coord_type = typename TIn::Coord;
+    using rotation_type = coord_type;
+    using vec_type = typename coord_type::Pos;    
+    
+    static const rotation_type& rotation(const coord_type& coord) { return coord; }
+    static vec_type rotate(const rotation_type& q, const vec_type& x) { return q.rotate(x); }
+};
+
+
+template<class U>
+struct rigid_mapping_traits< defaulttype::StdRigidTypes<3, U> > {
+
+    using TIn = defaulttype::StdRigidTypes<3, U>;
+    
+    using real = typename TIn::Real;
+    using coord_type = typename TIn::Coord;
+    using rotation_type = Eigen::Matrix<real, 3, 3>;
+        
+    using vec3_type = typename coord_type::Vec3;    
+    
+    static rotation_type rotation(const coord_type& coord);
+    static vec3_type rotate(const rotation_type& q, const vec3_type& x);
+};
+
+
+
+
 template <class TIn, class TOut>
 class RigidMapping : public core::Mapping<TIn, TOut>
 {
@@ -105,6 +137,8 @@ public:
 
     Data<int> geometricStiffness;
 
+    Data<bool> matrix_rotation;
+    
 protected:
     RigidMapping();
     virtual ~RigidMapping() {}
@@ -166,6 +200,10 @@ protected:
 
     typedef linearsolver::EigenSparseMatrix<In,In> StiffnessSparseMatrixEigen;
     StiffnessSparseMatrixEigen geometricStiffnessMatrix;
+
+    using traits_type = rigid_mapping_traits<TIn>;
+    using rotation_type = typename traits_type::rotation_type;
+    std::vector<rotation_type> rotation;
 };
 
 template <int N, class Real>
