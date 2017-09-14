@@ -19,8 +19,8 @@ namespace mapping {
 
 
 /**  
-     Provides an implementation basis for assembled, sparse multi
-     mappings with any input types
+     Provides an implementation basis for assembled, sparse multi-mappings with
+     any input types
      
      @author: maxime.tournier@anatoscope.com
 */

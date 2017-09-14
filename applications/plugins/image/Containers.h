@@ -87,7 +87,7 @@ public:
     {
         if( !_array ) // alloc
         {
-            _array = new T[_size];
+            _array = new T[_size+1];
         }
         else // realloc
         {
