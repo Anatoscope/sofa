@@ -1,7 +1,6 @@
 #include "assembly.hpp"
 
 #include <boost/graph/adjacency_list.hpp>
-// #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/topological_sort.hpp>
 
 #include <SofaEigen2Solver/EigenBaseSparseMatrix.h>
@@ -433,8 +432,11 @@ static void fill_forcefield(OutputIterator out, const graph_type& graph, const c
 
 
 template<class OutputIterator>
-static void fill_compliance(OutputIterator out, const graph_type& graph, const core::MechanicalParams& mp) {
-    const real factor = -1 / mp.kFactor();
+static void fill_compliance(OutputIterator out, const graph_type& graph, const core::MechanicalParams* mp) {
+
+    // note: kfactor is already negative since stiffness is negative
+    // definite (wtf)
+    const real factor = 1 / mp->kFactor();
     
     for(std::size_t v : vertices(graph) ) {
         
