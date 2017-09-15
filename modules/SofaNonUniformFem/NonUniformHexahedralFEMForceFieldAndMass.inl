@@ -937,7 +937,8 @@ typename NonUniformHexahedralFEMForceFieldAndMass<T>::Vec3i NonUniformHexahedral
 
 
 template <class DataTypes>
-void NonUniformHexahedralFEMForceFieldAndMass<DataTypes>::addMBKdx(const core::MechanicalParams* mparams, core::MultiVecDerivId dfId)
+void NonUniformHexahedralFEMForceFieldAndMass<DataTypes>::addMBKdx(const core::MechanicalParams* mparams, 
+                                                                   const core::MultiVecDerivId& dfId)
 {
     Real mFactor=(Real)mparams->mFactorIncludingRayleighDamping(this->rayleighMass.getValue());
     Real kFactor=(Real)mparams->kFactorIncludingRayleighDamping(this->rayleighStiffness.getValue());

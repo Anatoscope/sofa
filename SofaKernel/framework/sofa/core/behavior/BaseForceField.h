@@ -94,7 +94,7 @@ public:
     /// - if \a mparams->energy() is true, the method computes and internally stores the potential energy,
     /// which will be subsequently returned by method getPotentialEnergy()
     /// \param fId the output vector of forces
-    virtual void addForce(const MechanicalParams* mparams, MultiVecDerivId fId )=0;
+    virtual void addForce(const MechanicalParams* mparams, const MultiVecDerivId& fId )=0;
 
     /// \brief Compute the force derivative given a small displacement from the
     /// position and velocity used in the previous call to addForce().
@@ -115,7 +115,7 @@ public:
     /// - \a mparams->kFactor() is the coefficient for stiffness contributions (i.e. DOFs term in the ODE)
     /// - \a mparams->readDx() input vector
     /// \param dfId the output vector
-    virtual void addDForce(const MechanicalParams* mparams, MultiVecDerivId dfId )=0;
+    virtual void addDForce(const MechanicalParams* mparams, const MultiVecDerivId& dfId )=0;
 
     /// \brief Accumulate the contribution of M, B, and/or K matrices multiplied
     /// by the dx vector with the given coefficients.
@@ -138,7 +138,7 @@ public:
     /// - \a mparams->bFactor() is the coefficient for damping contributions (i.e. first derivatives term in the ODE)
     /// - \a mparams->kFactor() is the coefficient for stiffness contributions (i.e. DOFs term in the ODE)
     /// \param dfId the output vector
-    virtual void addMBKdx(const MechanicalParams* mparams, MultiVecDerivId dfId);
+    virtual void addMBKdx(const MechanicalParams* mparams, const MultiVecDerivId& dfId);
 
     /// \brief Get the potential energy associated to this ForceField during the
     /// last call of addForce( const MechanicalParams* mparams );
@@ -214,7 +214,8 @@ public:
     /// where C is the Compliant matrix (inverse of the Stiffness matrix K
     /// $ C = K^{-1} $
     ///
-    virtual void addClambda(const MechanicalParams* /*mparams*/, MultiVecDerivId /*resId*/, MultiVecDerivId /*lambdaId*/, SReal /*cFactor*/ ){}
+    virtual void addClambda(const MechanicalParams* /*mparams*/, const MultiVecDerivId& /*resId*/, 
+                            const MultiVecDerivId& /*lambdaId*/, SReal /*cFactor*/ ){}
 
     /// @}
 

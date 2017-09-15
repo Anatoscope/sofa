@@ -81,7 +81,7 @@ struct ParallelForceFieldAddDForce
 
 
 template<class DataTypes>
-void ForceField<DataTypes>::addForce(const MechanicalParams* mparams, MultiVecDerivId fId )
+void ForceField<DataTypes>::addForce(const MechanicalParams* mparams, const MultiVecDerivId& fId )
 {
     if (mparams)
     {
@@ -99,7 +99,7 @@ void ForceField<DataTypes>::addForce(const MechanicalParams* mparams, MultiVecDe
 }
 
 template<class DataTypes>
-void ForceField<DataTypes>::addDForce(const MechanicalParams* mparams, MultiVecDerivId dfId )
+void ForceField<DataTypes>::addDForce(const MechanicalParams* mparams, const MultiVecDerivId& dfId )
 {
     if (mparams)
     {
@@ -124,7 +124,8 @@ void ForceField<DataTypes>::addDForce(const MechanicalParams* mparams, MultiVecD
 
 
 template<class DataTypes>
-void ForceField<DataTypes>::addClambda(const MechanicalParams* mparams, MultiVecDerivId resId, MultiVecDerivId lambdaId, SReal cFactor )
+void ForceField<DataTypes>::addClambda(const MechanicalParams* mparams, const MultiVecDerivId& resId, 
+                                       const MultiVecDerivId& lambdaId, SReal cFactor )
 {
     if (mparams)
     {

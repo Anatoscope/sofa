@@ -151,7 +151,7 @@ struct ParallelPairInteractionForceFieldAddDForce
 #endif /* SOFA_SMP */
 
 template<class DataTypes>
-void PairInteractionForceField<DataTypes>::addForce(const MechanicalParams* mparams, MultiVecDerivId fId )
+void PairInteractionForceField<DataTypes>::addForce(const MechanicalParams* mparams, const MultiVecDerivId& fId )
 {
     if (mstate1 && mstate2)
     {
@@ -181,7 +181,7 @@ void PairInteractionForceField<DataTypes>::addForce(const MechanicalParams* mpar
 }
 
 template<class DataTypes>
-void PairInteractionForceField<DataTypes>::addDForce(const MechanicalParams* mparams, MultiVecDerivId dfId )
+void PairInteractionForceField<DataTypes>::addDForce(const MechanicalParams* mparams, const MultiVecDerivId& dfId )
 {
     if (mstate1 && mstate2)
     {

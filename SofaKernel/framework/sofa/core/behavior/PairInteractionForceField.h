@@ -101,7 +101,7 @@ public:
     /// This method retrieves the force, x and v vector from the two MechanicalState
     /// and call the internal addForce(VecDeriv&,VecDeriv&,const VecCoord&,const VecCoord&,const VecDeriv&,const VecDeriv&)
     /// method implemented by the component.
-    virtual void addForce(const MechanicalParams* mparams, MultiVecDerivId fId );
+    virtual void addForce(const MechanicalParams* mparams, const MultiVecDerivId& fId );
 
     /// Given the current position and velocity states, update the current force
     /// vector by computing and adding the forces associated with this
@@ -113,7 +113,9 @@ public:
     /// This method must be implemented by the component, and is usually called
     /// by the generic ForceField::addForce() method.
 
-    virtual void addForce(const MechanicalParams* mparams, DataVecDeriv& f1, DataVecDeriv& f2, const DataVecCoord& x1, const DataVecCoord& x2, const DataVecDeriv& v1, const DataVecDeriv& v2 )=0;
+    virtual void addForce(const MechanicalParams* mparams, DataVecDeriv& f1, DataVecDeriv& f2, 
+                          const DataVecCoord& x1, const DataVecCoord& x2, 
+                          const DataVecDeriv& v1, const DataVecDeriv& v2 )=0;
 
 
     /// Compute the force derivative given a small displacement from the
@@ -129,7 +131,7 @@ public:
     /// This method retrieves the force and dx vector from the two MechanicalState
     /// and call the internal addDForce(VecDeriv&,VecDeriv&,const VecDeriv&,const VecDeriv&,SReal,SReal)
     /// method implemented by the component.
-    virtual void addDForce(const MechanicalParams* mparams, MultiVecDerivId dfId );
+    virtual void addDForce(const MechanicalParams* mparams, const MultiVecDerivId& dfId );
 
     /// Compute the force derivative given a small displacement from the
     /// position and velocity used in the previous call to addForce().

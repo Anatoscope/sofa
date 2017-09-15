@@ -89,7 +89,7 @@ public:
 
 
 template<class DataTypes>
-void Mass<DataTypes>::addMDx(const MechanicalParams* mparams, MultiVecDerivId fid, SReal factor)
+void Mass<DataTypes>::addMDx(const MechanicalParams* mparams, const MultiVecDerivId& fid, SReal factor)
 {
     if (mparams)
     {
@@ -110,7 +110,7 @@ void Mass<DataTypes>::addMDx(const MechanicalParams* /*mparams*/, DataVecDeriv& 
 
 
 template<class DataTypes>
-void Mass<DataTypes>::accFromF(const MechanicalParams* mparams, MultiVecDerivId aid)
+void Mass<DataTypes>::accFromF(const MechanicalParams* mparams, const MultiVecDerivId& aid)
 {
     if(mparams)
     {
@@ -147,7 +147,7 @@ void Mass<DataTypes>::addDForce(const MechanicalParams*
 }
 
 template<class DataTypes>
-void Mass<DataTypes>::addMBKdx(const MechanicalParams* mparams, MultiVecDerivId dfId)
+void Mass<DataTypes>::addMBKdx(const MechanicalParams* mparams, const MultiVecDerivId& dfId)
 {
     this->ForceField<DataTypes>::addMBKdx(mparams, dfId);
     if (mparams->mFactorIncludingRayleighDamping(rayleighMass.getValue()) != 0.0)
@@ -237,7 +237,7 @@ void Mass<DataTypes>::addSubMBKToMatrix(const MechanicalParams* mparams, const s
 }
 
 template<class DataTypes>
-void Mass<DataTypes>::addGravityToV(const MechanicalParams* mparams, MultiVecDerivId vid)
+void Mass<DataTypes>::addGravityToV(const MechanicalParams* mparams, const MultiVecDerivId& vid)
 {
     if(this->mstate)
     {

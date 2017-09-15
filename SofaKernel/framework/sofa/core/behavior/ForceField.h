@@ -91,7 +91,7 @@ public:
     /// This method retrieves the force, x and v vector from the MechanicalState
     /// and call the internal addForce(const MechanicalParams*, DataVecDeriv&,const DataVecCoord&,const DataVecDeriv&)
     /// method implemented by the component.
-    virtual void addForce(const MechanicalParams* mparams, MultiVecDerivId fId );
+    virtual void addForce(const MechanicalParams* mparams, const MultiVecDerivId& fId );
 
     /// Given the current position and velocity states, update the current force
     /// vector by computing and adding the forces associated with this
@@ -116,7 +116,7 @@ public:
     /// This method retrieves the force and dx vector from the MechanicalState
     /// and call the internal addDForce(VecDeriv&,const VecDeriv&,SReal,SReal)
     /// method implemented by the component.
-    virtual void addDForce(const MechanicalParams* mparams, MultiVecDerivId dfId );
+    virtual void addDForce(const MechanicalParams* mparams, const MultiVecDerivId& dfId );
 
     virtual void addDForce(const MechanicalParams* mparams, DataVecDeriv& df, const DataVecDeriv& dx ) = 0;
 
@@ -124,9 +124,11 @@ public:
     /// with the Lagrange multipliers lambda
     /// res += cFactor * C * lambda
     /// used by the graph-scattered (unassembledà API when the ForceField is handled as a constraint
-    virtual void addClambda(const MechanicalParams* mparams, MultiVecDerivId resId, MultiVecDerivId lambdaId, SReal cFactor );
+    virtual void addClambda(const MechanicalParams* mparams, const MultiVecDerivId& resId, 
+                            const MultiVecDerivId& lambdaId, SReal cFactor );
 
-    virtual void addClambda(const MechanicalParams* mparams, DataVecDeriv& df, const DataVecDeriv& lambda, SReal cFactor );
+    virtual void addClambda(const MechanicalParams* mparams, DataVecDeriv& df, 
+                            const DataVecDeriv& lambda, SReal cFactor );
 
 
 

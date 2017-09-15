@@ -38,7 +38,7 @@ BaseForceField::BaseForceField()
 {
 }
 
-void BaseForceField::addMBKdx(const MechanicalParams* mparams, MultiVecDerivId dfId)
+void BaseForceField::addMBKdx(const MechanicalParams* mparams, const MultiVecDerivId& dfId)
 {
     if (mparams->kFactorIncludingRayleighDamping(rayleighStiffness.getValue()) != 0.0 || mparams->bFactor() != 0.0)
         addDForce(mparams, dfId);

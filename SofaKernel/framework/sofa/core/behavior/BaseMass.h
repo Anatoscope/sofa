@@ -73,15 +73,15 @@ public:
     /// @{
 
     /// f += factor M dx
-    virtual void addMDx(const MechanicalParams* mparams, MultiVecDerivId fid, SReal factor) =0;
+    virtual void addMDx(const MechanicalParams* mparams, const MultiVecDerivId& fid, SReal factor) =0;
 
     /// dx = M^-1 f
-    virtual void accFromF(const MechanicalParams* mparams, MultiVecDerivId aid) = 0;
+    virtual void accFromF(const MechanicalParams* mparams, const MultiVecDerivId& aid) = 0;
 
     /// \brief Perform  v += dt*g operation. Used if mass wants to added G separately from the other forces to v.
     ///
     /// \param mparams \a mparams->dt() is the time step of for temporal discretization.
-    virtual void addGravityToV(const MechanicalParams* mparams, MultiVecDerivId vid) = 0;
+    virtual void addGravityToV(const MechanicalParams* mparams, const MultiVecDerivId& vid) = 0;
 
     /// vMv/2
     virtual SReal getKineticEnergy(const MechanicalParams* mparams = MechanicalParams::defaultInstance()) const = 0;

@@ -126,7 +126,8 @@ struct ParallelMixedInteractionForceFieldAddDForce
 
 
 template<class DataTypes1, class DataTypes2>
-void MixedInteractionForceField<DataTypes1, DataTypes2>::addForce(const MechanicalParams* mparams, MultiVecDerivId fId )
+void MixedInteractionForceField<DataTypes1, DataTypes2>::addForce(const MechanicalParams* mparams, 
+                                                                  const MultiVecDerivId& fId )
 {
 
     if (mstate1 && mstate2)
@@ -148,7 +149,8 @@ void MixedInteractionForceField<DataTypes1, DataTypes2>::addForce(const Mechanic
 }
 
 template<class DataTypes1, class DataTypes2>
-void MixedInteractionForceField<DataTypes1, DataTypes2>::addDForce(const MechanicalParams* mparams, MultiVecDerivId dfId )
+void MixedInteractionForceField<DataTypes1, DataTypes2>::addDForce(const MechanicalParams* mparams, 
+                                                                   const MultiVecDerivId& dfId )
 {
     if (mstate1 && mstate2)
     {

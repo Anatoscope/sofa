@@ -82,7 +82,7 @@ public:
     ///
     /// This method retrieves the force and dx vector and call the internal
     /// addMDx(const MechanicalParams*, DataVecDeriv&, const DataVecDeriv&, SReal) method implemented by the component.
-    virtual void addMDx(const MechanicalParams* mparams, MultiVecDerivId fid, SReal factor);
+    virtual void addMDx(const MechanicalParams* mparams, const MultiVecDerivId& fid, SReal factor);
 
     virtual void addMDx(const MechanicalParams* mparams, DataVecDeriv& f, const DataVecDeriv& dx, SReal factor);
 
@@ -90,7 +90,7 @@ public:
     ///
     /// This method retrieves the force and dx vector and call the internal
     /// accFromF(VecDeriv&,const VecDeriv&) method implemented by the component.
-    virtual void accFromF(const MechanicalParams* mparams, MultiVecDerivId aid);
+    virtual void accFromF(const MechanicalParams* mparams, const MultiVecDerivId& aid);
 
     virtual void accFromF(const MechanicalParams* mparams, DataVecDeriv& a, const DataVecDeriv& f);
 
@@ -108,7 +108,7 @@ public:
     /// \param mFact coefficient for mass contributions (i.e. second-order derivatives term in the ODE)
     /// \param bFact coefficient for damping contributions (i.e. first derivatives term in the ODE)
     /// \param kFact coefficient for stiffness contributions (i.e. DOFs term in the ODE)
-    virtual void addMBKdx(const MechanicalParams* mparams, MultiVecDerivId dfId);
+    virtual void addMBKdx(const MechanicalParams* mparams, const MultiVecDerivId& dfId);
 
     ///                         $ e = 1/2  v^t M v $
     ///
@@ -166,7 +166,7 @@ public:
     virtual void exportGnuplot(const MechanicalParams* mparams, SReal time);
 
     /// perform  v += dt*g operation. Used if mass wants to added G separately from the other forces to v.
-    virtual void addGravityToV(const MechanicalParams* mparams, MultiVecDerivId /*vid*/);
+    virtual void addGravityToV(const MechanicalParams* mparams, const MultiVecDerivId& /*vid*/);
     virtual void addGravityToV(const MechanicalParams* /* mparams */, DataVecDeriv& /* d_v */);
 
 

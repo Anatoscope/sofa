@@ -60,8 +60,8 @@ public:
 
 
     // other virtual functions do nothing
-    virtual void addForce(const core::MechanicalParams*, core::MultiVecDerivId ) {}
-    virtual void addDForce(const core::MechanicalParams*, core::MultiVecDerivId ) {}
+    virtual void addForce(const core::MechanicalParams*, const core::MultiVecDerivId& ) {}
+    virtual void addDForce(const core::MechanicalParams*, const core::MultiVecDerivId& ) {}
     virtual SReal getPotentialEnergy( const core::MechanicalParams* = core::MechanicalParams::defaultInstance() ) const { return 0; }
     virtual void addKToMatrix(const core::MechanicalParams*, const core::behavior::MultiMatrixAccessor* ) {}
 
