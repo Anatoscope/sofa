@@ -33,7 +33,7 @@ simple_solver::simple_solver()
 simple_solver::~simple_solver() { }
 
 
-static core::MechanicalParams mechanical_params(const core::ExecParams& ep, SReal dt) {
+static core::MechanicalParams mechanical_params_system(const core::ExecParams& ep, SReal dt) {
     core::MechanicalParams res(ep);
 
     res.setMFactor(1.0);
@@ -43,17 +43,37 @@ static core::MechanicalParams mechanical_params(const core::ExecParams& ep, SRea
     return res;
 }
 
+static core::MechanicalParams mechanical_params_rhs(const core::ExecParams& ep, SReal dt) {
+    core::MechanicalParams res(ep);
+
+    res.setMFactor(1.0);
+    res.setBFactor(0);
+    res.setKFactor(dt);        
+
+    // this is to get momentum on addMDx
+    res.dx() = core::VecDerivId::velocity();
+    
+    return res;
+}
+
+
+
 void simple_solver::solve(const core::ExecParams* ep,
                           SReal dt,
                           core::MultiVecCoordId posId,
                           core::MultiVecDerivId velId) {
     check();        // TODO this should be called automatically from the outside
 
-    auto assembler = assembly::make_assembler();
+    using namespace assembly;
+    auto assembler = make_assembler();
     assembler->init(getContext());
 
-    const core::MechanicalParams mparams = mechanical_params(*ep, dt);
-    const assembly::system_type sys = assembler->assemble_system(&mparams);
+    const core::MechanicalParams mp_sys = mechanical_params_system(*ep, dt);
+    const system_type sys = assembler->assemble_system(mp_sys);
+
+
+    const core::MechanicalParams mp_rhs = mechanical_params_rhs(*ep, dt);    
+    const system_type::vec rhs = assembler->rhs_dynamics(mp_rhs); 
     
 }
 

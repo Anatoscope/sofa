@@ -72,8 +72,6 @@ static void log(Args&& ... args) {
 
 
 
-
-// TODO: inherit from Visitor directly?
 struct Visitor : public simulation::Visitor {
 
     graph_type& graph;
@@ -184,7 +182,7 @@ static graph_type create_graph(core::objectmodel::BaseContext* ctx) {
     // fill kinematic graph
     graph_type graph;
 
-    const core::ExecParams ep;
+    static const core::ExecParams ep;
     Visitor visitor(graph, &ep);
     ctx->executeVisitor(&visitor);
 
@@ -420,7 +418,7 @@ static forcefield_type node_compliance(simulation::Node* node) {
 
 
 template<class OutputIterator>
-static void fill_forcefield(OutputIterator out, const graph_type& graph, const core::MechanicalParams* mp) {
+static void fill_forcefield(OutputIterator out, const graph_type& graph, const core::MechanicalParams& mp) {
     for(std::size_t v : vertices(graph) ) {
         if(!graph[v].state) continue;
         
@@ -428,29 +426,30 @@ static void fill_forcefield(OutputIterator out, const graph_type& graph, const c
         
         for(auto* ff : node->forceField) {
             const multi_matrix_adaptor<OutputIterator> matrix(out, graph[v].offset);
-            ff->addMBKToMatrix(mp, &matrix);
+            ff->addMBKToMatrix(&mp, &matrix);
         }
     }
 }
 
 
 template<class OutputIterator>
-static void fill_compliance(OutputIterator out, const graph_type& graph, const core::MechanicalParams* mp) {
-    const real factor = -1 / mp->kFactor();
+static void fill_compliance(OutputIterator out, const graph_type& graph, const core::MechanicalParams& mp) {
+    const real factor = -1 / mp.kFactor();
     
     for(std::size_t v : vertices(graph) ) {
         
         if(!graph[v].state) {
             // pairing node: fill pairing matrix
+            assert(out_degree(v, graph) == 2);            
             auto it = adjacent_vertices(v, graph).first;
 
-            assert(out_degree(v, graph) == 2);            
             const std::size_t p1 = *it++, p2 = *it++;
             assert( graph[p1].size == graph[p2].size );
             assert( graph[p1].state == graph[p2].state );            
 
             const std::size_t size = graph[p1].size;
 
+            // fill [[0, 1], [1, 0]] pattern
             fill_identity_chunk(out, graph[p1].offset, graph[p2].offset, size);
             fill_identity_chunk(out, graph[p2].offset, graph[p1].offset, size);            
 
@@ -459,7 +458,7 @@ static void fill_compliance(OutputIterator out, const graph_type& graph, const c
             auto* node = node_cast(graph[v].state->getContext());
 
             if(auto* ff = node_compliance(node) ) {
-                fill_matrix_chunk(out, ff->getComplianceMatrix(mp), 
+                fill_matrix_chunk(out, ff->getComplianceMatrix(&mp), 
                                   graph[v].offset, graph[v].offset, factor);
             }
         }
@@ -471,9 +470,8 @@ static void fill_compliance(OutputIterator out, const graph_type& graph, const c
 
 
 
-
+// note: we don't number vertices without state
 static std::size_t number_vertices(graph_type& graph, const std::vector<std::size_t>& top_down) {
-
     std::size_t off = 0;
     for(std::size_t v : top_down) {
         if(!graph[v].state) continue;
@@ -613,7 +611,61 @@ static void select_primal_dual(OutputIterator pout, std::size_t& p,
     }
     
 }
-  
+
+
+static void fetch_rhs(system_type::vec& out, const graph_type& graph, 
+                      const core::MechanicalParams& mp, bool correction = false) {
+
+    static const core::VecDerivId out_id = core::VecId::force();
+    static const core::MultiVecDerivId out_mid = out_id;
+
+    for(std::size_t v : vertices(graph)) {
+        if(!graph[v].state) continue;
+
+        assert(graph[v].offset + graph[v].size < out.size());
+        auto chunk = out.segment(graph[v].offset, graph[v].size);
+
+        // clear output
+        graph[v].state->vOp(&mp, out_id);
+        
+        // add forces
+        auto* node = node_cast(graph[v].state->getContext());
+        for(auto* ff : node->forceField) {
+            if(ff->isCompliance.getValue()) {
+                // TODO get constraintvalue
+                
+            } else {
+                ff->addForce(&mp, out_mid);
+            }
+        }
+
+        // add momentum
+        if(auto* mass = node->getMass()) {
+            mass->addMDx(&mp, out_mid, 1.0);
+        }
+        
+        graph[v].state->copyToBuffer(chunk.data(), out_id, graph[v].size);
+        
+    }
+}
+
+static void integrate(const graph_type& graph, const system_type::vec& vel, real dt) {
+    static const core::VecDerivId vel_id = core::VecDerivId::velocity();
+    static const core::VecCoordId pos_id = core::VecCoordId::position();    
+    static const core::ExecParams ep;
+    
+    for(std::size_t v : vertices(graph) ) {
+        // TODO use flags
+        auto* node = node_cast(graph[v].state->getContext());
+        if(out_degree(v, graph) || node_compliance(node)) {
+            continue;
+        }
+        
+        const auto chunk = vel.segment(graph[v].offset, graph[v].size);
+        graph[v].state->copyFromBuffer(core::VecDerivId::velocity(), chunk.data(), graph[v].size);
+        graph[v].state->vOp(&ep, pos_id, pos_id, vel_id, dt);
+    }
+}
 
 
 struct assembler : assembler_base {
@@ -633,16 +685,18 @@ struct assembler : assembler_base {
         // order graph
         topological_sort(top_down, graph);
 
-        // fill offset/size for vertices
+        // compute offset/size for vertices in top-down traversal
         size = number_vertices(graph, top_down);
         log("graph numbered");
     }
 
     // assemble_system
     rmat P, D;
+
+    rmat LP, LD;
     
     // TODO cache/reuse triplets, matrices ?
-    system_type assemble_system(const core::MechanicalParams* mp) {
+    system_type assemble_system(const core::MechanicalParams& mp) {
 
         // obtain mapping chunks
         // TODO fetch projectors/masks and fill masked mapping chunks
@@ -663,27 +717,23 @@ struct assembler : assembler_base {
         rmat J(size, size);
         J.setFromTriplets(Js.begin(), Js.end());
         log("J:\n", J);
-    
+
+        // concatenate mappings
         rmat L;
         concatenate(L, J);
-    
-        log("mappings concatenated");
         log("L:\n", L);
-    
+
+        // fetch system matrix
         rmat H(size, size);
         H.setFromTriplets(Hs.begin(), Hs.end());
         log("H:\n", H);
-
+        
         // primal/dual selection
         // TODO use projectors
         triplets_type Ps, Ds;
         std::size_t p, d;
         select_primal_dual(std::back_inserter(Ps), p, std::back_inserter(Ds), d, graph);
         log("primal/dual selected:", p, '/', d);
-        
-        // TODO which side is the fastest?
-        const rmat K = ((L.transpose() * H) * L).triangularView<Eigen::Lower>();
-        log("K:\n", K);
 
         system_type res;
 
@@ -691,21 +741,27 @@ struct assembler : assembler_base {
             P.resize(size, p); P.setFromTriplets(Ps.begin(), Ps.end());
             log("P:\n", P);
 
+            // primal mapping
+            LP = L * P;
+            
             // TODO optimize selection        
-            res.H = ((P.transpose() * K) * P).triangularView<Eigen::Lower>();
+            res.H = ((LP.transpose() * H) * LP).triangularView<Eigen::Lower>();
             log("res.H\n", res.H);
     
 
             if( d ) {
                 D.resize(size, d); D.setFromTriplets(Ds.begin(), Ds.end());
                 log("D:\n", D);
-            
+
+                // dual mappings (selection only)
+                LD = L * D;
+                
                 // TODO optimize selection
-                res.J = (D.transpose() * K) * P;
+                res.J = (LD.transpose() * H) * LP;
                 log("res.J\n", res.J);
 
                 // TODO optimize selection
-                res.C = ((D.transpose() * K) * D).triangularView<Eigen::Lower>();
+                res.C = ((LD.transpose() * H) * LD).triangularView<Eigen::Lower>();
                 log("res.C\n",  res.C);
             }
         }
@@ -715,18 +771,38 @@ struct assembler : assembler_base {
     }
 
 
-    void rhs_correction(system_type::vec& out, const core::MechanicalParams* mp) const  {
+    system_type::vec rhs_dynamics(const core::MechanicalParams& mp) const {
         log(__func__);
+        
+        system_type::vec storage = system_type::vec::Zero(size);
+        
+        // 1. express forces/momentum/constraint values with correct
+        fetch_rhs(storage, graph, mp, false);
+        
+        // 2. pull everything on primal/dual
+        const std::size_t p = P.cols(), d = D.cols();
+
+        system_type::vec res(p + d);
+        res.head(p).noalias() = LP.transpose() * storage;
+
+        if( d ) {
+            res.tail(d).noalias() = LD.transpose() * storage;
+        }
+
+        log("rhs dynamics:", res.transpose());
+        return res;
     }
 
 
-    void rhs_dynamics(system_type::vec& out, const core::MechanicalParams* mp) const  {
-        log(__func__);
+    system_type::vec rhs_correction(const core::MechanicalParams& mp) const  {
+        throw unimplemented();
     }
     
         
     virtual void integrate(const system_type::vec& v, system_type::real dt) const {
-        log(__func__);
+        const system_type::vec unproj = P * v.head(P.cols());
+
+        assembly::integrate(graph, unproj, dt);
     }
 };
 
