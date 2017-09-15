@@ -142,6 +142,48 @@ public:
 		(void) n;
 	}
 
+
+	virtual void addToBuffer(SReal* dst, ConstVecId src, unsigned n) const {
+		const size_t size = this->getSize();
+		
+		switch(src.type) {
+		case V_COORD: {
+			helper::ReadAccessor< Data<VecCoord> > vec = this->read(ConstVecCoordId(src));
+			const size_t dim = defaulttype::DataTypeInfo<Coord>::size();
+			assert( n == dim * size );
+			
+			for(size_t i = 0; i < size; ++i) {
+				for(size_t j = 0; j < dim; ++j) {
+                    SReal tmp;
+					defaulttype::DataTypeInfo<Coord>::getValue(vec[i], j, tmp);
+                    *dst++ += tmp;
+				}
+			}
+			
+		}; break;
+		case V_DERIV: {
+            helper::ReadAccessor< Data<VecDeriv> > vec = this->read(ConstVecDerivId(src));
+            const size_t dim = defaulttype::DataTypeInfo<Deriv>::size();
+            assert( n == dim * size );
+			
+            for(size_t i = 0; i < size; ++i) {
+                for(size_t j = 0; j < dim; ++j) {
+                    SReal tmp;
+                    defaulttype::DataTypeInfo<Deriv>::getValue(vec[i], j, tmp);
+                    *dst++ += tmp;
+                }
+            }
+			
+		}; break;
+		default: 
+			assert( false );
+		}
+		
+		// get rid of unused parameter warnings in release build
+		(void) n;
+	}
+
+    
 	virtual void copyFromBuffer(VecId dst, const SReal* src, unsigned n) {
 		const size_t size = this->getSize();
 		

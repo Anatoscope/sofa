@@ -365,6 +365,12 @@ public:
     /// *Exact* element count must be provided for consistency checks.
     virtual void copyFromBuffer(VecId dst, const SReal* src, unsigned int n) = 0;
 
+    /// \brief Add data to an external, user-allocated buffer.
+    ///
+    /// *Exact* element count must be provided for consistency checks.
+    virtual void addToBuffer(SReal* src, ConstVecId dst, unsigned int n) const = 0;
+
+    
     /// \brief Add data from an external, user-allocated buffer.
     ///
     /// *Exact* element count must be provided for consistency checks.
