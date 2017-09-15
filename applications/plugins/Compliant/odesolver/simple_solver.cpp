@@ -49,9 +49,11 @@ void simple_solver::solve(const core::ExecParams* ep,
                           core::MultiVecDerivId velId) {
     check();        // TODO this should be called automatically from the outside
 
-    const core::MechanicalParams mparams = mechanical_params(*ep, dt);
+    auto assembler = assembly::make_assembler();
+    assembler->init(getContext());
 
-    const assembly::system_type sys = assembly::assemble_system(getContext(), &mparams);
+    const core::MechanicalParams mparams = mechanical_params(*ep, dt);
+    const assembly::system_type sys = assembler->assemble_system(&mparams);
     
 }
 

@@ -60,15 +60,27 @@ struct unimplemented : std::logic_error {
 };
 
 
+template<class ... Args>
+static void log(Args&& ... args) {
+    auto out = oldmsg_info("assembly");
+    
+    const int expand[] = {
+      (out <<  args << " ", 0)...
+    }; (void) expand;
+    // std::clog << std::endl;
+}
+
+
+
 
 // TODO: inherit from Visitor directly?
-struct Visitor : public simulation::MechanicalVisitor {
+struct Visitor : public simulation::Visitor {
 
     graph_type& graph;
     std::map< vertex_type::state_type, std::size_t > table;
 
-    Visitor(graph_type& graph, const core::MechanicalParams* mp)
-        : simulation::MechanicalVisitor(mp),
+    Visitor(graph_type& graph, const core::ExecParams* ep)
+        : simulation::Visitor(ep),
         graph(graph) { }
     
     virtual Visitor::Result processNodeTopDown(simulation::Node* node) {
@@ -167,13 +179,13 @@ static void topological_sort(std::vector<std::size_t>& ordering,
 
 
 // post-condition: all vertices have non-null state
-static graph_type create_graph(core::objectmodel::BaseContext* ctx, 
-                               const core::MechanicalParams* mp) {
+static graph_type create_graph(core::objectmodel::BaseContext* ctx) {
 
     // fill kinematic graph
     graph_type graph;
-    
-    Visitor visitor(graph, mp);
+
+    const core::ExecParams ep;
+    Visitor visitor(graph, &ep);
     ctx->executeVisitor(&visitor);
 
     // topological sort
@@ -601,92 +613,126 @@ static void select_primal_dual(OutputIterator pout, std::size_t& p,
     }
     
 }
+  
 
-system_type assemble_system(core::objectmodel::BaseContext* ctx,
-                            const core::MechanicalParams* mp) {
 
-    graph_type graph = create_graph(ctx, mp);
+struct assembler : assembler_base {
 
-    // extend graph with lambda/pairing nodes
-    extend_graph(graph);
-    std::clog << "graph extended" << std::endl;
-    
-    // order graph
+    // init
+    graph_type graph;
     std::vector<std::size_t> top_down;
-    topological_sort(top_down, graph);
-
-    // fill offset/size for vertices
-    const std::size_t size = number_vertices(graph, top_down);
-    std::clog << "graph numbered" << std::endl;
+    std::size_t size;
     
-    // obtain mapping chunks
-    // TODO fetch projectors/masks and fill masked mapping chunks
-    triplets_type Js;
-    fill_mapping(std::back_inserter(Js), graph);
-    std::clog << "mappings fetched" << std::endl;
+    void init(core::objectmodel::BaseContext* ctx) {
+        graph = create_graph(ctx);
 
-    // obtain mass/stiffness chunks
-    triplets_type Hs;
-
-    fill_forcefield(std::back_inserter(Hs), graph, mp);
-    std::clog << "forcefields fetched" << std::endl;
+        // extend graph with lambda/pairing nodes
+        extend_graph(graph);
+        log("graph extended");
     
-    fill_compliance(std::back_inserter(Hs), graph, mp);
-    std::clog << "compliance fetched" << std::endl;
+        // order graph
+        topological_sort(top_down, graph);
+
+        // fill offset/size for vertices
+        size = number_vertices(graph, top_down);
+        log("graph numbered");
+    }
+
+    // assemble_system
+    rmat P, D;
     
-    // build actual matrices
-    rmat J(size, size);
-    J.setFromTriplets(Js.begin(), Js.end());
-    std::clog << "J:\n" << J << std::endl;
+    // TODO cache/reuse triplets, matrices ?
+    system_type assemble_system(const core::MechanicalParams* mp) {
+
+        // obtain mapping chunks
+        // TODO fetch projectors/masks and fill masked mapping chunks
+        triplets_type Js;
+        fill_mapping(std::back_inserter(Js), graph);
+        log("mappings fetched");
+
+        // obtain mass/stiffness chunks
+        triplets_type Hs;
+
+        fill_forcefield(std::back_inserter(Hs), graph, mp);
+        log("forcefields fetched");
     
-    rmat L;
-    concatenate(L, J);
-    std::clog << "mappings concatenated" << std::endl;
-    std::clog << "L:\n" << L << std::endl;
+        fill_compliance(std::back_inserter(Hs), graph, mp);
+        log("compliance fetched");
     
-    rmat H(size, size);
-    H.setFromTriplets(Hs.begin(), Hs.end());
-    std::clog << "H:\n" << H << std::endl;    
-
-    // primal/dual selection
-    // TODO use projectors
-    triplets_type Ps, Ds;
-    std::size_t p, d;
-    select_primal_dual(std::back_inserter(Ps), p, std::back_inserter(Ds), d, graph);
-    std::clog << "primal/dual selected: " << p << " / " << d << std::endl;
-
-
+        // build actual matrices
+        rmat J(size, size);
+        J.setFromTriplets(Js.begin(), Js.end());
+        log("J:\n", J);
     
-    // TODO which side is the fastest?
-    const rmat K = ((L.transpose() * H) * L).triangularView<Eigen::Lower>();
-    std::clog << "K:\n" << K << std::endl;
+        rmat L;
+        concatenate(L, J);
+    
+        log("mappings concatenated");
+        log("L:\n", L);
+    
+        rmat H(size, size);
+        H.setFromTriplets(Hs.begin(), Hs.end());
+        log("H:\n", H);
 
-    system_type res;
+        // primal/dual selection
+        // TODO use projectors
+        triplets_type Ps, Ds;
+        std::size_t p, d;
+        select_primal_dual(std::back_inserter(Ps), p, std::back_inserter(Ds), d, graph);
+        log("primal/dual selected:", p, '/', d);
+        
+        // TODO which side is the fastest?
+        const rmat K = ((L.transpose() * H) * L).triangularView<Eigen::Lower>();
+        log("K:\n", K);
 
-    if( p ) {
-        rmat P(size, p); P.setFromTriplets(Ps.begin(), Ps.end());
-        std::clog << "P:\n" << P << std::endl;
+        system_type res;
 
-        // TODO optimize selection        
-        res.H = ((P.transpose() * K) * P).triangularView<Eigen::Lower>();
-        std::clog << "res.H\n" << res.H << std::endl;
+        if( p ) {
+            P.resize(size, p); P.setFromTriplets(Ps.begin(), Ps.end());
+            log("P:\n", P);
+
+            // TODO optimize selection        
+            res.H = ((P.transpose() * K) * P).triangularView<Eigen::Lower>();
+            log("res.H\n", res.H);
     
 
-        if( d ) {
-            rmat D(size, d); D.setFromTriplets(Ds.begin(), Ds.end());
-            std::clog << "D:\n" << D << std::endl;
+            if( d ) {
+                D.resize(size, d); D.setFromTriplets(Ds.begin(), Ds.end());
+                log("D:\n", D);
             
-            // TODO optimize selection
-            res.J = (D.transpose() * K) * P;
-            std::clog << "res.J\n" << res.J << std::endl;        
+                // TODO optimize selection
+                res.J = (D.transpose() * K) * P;
+                log("res.J\n", res.J);
 
-            // TODO optimize selection
-            res.C = ((D.transpose() * K) * D).triangularView<Eigen::Lower>();
-            std::clog << "res.C\n" << res.C << std::endl;                
+                // TODO optimize selection
+                res.C = ((D.transpose() * K) * D).triangularView<Eigen::Lower>();
+                log("res.C\n",  res.C);
+            }
         }
+
+        // TODO should we store L ?
+        return res;
+    }
+
+
+    void rhs_correction(system_type::vec& out, const core::MechanicalParams* mp) const  {
+        log(__func__);
+    }
+
+
+    void rhs_dynamics(system_type::vec& out, const core::MechanicalParams* mp) const  {
+        log(__func__);
     }
     
-    return res;
+        
+    virtual void integrate(const system_type::vec& v, system_type::real dt) const {
+        log(__func__);
+    }
+};
+
+
+std::unique_ptr<assembler_base> make_assembler() {
+    return std::unique_ptr<assembler_base>(new assembler());
 }
 
 
