@@ -432,11 +432,11 @@ static void fill_forcefield(OutputIterator out, const graph_type& graph, const c
 
 
 template<class OutputIterator>
-static void fill_compliance(OutputIterator out, const graph_type& graph, const core::MechanicalParams* mp) {
+static void fill_compliance(OutputIterator out, const graph_type& graph, const core::MechanicalParams& mp) {
 
     // note: kfactor is already negative since stiffness is negative
     // definite (wtf)
-    const real factor = 1 / mp->kFactor();
+    const real factor = 1 / mp.kFactor();
     
     for(std::size_t v : vertices(graph) ) {
         
