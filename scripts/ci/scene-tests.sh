@@ -121,20 +121,9 @@ get-lib() {
 }
 
 list-plugins() {
-    #Clear the files
-    rm -f plugin-active.txt
-    rm -f Pathfinder.txt
-
-    #Récupère les plugins actifs, et met leur noms dans un fichier
-    grep ^PLUGIN_ ${build_dir}/CMakeCache.txt | grep BOOL=ON$ | cut -d '_' -f2 | cut -d ':' -f1 >> plugin-active.txt
-
-    #Récupère chaque ligne, et va chercher le path des plugins
-    cat plugin-active.txt | while  read ligne ; do
-	grep -i ${ligne}_SOURCE_DIR ${build_dir}/CMakeCache.txt | cut -d '=' -f2 >> Pathfinder.txt
-    done
-
-    #Delete the temp file
-    rm -f plugin-active.txt
+    #Grep tous les noms des plugins actifs, puis leurs paths
+    grep ^PLUGIN_ ${build_dir}/CMakeCache.txt | grep BOOL=ON$ | cut -d '_' -f2 | cut -d ':' -f1 |
+	while  read ligne ; do  grep -i ${ligne}_SOURCE_DIR ${build_dir}/CMakeCache.txt | cut -d '=' -f2; done
 }
 
 list-scene-directories() {
@@ -142,8 +131,7 @@ list-scene-directories() {
     mkdir -p "$output_dir/examples"
     echo examples >> "$output_dir/directories.txt"
     # List directories for compiled plugins only
-    list-plugins
-    cat Pathfinder.txt| while read line; do
+    list-plugins | while read line; do
 	plugin=`basename $line`
 	local lib="$(get-lib "$plugin")"
 	if [ -n "$lib" ]; then
