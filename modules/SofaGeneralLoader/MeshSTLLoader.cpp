@@ -231,8 +231,7 @@ bool MeshSTLLoader::readSTL(std::ifstream& dataFile)
 
         std::getline(dataFile, buffer);
         std::stringstream line;
-
-        std::clog << line.str() << std::endl;
+        line << buffer;
         
         std::string bufferWord;
         line >> bufferWord;

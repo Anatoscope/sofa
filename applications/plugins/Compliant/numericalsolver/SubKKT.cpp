@@ -12,7 +12,10 @@ typedef SubKKT::rmat rmat;
 // P must be diagonal with 0, 1 on the diagonal
 void SubKKT::projection_basis(rmat& res, const rmat& P, bool identity_hint) {
 
-    res.resize(P.rows(), P.nonZeros());
+    const unsigned rows = P.rows();
+    const unsigned cols = P.nonZeros();
+
+    res.resize(rows, cols);
 
     if( identity_hint ) {
         res.setIdentity();
@@ -20,10 +23,10 @@ void SubKKT::projection_basis(rmat& res, const rmat& P, bool identity_hint) {
     }
 
     res.setZero();
-    res.reserve(P.nonZeros());
+    res.reserve(cols);
     
     unsigned off = 0;
-    for(unsigned i = 0, n = P.rows(); i < n; ++i) {
+    for(unsigned i = 0, n = rows; i < n; ++i) {
 
         res.startVec(i);
 

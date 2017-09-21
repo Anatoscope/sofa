@@ -306,9 +306,13 @@ class ShearlessAffineBody:
                 global idxVisualModel;
                 self.node = node.createChild('visual')  # node
                 self.visual = self.node.createObject('VisualModel', name='model'+str(idxVisualModel), color=concat(color)) # @to do: Add the filename in order to keep the texture coordinates otherwise we lost them ...
-                self.model = self.visual # backward compatibility
                 self.mapping = self.node.createObject('IdentityMapping', name='mapping')
                 idxVisualModel+=1
+
+            @property
+            def model(self):
+                # backward compatibility
+                return self.visual
 
     class VisualModel:
 
@@ -317,12 +321,16 @@ class ShearlessAffineBody:
             global idxVisualModel;
             self.node = node.createChild('visual'+name_suffix)  # node
             self.visual = self.node.createObject('VisualModel', name='visual'+str(idxVisualModel), fileMesh=filepath, scale3d=concat(scale3d), translation=concat(offset[:3]), rotation=concat(r), color=concat(color))
-            self.model = self.visual # backward compatibility
             if generatedDir is None:
                 self.mapping = self.node.createObject('LinearMapping', template='Affine,ExtVec3f', name='mapping')
             else:
                 serialization.importLinearMapping(self.node, generatedDir+"_visualmapping.json")
             idxVisualModel+=1
+
+        @property
+        def model(self):
+            # backward compatibility
+            return self.visual
 
     class Offset:
 

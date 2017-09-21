@@ -447,7 +447,7 @@ int SetDataValuePython(BaseData* data, PyObject* args)
     if( BaseData* targetData = get_basedata(args) )
     {
         // TODO improve data to data copy
-        SP_MESSAGE_WARNING( "Data to Data copy is using string serialization for now. This may results in poor performances." );
+        SP_MESSAGE_WARNING( "Data to Data copy is using string serialization for now. This may result in poor performances." );
         data->read( targetData->getValueString() );
         return 0;
     }

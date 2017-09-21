@@ -414,23 +414,20 @@ class Quaternion(np.ndarray):
     def from_vectors(x, y):
         '''rotation sending x to y'''
 
-        # compute yx
+        # compute -yx
         yx = Quaternion()
 
         dot = x.dot(y)
 
-        yx.real = -y.dot(x)
-        yx.imag = np.cross(y, x)
+        yx.real = y.dot(x)
+        yx.imag = np.cross(x, y)
         
         # add ||yx|| to xy.real
         yx.real += norm(yx)
         
         theta = norm(yx)
+        
         if theta < Quaternion.epsilon:
-            
-            # x == y
-            if dot >= 0: return Quaternion()
-            
             # x == -y
             # TODO make up vector configurable
             return Quaternion.exp( math.pi * ey )

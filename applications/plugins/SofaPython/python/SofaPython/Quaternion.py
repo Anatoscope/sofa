@@ -107,28 +107,30 @@ def from_vectors(x, y):
     '''quaternion sending x to y'''
     import numpy as np
 
-    # no rotation
-    if np.linalg.norm(x - y) < sys.float_info.epsilon:
-        return [0, 0, 0, 1]
-
+    epsilon = 1e-8
+    
+    # sanity checks
+    assert np.linalg.norm(x) > epsilon
+    assert np.linalg.norm(y) > epsilon
+    
     # half-turn: any unit vector not along e will do
-    if np.linalg.norm(x + y) < sys.float_info.epsilon:
+    if np.linalg.norm(x + y) < epsilon:
         v = np.random.rand(3)
         v /= np.linalg.norm(v)
         return v.tolist() + [0]
 
-    # q = yx
+    # q = -yx
     q = np.zeros(4)            
-    q[:3] = np.cross(y, x)
-    q[-1] = -np.dot(y, x)
+    q[:3] = np.cross(x, y)
+    q[-1] = np.dot(y, x)
     
-    # q = yx + ||yx||
+    # q = -yx + ||yx||
     q[-1] += np.linalg.norm(q)
 
     # normalize q and we're good
     theta = np.linalg.norm(q)
 
-    assert theta > sys.float_info.epsilon
+    assert theta > sys.float_info.epsilon, q
     return (q / theta).tolist()
 
 

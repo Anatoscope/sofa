@@ -126,6 +126,7 @@ set(SOURCE_FILES
     ScriptFunction.cpp
     initSofaPython.cpp
     helper.cpp
+    ctypes.cpp
 )
 
 set(PYTHON_FILES

@@ -76,6 +76,9 @@ void NormalsFromPoints<DataTypes>::update()
     helper::ReadAccessor<Data< VecCoord > > raPositions = position;
     helper::ReadAccessor<Data< helper::vector< helper::fixed_array <unsigned int,3> > > > raTriangles = triangles;
     helper::ReadAccessor<Data< helper::vector< helper::fixed_array <unsigned int,4> > > > raQuads = quads;
+
+    cleanDirty();
+
     helper::WriteOnlyAccessor<Data< VecCoord > > waNormals = normals;
     const bool useAngles = this->useAngles.getValue();
     const bool invertNormals = this->invertNormals.getValue();
@@ -142,7 +145,6 @@ void NormalsFromPoints<DataTypes>::update()
     for (unsigned int i = 0; i < waNormals.size(); i++)
         waNormals[i].normalize(failsafe);
 
-    cleanDirty();
 }
 
 } // namespace engine
