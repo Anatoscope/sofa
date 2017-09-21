@@ -123,7 +123,11 @@ get-lib() {
 list-plugins() {
     #Grep tous les noms des plugins actifs, puis leurs paths
     grep ^PLUGIN_ ${build_dir}/CMakeCache.txt | grep BOOL=ON$ | cut -d '_' -f2 | cut -d ':' -f1 |
-	while  read ligne ; do  grep -i ${ligne}_SOURCE_DIR ${build_dir}/CMakeCache.txt | cut -d '=' -f2; done
+	while  read ligne ; do
+	    srcdir=`grep -i ${ligne}_SOURCE_DIR ${build_dir}/CMakeCache.txt | cut -d '=' -f2`
+	    bindir=`grep -i ${ligne}_BINARY_DIR ${build_dir}/CMakeCache.txt | cut -d '=' -f2`
+	    echo "$srcdir":"$bindir" # todo changer les : pour windows?
+	done
 }
 
 list-scene-directories() {
@@ -131,22 +135,23 @@ list-scene-directories() {
     mkdir -p "$output_dir/examples"
     echo examples >> "$output_dir/directories.txt"
     # List directories for compiled plugins only
-    list-plugins | while read line; do
-	plugin=`basename $line`
-	local lib="$(get-lib "$plugin")"
-	if [ -n "$lib" ]; then
-	    echo "Plugin $plugin: built (found $lib)" | log
-	    if [ -d "$line/examples" ]; then
-		mkdir -p "$output_dir/applications/plugins/$plugin/examples"
-		echo "applications/plugins/$plugin/examples"
-	    else
-		echo "Plugin $plugin: no examples/ directory" | log
-	    fi
-	else
-	    echo "Plugin $plugin: not built" | log
-	fi
-    done >> "$output_dir/directories.txt"
-    rm -f Pathfinder.txt
+    list-plugins | while read plugin_path; do
+	       srcdir=`echo $plugin_path | cut -d ':' -f1`
+    	   bindir=`echo $plugin_path | cut -d ':' -f2`
+         # echo "pluginpath",$plugin_path | log
+         # echo "srcdir",$srcdir | log
+         # echo "bindir",$bindir | log
+         plugin=`basename $srcdir`
+         echo "$plugin built" | log
+         if [ -d "$srcdir/examples" ]; then
+         relativebinpath=`realpath --relative-to=$build_dir $bindir`
+         relativesrcpath=`realpath --relative-to=$src_dir $srcdir`
+         mkdir -p "$output_dir/$relativebinpath/examples"
+         echo "$relativesrcpath/examples:$relativebinpath/examples"
+         else
+             echo "Plugin $plugin: no examples/ directory" | log
+         fi
+   	done >> "$output_dir/directories.txt"
 }
 
 create-directories() {
@@ -156,92 +161,97 @@ create-directories() {
     # echo "Creating directory structure."
     # List all scenes
     while read path; do
-	rm -f "$output_dir/$path/ignore-patterns.txt"
-	touch "$output_dir/$path/ignore-patterns.txt"
-	rm -f "$output_dir/$path/add-patterns.txt"
-	touch "$output_dir/$path/add-patterns.txt"
-	list-scenes "$src_dir/$path" > "$output_dir/$path/scenes.txt"
+	srcdir=`echo $path | cut -d ':' -f1`
+	bindir=`echo $path | cut -d ':' -f2`
+	rm -f "$output_dir/$bindir/ignore-patterns.txt"
+	touch "$output_dir/$bindir/ignore-patterns.txt"
+	rm -f "$output_dir/$bindir/add-patterns.txt"
+	touch "$output_dir/$bindir/add-patterns.txt"
+	list-scenes "$src_dir/$srcdir" > "$output_dir/$bindir/scenes.txt"
 	while read scene; do
-	    mkdir -p "$output_dir/$path/$scene"
+	    mkdir -p "$output_dir/$bindir/$scene"
 	    if [[ "$CI_BUILD_TYPE" == "Debug" ]]; then
-		echo 60 > "$output_dir/$path/$scene/timeout.txt" # Default debug timeout, in seconds
+		echo 60 > "$output_dir/$bindir/$scene/timeout.txt" # Default debug timeout, in seconds
 	    else
-		echo 30 > "$output_dir/$path/$scene/timeout.txt" # Default release timeout, in seconds
+		echo 30 > "$output_dir/$bindir/$scene/timeout.txt" # Default release timeout, in seconds
 	    fi
-	    echo 100 > "$output_dir/$path/$scene/iterations.txt" # Default number of iterations
-	    echo "$path/$scene" >> "$output_dir/all-scenes.txt"
-	done < "$output_dir/$path/scenes.txt"
+	    echo 100 > "$output_dir/$bindir/$scene/iterations.txt" # Default number of iterations
+	    echo "$srcdir/$scene" >> "$output_dir/all-scenes.txt"
+	done < "$output_dir/$bindir/scenes.txt"
     done < "$output_dir/directories.txt"
 }
 
 parse-options-files() {
     # echo "Parsing option files."
-    while read path; do
-	if [[ -e "$src_dir/$path/.scene-tests" ]]; then
-	    clean-line < "$src_dir/$path/.scene-tests" | while read line; do
+    while read allpath; do
+	srcdir=`echo $allpath | cut -d ':' -f1`
+	bindir=`echo $allpath | cut -d ':' -f2`	
+	if [[ -e "$src_dir/$srcdir/.scene-tests" ]]; then
+	    clean-line < "$src_dir/$srcdir/.scene-tests" | while read line; do
 		if option-is-well-formed "$line"; then
 		    local option=$(get-option "$line")
 		    local args=$(get-args "$line")
 		    case "$option" in
 			ignore)
 			    if [[ "$(count-args "$args")" = 1 ]]; then
-				get-arg "$args" 1 >> "$output_dir/$path/ignore-patterns.txt"
+				get-arg "$args" 1 >> "$output_dir/$bindir/ignore-patterns.txt"
 			    else
-				echo "$path/.scene-tests: warning: 'ignore' expects one argument: ignore <pattern>" | log
+				echo "$srcdir/.scene-tests: warning: 'ignore' expects one argument: ignore <pattern>" | log
 			    fi
 			    ;;
 			add)
 			    if [[ "$(count-args "$args")" = 1 ]]; then
 				scene="$(get-arg "$args" 1)"
-				echo $scene >> "$output_dir/$path/add-patterns.txt"
-				mkdir -p "$output_dir/$path/$scene"
+				echo $scene >> "$output_dir/$bindir/add-patterns.txt"
+				mkdir -p "$output_dir/$bindir/$scene"
 				if [[ "$CI_BUILD_TYPE" == "Debug" ]]; then
-				    echo 60 > "$output_dir/$path/$scene/timeout.txt" # Default debug timeout, in seconds
+				    echo 60 > "$output_dir/$bindir/$scene/timeout.txt" # Default debug timeout, in seconds
 				else
-				    echo 30 > "$output_dir/$path/$scene/timeout.txt" # Default release timeout, in seconds
+				    echo 30 > "$output_dir/$bindir/$scene/timeout.txt" # Default release timeout, in seconds
 				fi
-				echo 100 > "$output_dir/$path/$scene/iterations.txt" # Default number of iterations
+				echo 100 > "$output_dir/$bindir/$scene/iterations.txt" # Default number of iterations
 			    else
-				echo "$path/.scene-tests: warning: 'add' expects one argument: add <pattern>" | log
+				echo "$srcdir/.scene-tests: warning: 'add' expects one argument: add <pattern>" | log
 			    fi
 			    ;;
 			timeout)
 			    if [[ "$(count-args "$args")" = 2 ]]; then
 				scene="$(get-arg "$args" 1)"
-				if [[ -e "$src_dir/$path/$scene" ]]; then
-				    get-arg "$args" 2 > "$output_dir/$path/$scene/timeout.txt"
+				if [[ -e "$src_dir/$srcdir/$scene" ]]; then
+				    get-arg "$args" 2 > "$output_dir/$bindir/$scene/timeout.txt"
 				else
-				    echo "$path/.scene-tests: warning: no such file: $scene" | log
+				    echo "$srcdir/.scene-tests: warning: no such file: $scene" | log
 				fi
 			    else
-				echo "$path/.scene-tests: warning: 'timeout' expects two arguments: timeout <file> <timeout>" | log
+				echo "$srcdir/.scene-tests: warning: 'timeout' expects two arguments: timeout <file> <timeout>" | log
 			    fi
 			    ;;
 			iterations)
 			    if [[ "$(count-args "$args")" = 2 ]]; then
 				scene="$(get-arg "$args" 1)"
-				if [[ -e "$src_dir/$path/$scene" ]]; then
-				    get-arg "$args" 2 > "$output_dir/$path/$scene/iterations.txt"
+				if [[ -e "$src_dir/$srcdir/$scene" ]]; then
+				    get-arg "$args" 2 > "$output_dir/$bindir/$scene/iterations.txt"
 				else
-				    echo "$path/.scene-tests: warning: no such file: $scene" | log
+				    echo "$srcdir/.scene-tests: warning: no such file: $scene" | log
 				fi
 			    else
-				echo "$path/.scene-tests: warning: 'iterations' expects two arguments: iterations <file> <number>" | log
+				echo "$srcdir/.scene-tests: warning: 'iterations' expects two arguments: iterations <file> <number>" | log
 			    fi
 			    ;;
 			*)
-			    echo "$path/.scene-tests: warning: unknown option: $option" | log
+			    echo "$srcdir/.scene-tests: warning: unknown option: $option" | log
 			    ;;
 		    esac
 		else
-		    echo "$path/.scene-tests: warning: ill-formed line: $line" | log
+		    echo "$srcdir/.scene-tests: warning: ill-formed line: $line" | log
 		fi
 	    done
 	fi
     done < "$output_dir/directories.txt"
-
+    
     # echo "Listing ignored and added scenes."
-    while read path; do
+    while read allpath; do
+	path=`echo $allpath | cut -d ':' -f2`
 	grep -xf "$output_dir/$path/ignore-patterns.txt" \
 	     "$output_dir/$path/scenes.txt" \
 	     > "$output_dir/$path/ignored-scenes.txt" || true
@@ -252,9 +262,8 @@ parse-options-files() {
 	else
 	    cp  "$output_dir/$path/scenes.txt" "$output_dir/$path/tested-scenes.txt"
 	fi
-
 	sed -e "s:^:$path/:" "$output_dir/$path/ignored-scenes.txt" >> "$output_dir/all-ignored-scenes.txt"
-
+	
 	# Add scenes
 	cp "$output_dir/$path/add-patterns.txt" "$output_dir/$path/added-scenes.txt"
 	if [ -s "$output_dir/$path/add-patterns.txt" ]; then
@@ -263,7 +272,6 @@ parse-options-files() {
 	    cat "$output_dir/$path/add-patterns.txt" \
 		>> "$output_dir/$path/scenes.txt" || true
 	fi
-
 	sed -e "s:^:$path/:" "$output_dir/$path/added-scenes.txt" >> "$output_dir/all-added-scenes.txt"
 	sed -e "s:^:$path/:" "$output_dir/$path/tested-scenes.txt" >> "$output_dir/all-tested-scenes.txt"
     done < "$output_dir/directories.txt"
