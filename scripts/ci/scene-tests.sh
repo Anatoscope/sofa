@@ -126,7 +126,7 @@ list-plugins() {
 	while  read ligne ; do
 	    srcdir=`grep -i ${ligne}_SOURCE_DIR ${build_dir}/CMakeCache.txt | cut -d '=' -f2`
 	    bindir=`grep -i ${ligne}_BINARY_DIR ${build_dir}/CMakeCache.txt | cut -d '=' -f2`
-	    echo "$srcdir":"$bindir"
+	    echo "$srcdir":"$bindir" # todo changer les : pour windows?
 	done
 }
 
@@ -136,22 +136,22 @@ list-scene-directories() {
     echo examples >> "$output_dir/directories.txt"
     # List directories for compiled plugins only
     list-plugins | while read plugin_path; do
-	srcdir=`echo $plugin_path | cut -d ':' -f1`
-    	bindir=`echo $plugin_path | cut -d ':' -f2`
-	# echo "pluginpath",$plugin_path | log
-	# echo "srcdir",$srcdir | log
-	# echo "bindir",$bindir | log
-	plugin=`basename $srcdir`
-	echo "$plugin built" | log
-    	if [ -d "$srcdir/examples" ]; then
-	    relativebinpath=`realpath --relative-to=$build_dir $bindir`
-	    relativesrcpath=`realpath --relative-to=$src_dir $srcdir`
-	    mkdir -p "$output_dir/$relativebinpath/examples"
-	    echo "$relativesrcpath/examples:$relativebinpath/examples"
-	else
-	    echo "Plugin $plugin: no examples/ directory" | log
-	fi
- 	done >> "$output_dir/directories.txt"
+	       srcdir=`echo $plugin_path | cut -d ':' -f1`
+    	   bindir=`echo $plugin_path | cut -d ':' -f2`
+         # echo "pluginpath",$plugin_path | log
+         # echo "srcdir",$srcdir | log
+         # echo "bindir",$bindir | log
+         plugin=`basename $srcdir`
+         echo "$plugin built" | log
+         if [ -d "$srcdir/examples" ]; then
+         relativebinpath=`realpath --relative-to=$build_dir $bindir`
+         relativesrcpath=`realpath --relative-to=$src_dir $srcdir`
+         mkdir -p "$output_dir/$relativebinpath/examples"
+         echo "$relativesrcpath/examples:$relativebinpath/examples"
+         else
+             echo "Plugin $plugin: no examples/ directory" | log
+         fi
+   	done >> "$output_dir/directories.txt"
 }
 
 create-directories() {
