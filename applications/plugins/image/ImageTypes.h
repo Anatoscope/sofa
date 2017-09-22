@@ -25,15 +25,8 @@
 
 #include <image/config.h>
 
-#if  defined (SOFA_HAVE_FFMPEG)  || defined (SOFA_EXTLIBS_FFMPEG)
-#define cimg_use_ffmpeg
-#endif
-#ifdef SOFA_IMAGE_HAVE_OPENCV // should be "SOFA_HAVE_OPENCV" -> use "SOFA_IMAGE_HAVE_OPENCV" until the opencv plugin is fixed..
-#define cimg_use_opencv
-#endif
+#include <image/cimg_types.h>
 
-#define cimg_display 0
-#include <CImg/SOFACImg.h>
 #include <sofa/defaulttype/Vec.h>
 #include <sofa/defaulttype/Mat.h>
 #include <sofa/defaulttype/Quat.h>
@@ -50,9 +43,6 @@ namespace sofa
 
 namespace defaulttype
 {
-
-
-
 
 
 /// a virtual, non templated Image class that can be allocated without knowing its exact type

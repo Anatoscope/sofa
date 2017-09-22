@@ -32,6 +32,13 @@ set(SOURCE_FILES
     VoronoiToMeshEngine.cpp
     VoronoiImageEngine.cpp
     initImage.cpp
+    cimg_types.1.cpp
+    cimg_types.2.cpp
+    cimg_types.3.cpp
+    cimg_types.4.cpp
+    cimg_types.5.cpp
+    cimg_types.6.cpp    
+    
 )
 
 set(HEADER_FILES
@@ -61,6 +68,7 @@ set(HEADER_FILES
     VectorVis.h
     VoronoiToMeshEngine.h
     VoronoiImageEngine.h
+    cimg_types.h
 )
 
 
