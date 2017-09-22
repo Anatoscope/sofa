@@ -400,6 +400,9 @@ count-crashes() {
 
 print-summary() {
     echo "Scene testing summary:"
+
+    cat "$output_dir/time.txt"
+
     echo "- $(count-tested-scenes) scene(s) tested"
     echo "- $(count-warnings) warning(s)"
 
@@ -442,11 +445,19 @@ print-summary() {
 }
 
 if [[ "$command" = run ]]; then
+
+    time_start=$(date +%s.%N)
+
     initialize-scene-testing
     test-all-scenes
     extract-warnings
     extract-errors
     extract-crashes
+
+    time_end=$(date +%s.%N)
+    time_diff=$(echo "$time_end - $time_start" | bc)
+    echo "time:" $time_diff "s - end date: " $(date +%s) "s - " $(date +"%b %d %I:%M %Z") > "$output_dir/time.txt" # duration in s, end date in s and end date in "ctest" format
+
 elif [[ "$command" = print-summary ]]; then
     print-summary
 elif [[ "$command" = count-warnings ]]; then
