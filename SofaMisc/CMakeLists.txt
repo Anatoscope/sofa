@@ -22,7 +22,7 @@ set(SOFAMISC_TARGETS
     SofaMiscFem
     SofaMiscForceField
     SofaMiscMapping
-    SofaMiscSolver
+#    SofaMiscSolver
     SofaMiscTopology
 )
 

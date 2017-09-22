@@ -9,13 +9,7 @@
 #include "../constraint/UnilateralConstraint.h"
 #include "../compliance/UniformCompliance.h"
 
-// for constraint version
-//#include "../constraint/DampingValue.h"
-//#include "../compliance/DampingCompliance.h"
-
-// for forcefield version
-#include <SofaBoundaryCondition/UniformVelocityDampingForceField.h>
-
+#include <Compliant/forcefield/UniformDamping.h>
 
 
 #include "../mapping/ContactMapping.h"
@@ -77,11 +71,14 @@ protected:
 
     // TODO why do we have friction stuff here? this should go elsewhere
     typename node_type::SPtr friction_node;
+    
     typedef core::behavior::MechanicalState<defaulttype::Vec2Types> friction_dofs_type;
     typename friction_dofs_type::SPtr friction_dofs;
+
     typedef mapping::ContactMapping<ResponseDataTypes, defaulttype::Vec2Types> friction_map_type;
     typename friction_map_type::SPtr friction_map;
-    typedef forcefield::UniformVelocityDampingForceField<defaulttype::Vec2Types> damping_type;
+    
+    using damping_type = forcefield::UniformDamping<defaulttype::Vec2Types>;
     damping_type::SPtr damping;
 
 
@@ -214,7 +211,7 @@ protected:
         // cheap forcefield version
         damping = sofa::core::objectmodel::New<damping_type>();
         friction_node->addObject( damping.get() );
-        damping->dampingCoefficient.setValue( frictionCoefficient );
+        damping->damping.setValue( frictionCoefficient );
         damping->init();
     }
 
@@ -283,7 +280,7 @@ protected:
                     create_friction_node( frictionCoefficient, nout, cvmask );
                 else
                 {
-                    damping->dampingCoefficient.setValue( frictionCoefficient );
+                    damping->damping.setValue( frictionCoefficient );
                     friction_dofs->resize( nout );
                     this->copyNormals( *editOnly(friction_map->normal) );
                     friction_map->mask = *cvmask; // by pointer copy, the vector was deleted before being used in contact mapping...  // TODO improve this by avoiding a copy

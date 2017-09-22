@@ -77,12 +77,12 @@ void initComponentGeneral()
 
     initGeneralAnimationLoop();
     initGeneralDeformable();
-    initGeneralExplicitODESolver();
-    initGeneralImplicitODESolver();
-    initGeneralLinearSolver();
+    // initGeneralExplicitODESolver();
+    // initGeneralImplicitODESolver();
+    // initGeneralLinearSolver();
     initGeneralLoader();
     initGeneralMeshCollision();
-    initGeneralObjectInteraction();
+    // initGeneralObjectInteraction();
     initGeneralRigid();
     initGeneralSimpleFEM();
     initGeneralTopology();
@@ -94,18 +94,18 @@ void initComponentGeneral()
     initTopologyMapping();
     initBoundaryCondition();
     initUserInteraction();
-    initConstraint();
-    initHaptics();
+    // initConstraint();
+    // initHaptics();
 #ifdef SOFA_HAVE_NEWMAT
-    initDenseSolver();
+    // initDenseSolver();
 #endif
 #ifdef SOFA_HAVE_CSPARSE
-    initSparseSolver();
+    // initSparseSolver();
 #endif
 #ifdef SOFA_HAVE_TAUCS
-    initTaucsSolver();
+    // initTaucsSolver();
 #endif
-    initPreconditioner();
+    // initPreconditioner();
 #ifndef SOFA_NO_OPENGL
     initOpenGLVisual();
 #endif

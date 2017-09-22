@@ -19,7 +19,7 @@ add_subdirectory(../modules/SofaSimulationGraph ${CMAKE_CURRENT_BINARY_DIR}/Sofa
 set(SOFASIMULATION_TARGETS
     SofaSimulationCommon
     SofaSimulationGraph
-    SofaSimulationTree
+    SofaSimulationTree          #wtf do i need this
 )
 
 foreach(TARGET ${SOFASIMULATION_TARGETS})

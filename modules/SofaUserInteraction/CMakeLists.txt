@@ -16,8 +16,8 @@ set(HEADER_FILES
     DisabledContact.h
     EdgeSetController.h
     EdgeSetController.inl
-    FixParticlePerformer.h
-    FixParticlePerformer.inl
+    # FixParticlePerformer.h
+    # FixParticlePerformer.inl
     GraspingManager.h
     InciseAlongPathPerformer.h
     InteractionPerformer.h
@@ -40,8 +40,8 @@ set(HEADER_FILES
     RemovePrimitivePerformer.inl
     SleepController.h
     StartNavigationPerformer.h
-    SuturePointPerformer.h
-    SuturePointPerformer.inl
+    # SuturePointPerformer.h
+    # SuturePointPerformer.inl
     TopologicalChangeManager.h
     config.h
     initUserInteraction.h
@@ -58,7 +58,7 @@ set(SOURCE_FILES
     CuttingPoint.cpp
     DisabledContact.cpp
     EdgeSetController.cpp
-    FixParticlePerformer.cpp
+#    FixParticlePerformer.cpp
     GraspingManager.cpp
     InciseAlongPathPerformer.cpp
     InteractionPerformer.cpp
@@ -76,13 +76,22 @@ set(SOURCE_FILES
     RemovePrimitivePerformer.cpp
     SleepController.cpp
     StartNavigationPerformer.cpp
-    SuturePointPerformer.cpp
+#     SuturePointPerformer.cpp
     TopologicalChangeManager.cpp
     initUserInteraction.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} PUBLIC SofaMeshCollision SofaGeneralMeshCollision SofaGeneralRigid SofaGeneralVisual SofaTopologyMapping SofaDeformable SofaBoundaryCondition SofaGraphComponent SofaBaseVisual)
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  SofaMeshCollision
+  SofaGeneralMeshCollision
+  SofaGeneralRigid
+  SofaGeneralVisual
+  SofaTopologyMapping
+  SofaDeformable
+  # SofaBoundaryCondition
+  SofaGraphComponent
+  SofaBaseVisual)
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DSOFA_BUILD_USER_INTERACTION")
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 

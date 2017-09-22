@@ -20,7 +20,7 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 #include <Compliant/config.h>
-#include "misc/CompliantSolverMerger.h"
+// #include "misc/CompliantSolverMerger.h"
 #include "contact/CompliantContact.h"
 
 #ifdef SOFA_HAVE_SOFAPYTHON
@@ -57,7 +57,7 @@ void initExternalModule()
     {
         first = false;
 
-        component::collision::CompliantSolverMerger::add();
+        // component::collision::CompliantSolverMerger::add();
 
         // previous Eigen versions have a critical bug (v.noalias()+=w does not work in some situations)
         static_assert( EIGEN_WORLD_VERSION*10000+EIGEN_MAJOR_VERSION*100+EIGEN_MINOR_VERSION  >= 30205, "Eigen is too old (min 3.2.5)" );

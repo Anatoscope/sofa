@@ -21,9 +21,12 @@ set(SOFACOMMON_TARGETS
     SofaExplicitOdeSolver
     SofaImplicitOdeSolver
     SofaLoader
+
     SofaMeshCollision
     SofaObjectInteraction
+
     SofaRigid
+
     SofaSimpleFem
     SofaEigen2Solver
 )

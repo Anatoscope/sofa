@@ -22,25 +22,25 @@ install(FILES "${CMAKE_BINARY_DIR}/include/SofaGeneral/config.h" DESTINATION "in
 set(SOFAGENERAL_TARGETS
     SofaGeneralAnimationLoop
     SofaGeneralDeformable
-    SofaGeneralExplicitOdeSolver
-    SofaGeneralImplicitOdeSolver
-    SofaGeneralLinearSolver
+#    SofaGeneralExplicitOdeSolver
+#    SofaGeneralImplicitOdeSolver
+#    SofaGeneralLinearSolver
     SofaGeneralLoader
     SofaGeneralMeshCollision
-    SofaGeneralObjectInteraction
+#    SofaGeneralObjectInteraction
     SofaGeneralRigid
     SofaGeneralSimpleFem
     SofaGeneralTopology
     SofaGeneralVisual
     SofaBoundaryCondition
     SofaComponentGeneral
-    SofaConstraint
+#    SofaConstraint
     SofaGeneralEngine
     SofaExporter
     SofaGraphComponent
-    SofaHaptics
-    SofaPreconditioner
-    SofaSparseSolver
+#    SofaHaptics
+#    SofaPreconditioner
+#    SofaSparseSolver
     SofaTopologyMapping
     SofaUserInteraction
     SofaValidation

@@ -13,8 +13,8 @@ set(HEADER_FILES
     MatrixMass.inl
     MeshMatrixMass.h
     MeshMatrixMass.inl
-    WashingMachineForceField.h
-    WashingMachineForceField.inl
+    # WashingMachineForceField.h
+    # WashingMachineForceField.inl
     config.h
     initMiscForcefield.h
 )
@@ -26,12 +26,17 @@ set(SOURCE_FILES
     LineBendingSprings.cpp
     MatrixMass.cpp
     MeshMatrixMass.cpp
-    WashingMachineForceField.cpp
+#     WashingMachineForceField.cpp
     initMiscForcefield.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} PUBLIC SofaHelper SofaDeformable SofaBoundaryCondition SofaMiscTopology SofaGeneralTopology)
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  SofaHelper
+  SofaDeformable
+  # SofaBoundaryCondition
+  SofaMiscTopology
+  SofaGeneralTopology)
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DSOFA_BUILD_MISC_FORCEFIELD")
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 

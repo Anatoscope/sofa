@@ -41,8 +41,8 @@ void initComponentAdvanced()
         first = false;
     }
 
-    initEulerianFluid();
-    initSPHFluid();
+    // initEulerianFluid();
+    // initSPHFluid();
     initVolumetricData();
     initNonUniformFEM();
 }

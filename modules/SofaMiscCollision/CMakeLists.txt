@@ -7,7 +7,7 @@ set(HEADER_FILES
     DefaultCollisionGroupManager.h
     RuleBasedContactManager.h
     SolverMerger.h
-    SpatialGridPointModel.h
+    # SpatialGridPointModel.h
     TetrahedronDiscreteIntersection.h
     TetrahedronModel.h
     TriangleModelInRegularGrid.h
@@ -20,10 +20,10 @@ set(SOURCE_FILES
     DefaultCollisionGroupManager.cpp
     RuleBasedContactManager.cpp
     SolverMerger.cpp
-    SpatialGridPointModel.cpp
+    # SpatialGridPointModel.cpp
     TetrahedronBarycentricPenalityContact.cpp
     TetrahedronDiscreteIntersection.cpp
-    TetrahedronFrictionContact.cpp
+    # TetrahedronFrictionContact.cpp
     TetrahedronModel.cpp
     TetrahedronRayContact.cpp
     TriangleModelInRegularGrid.cpp
@@ -35,14 +35,14 @@ if(SOFA_HAVE_SMP)
     list(APPEND SOURCE_FILES ParallelCollisionPipeline.cpp)
 endif()
 
-if(SOFA_HAVE_MINIFLOWVR)
-    list(APPEND SOURCE_FILES FrictionContact_DistanceGrid.cpp)
-endif()
+# if(SOFA_HAVE_MINIFLOWVR)
+#     list(APPEND SOURCE_FILES FrictionContact_DistanceGrid.cpp)
+# endif()
 
-list(APPEND SOURCE_FILES TetrahedronBarycentricDistanceLMConstraintContact.cpp)
-if(SOFA_HAVE_MINIFLOWVR)
-    list(APPEND SOURCE_FILES BarycentricDistanceLMConstraintContact_DistanceGrid.cpp)
-endif()
+# list(APPEND SOURCE_FILES TetrahedronBarycentricDistanceLMConstraintContact.cpp)
+# if(SOFA_HAVE_MINIFLOWVR)
+#     list(APPEND SOURCE_FILES BarycentricDistanceLMConstraintContact_DistanceGrid.cpp)
+# endif()
 
 if(NOT SOFA_NO_OPENGL)
     list(APPEND HEADER_FILES RayTriangleVisitor.h)
@@ -50,7 +50,18 @@ if(NOT SOFA_NO_OPENGL)
 endif()
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} PUBLIC SofaBaseTopology SofaGeneralMeshCollision SofaGeneralDeformable SofaConstraint SofaVolumetricData SofaExplicitOdeSolver SofaGeneralExplicitOdeSolver SofaImplicitOdeSolver SofaSphFluid)
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  SofaBaseTopology
+  SofaGeneralMeshCollision
+  SofaGeneralDeformable
+  # SofaConstraint
+  SofaVolumetricData
+  
+  # SofaExplicitOdeSolver
+  # SofaGeneralExplicitOdeSolver
+  # SofaImplicitOdeSolver
+  # SofaSphFluid
+  )
 target_link_libraries(${PROJECT_NAME} PUBLIC SofaEigen2Solver)
 if(NOT SOFA_NO_OPENGL)
 target_link_libraries(${PROJECT_NAME} PUBLIC SofaOpenglVisual)

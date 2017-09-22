@@ -51,7 +51,7 @@ void initComponentMisc()
     initMiscFEM();
     initMiscEngine();
     initMiscCollision();
-    initMiscSolver();
+    // initMiscSolver();
     initMisc();
 }
 
