@@ -366,7 +366,6 @@ public:
 
 };
 
-
 typedef Image<char> ImageC;
 typedef Image<unsigned char> ImageUC;
 typedef Image<int> ImageI;
@@ -385,6 +384,7 @@ typedef ImageF ImageR;
 typedef ImageD ImageR;
 #endif
 
+
 template<> inline const char* ImageC::Name() { return "ImageC"; }
 template<> inline const char* ImageUC::Name() { return "ImageUC"; }
 template<> inline const char* ImageI::Name() { return "ImageI"; }
@@ -396,6 +396,27 @@ template<> inline const char* ImageUL::Name() { return "ImageUL"; }
 template<> inline const char* ImageF::Name() { return "ImageF"; }
 template<> inline const char* ImageD::Name() { return "ImageD"; }
 template<> inline const char* ImageB::Name() { return "ImageB"; }
+
+
+extern template struct Image<unsigned int>;
+extern template struct Image<long double>;
+extern template struct Image<bool>;
+extern template struct Image<unsigned char>;
+
+extern template struct Image<char>;
+extern template struct Image<int>;
+
+extern template struct Image<short>;
+extern template struct Image<unsigned short>;
+
+extern template struct Image<long>;
+extern template struct Image<unsigned long>;
+
+extern template struct Image<float>;
+extern template struct Image<double>;
+
+
+
 
 // The next line hides all those methods from the doxygen documentation
 /// \cond TEMPLATE_OVERRIDES
@@ -681,6 +702,25 @@ public:
 
 };
 
+extern template struct Histogram<unsigned int>;
+extern template struct Histogram<long double>;
+extern template struct Histogram<bool>;
+extern template struct Histogram<unsigned char>;
+
+extern template struct Histogram<char>;
+extern template struct Histogram<int>;
+
+extern template struct Histogram<short>;
+extern template struct Histogram<unsigned short>;
+
+extern template struct Histogram<long>;
+extern template struct Histogram<unsigned long>;
+
+extern template struct Histogram<float>;
+extern template struct Histogram<double>;
+
+
+
 
 //-----------------------------------------------------------------------------------------------//
 // Image plane selector (to be embedded into a Data, and visualized with ImagePlaneWidget)
@@ -940,6 +980,26 @@ public:
 
 
 };
+
+
+extern template struct ImagePlane<unsigned int>;
+extern template struct ImagePlane<long double>;
+extern template struct ImagePlane<bool>;
+extern template struct ImagePlane<unsigned char>;
+
+extern template struct ImagePlane<char>;
+extern template struct ImagePlane<int>;
+
+extern template struct ImagePlane<short>;
+extern template struct ImagePlane<unsigned short>;
+
+extern template struct ImagePlane<long>;
+extern template struct ImagePlane<unsigned long>;
+
+extern template struct ImagePlane<float>;
+extern template struct ImagePlane<double>;
+
+
 
 
 ////// infos for Data
