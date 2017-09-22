@@ -148,8 +148,8 @@ list-scene-directories() {
          plugin=`basename $plugin_src_dir`
          echo "$plugin built" | log
          if [ -d "$plugin_src_dir/examples" ]; then
-         relative_plugin_binpath=`realpath --relative-to=$build_dir $plugin_bin_dir`
-#         relative_plugin_srcpath=`realpath --relative-to=$src_dir $plugin_src_dir`
+         relative_plugin_binpath=`realpath --relative-to="$build_dir" "$plugin_bin_dir"`
+#         relative_plugin_srcpath=`realpath --relative-to="$src_dir" "$plugin_src_dir"`
          mkdir -p "$output_dir/$relative_plugin_binpath/examples"
          echo "$plugin_src_dir/examples:$output_dir/$relative_plugin_binpath/examples"
          else
@@ -178,7 +178,7 @@ create-directories() {
             scene_src_path=`echo $scene | cut -d ':' -f1`
 #            scene_bin_path=`echo $scene | cut -d ':' -f2`
 
-            relative_scene_path=`realpath --relative-to=$plugin_src_dir $scene_src_path`
+            relative_scene_path=`realpath --relative-to="$plugin_src_dir" "$scene_src_path"`
             mkdir -p "$plugin_bin_dir/$relative_scene_path"
             if [[ "$CI_BUILD_TYPE" == "Debug" ]]; then
             echo 60 > "$plugin_bin_dir/$relative_scene_path/timeout.txt" # Default debug timeout, in seconds
