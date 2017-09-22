@@ -329,7 +329,7 @@ test-all-scenes() {
         local status=-1
         if [[ -e runSofa.timeout ]]; then
             echo 'Timeout!'
-            echo timeout > "scene_bin_path/status.txt"
+            echo timeout > "$scene_bin_path/status.txt"
             echo -e "\n\nINFO: Abort caused by timeout.\n" >> "$scene_bin_path/output.txt"
             rm -f runSofa.timeout
         else
