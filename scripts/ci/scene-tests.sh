@@ -205,7 +205,7 @@ parse-options-files() {
 			ignore)
 			    if [[ "$(count-args "$args")" = 1 ]]; then
                 scene="$(get-arg "$args" 1)"
-                echo $plugin_src_dir/$scene:$plugin_bin_dir/$scene >> "$plugin_bin_dir/ignore-patterns.txt"
+                echo $scene >> "$plugin_bin_dir/ignore-patterns.txt"
 			    else
                 echo "$plugin_src_dir/.scene-tests: warning: 'ignore' expects one argument: ignore <pattern>" | log
 			    fi
@@ -263,11 +263,11 @@ parse-options-files() {
     # echo "Listing ignored and added scenes."
     while read allpath; do
         plugin_bin_dir=`echo $allpath | cut -d ':' -f2`
-        grep -xf "$plugin_bin_dir/ignore-patterns.txt" \
+        grep -f "$plugin_bin_dir/ignore-patterns.txt" \
              "$plugin_bin_dir/scenes.txt" \
              > "$plugin_bin_dir/ignored-scenes.txt" || true
         if [ -s "$plugin_bin_dir/ignore-patterns.txt" ]; then
-            grep -xvf "$plugin_bin_dir/ignore-patterns.txt" \
+            grep -vf "$plugin_bin_dir/ignore-patterns.txt" \
              "$plugin_bin_dir/scenes.txt" \
              > "$plugin_bin_dir/tested-scenes.txt" || true
         else
