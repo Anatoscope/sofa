@@ -402,6 +402,7 @@ print-summary() {
     echo "Scene testing summary:"
 
     cat "$output_dir/time.txt"
+    echo # newline
 
     echo "- $(count-tested-scenes) scene(s) tested"
     echo "- $(count-warnings) warning(s)"
