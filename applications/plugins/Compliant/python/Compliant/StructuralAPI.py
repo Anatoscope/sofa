@@ -24,7 +24,7 @@ import sys
 
 
 from SofaPython import SofaNumpy as sofa_numpy
-from SofaPython.SofaNumpy import numpy_data
+from SofaPython.SofaNumpy import numpify as numpy_data
 from types import Rigid3
 
 import numpy as np
