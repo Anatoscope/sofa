@@ -53,7 +53,7 @@ static core::MechanicalParams mechanical_params_rhs(const core::ExecParams& ep, 
     res.setKFactor(dt);        
 
     // this is to get momentum on addMDx
-    res.dx() = core::VecDerivId::velocity();
+    res.dx() = core::VecId::velocity();
     
     return res;
 }
@@ -77,14 +77,15 @@ void simple_solver::solve(const core::ExecParams* ep,
     const core::MechanicalParams mp_rhs = mechanical_params_rhs(*ep, dt);    
     const system_type::vec rhs = assembler->rhs_dynamics(mp_rhs);
 
-    system_type::vec vel;
+    system_type::vec vel = system_type::vec::Zero(rhs.size());
     kkt->solve(vel, sys, rhs);
 
-    std::clog << vel.transpose() << std::endl;
-    
     // TODO correction
 
     assembler->integrate(vel, dt);
+
+    simulation::MechanicalPropagateOnlyPositionAndVelocityVisitor vis( &mp_sys );    
+    getContext()->executeVisitor(&vis);
 }
 
 

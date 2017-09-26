@@ -59,15 +59,20 @@ struct unimplemented : std::logic_error {
 };
 
 
+#ifndef NDEBUG
 template<class ... Args>
-static void log(Args&& ... args) {
+static inline void log(Args&& ... args) {
     auto out = oldmsg_info("assembly");
     
     const int expand[] = {
-      (out <<  args << " ", 0)...
+        (out <<  args << " ", 0)...
     }; (void) expand;
     // std::clog << std::endl;
 }
+#else
+template<class ... Args>
+static inline void log(Args&& ... args) { }
+#endif
 
 
 
@@ -581,6 +586,85 @@ static void concatenate(rmat& res, const rmat& src) {
     res.finalize();
 }
 
+template<class F>
+static void visit_data(const core::objectmodel::BaseData* data, std::size_t size, const F& f) {
+    const void* vec_ptr = data->getValueVoidPtr();
+    const auto* info = data->getValueTypeInfo();
+    
+    void* ptr = const_cast<void*>(info->getValuePtr(vec_ptr));
+    
+    const std::size_t element_size = info->size();
+    
+    switch(info->byteSize()) {
+    case sizeof(double): 
+        f(reinterpret_cast<double*>(ptr), element_size * size); 
+        break;
+    case sizeof(float): 
+        f(reinterpret_cast<float*>(ptr), element_size * size);
+        break;
+    default:
+        throw std::runtime_error("cannot deduce scalar type");
+    }
+}
+
+
+template<class F, class VecId>
+static void visit_state_vector(const core::behavior::BaseMechanicalState* state, const VecId& id, const F& f) {
+    visit_data(state->baseRead( id ), state->getSize(), f);
+}
+
+
+
+
+
+template<class OutputIterator>
+struct projection_chunk_visitor {
+
+    OutputIterator& out;
+    std::size_t& p;
+    const std::size_t offset;
+
+    template<class U>
+    void operator()(const U* data, std::size_t size) const {
+        for(std::size_t i = 0; i < size; ++i) {
+            if(data[i]) {
+                *out++ = {offset + i, p, 1.0};
+                ++p;
+            }
+        }
+    }
+};
+
+struct fill_visitor {
+    const real value;
+
+    template<class U>
+    void operator()(U* data, std::size_t size) const {
+        for(std::size_t i = 0; i < size; ++i) {
+            data[i] = value;
+        }
+    }
+    
+};
+
+
+
+template<class OutputIterator, class State, class Constraint>
+static void fill_projection_chunk(OutputIterator out,
+                                  std::size_t& p, std::size_t offset,
+                                  State* state, Constraint* constraint) {
+    static const core::MechanicalParams mp;
+    
+    visit_state_vector(state, core::VecId::force(), fill_visitor{1.0});
+
+    // TODO make sure this does not unleash hell through MultiVec daemons
+    constraint->projectResponse(&mp, core::VecId::force());
+    
+    visit_state_vector(state, core::VecId::force(),
+                       projection_chunk_visitor<OutputIterator>{out, p, offset});
+}
+
+
 
 template<class OutputIterator>
 static void select_primal_dual(OutputIterator pout, std::size_t& p,
@@ -593,21 +677,28 @@ static void select_primal_dual(OutputIterator pout, std::size_t& p,
 
         assert(graph[v].state);
         
-        // TODO store primal/dual status in stage3
+        // TODO store primal/dual status in stage3 ?
         auto* node = node_cast(graph[v].state->getContext());
 
         if( node_compliance(node) ) {
-            std::clog << "compliant: " << graph[v].size << " " << graph[v].offset << std::endl;
-            // dual
+            // dual variables
             fill_identity_chunk(dout, graph[v].offset, d, graph[v].size);
             d += graph[v].size;
         } else {
-            // primal
+            // primal variables
 
             // TODO optionally include bilaterals
-            // TODO exclude projected dofs
-            fill_identity_chunk(pout, graph[v].offset, p, graph[v].size);
-            p += graph[v].size;            
+            const std::size_t constraints = node->projectiveConstraintSet.size();
+            if(constraints > 1) {
+                throw assembly_error("only one projective constraint per mechanical state supported");
+            } else if (constraints) {
+                fill_projection_chunk(pout, p, graph[v].offset, 
+                                      graph[v].state, node->projectiveConstraintSet[0]);
+            } else {
+                fill_identity_chunk(pout, graph[v].offset, p, graph[v].size);
+                p += graph[v].size;
+            }
+                                       
         }
         
     }
@@ -657,7 +748,8 @@ static void integrate(const graph_type& graph, const system_type::vec& vel, real
     static const core::ExecParams ep;
     
     for(std::size_t v : vertices(graph) ) {
-        // TODO use flags
+        if(!graph[v].state) continue;
+        
         auto* node = node_cast(graph[v].state->getContext());
         if(out_degree(v, graph) || node_compliance(node)) {
             continue;
@@ -731,10 +823,11 @@ struct assembler : assembler_base {
         log("H:\n", H);
         
         // primal/dual selection
-        // TODO use projectors
         triplets_type Ps, Ds;
         std::size_t p, d;
-        select_primal_dual(std::back_inserter(Ps), p, std::back_inserter(Ds), d, graph);
+        select_primal_dual(std::back_inserter(Ps), p, 
+                           std::back_inserter(Ds), d, 
+                           graph);
         log("primal/dual selected:", p, '/', d);
 
         system_type res(p, d);
@@ -743,19 +836,21 @@ struct assembler : assembler_base {
             P.resize(size, p); P.setFromTriplets(Ps.begin(), Ps.end());
             log("P:\n", P);
 
-            // primal mapping
+            // store primal mapping
             LP = L * P;
             
             // TODO optimize selection        
             res.H = ((LP.transpose() * H) * LP).triangularView<Eigen::Lower>();
             log("res.H\n", res.H);
-    
 
+            // TODO remove res.P altogether
+            res.P.setIdentity();
+            
             if( d ) {
                 D.resize(size, d); D.setFromTriplets(Ds.begin(), Ds.end());
                 log("D:\n", D);
 
-                // dual mappings (selection only)
+                // store dual mapping (selection only)
                 LD = L * D;
                 
                 // TODO optimize selection
@@ -768,7 +863,6 @@ struct assembler : assembler_base {
             }
         }
 
-        // TODO should we store L ?
         return res;
     }
 
