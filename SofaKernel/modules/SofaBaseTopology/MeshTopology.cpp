@@ -26,6 +26,7 @@
 #include <sofa/helper/fixed_array.h>
 #include <set>
 #include <string.h>
+#include <limits>
 
 namespace sofa
 {
@@ -2731,6 +2732,33 @@ void MeshTopology::draw(const core::visual::VisualParams* vparams)
     }
 
 }
+
+
+void MeshTopology::computeBBox(const core::ExecParams* params, bool onlyVisible)
+{
+    if( onlyVisible &&
+        !_drawEdges.getValue() &&
+            !_drawTriangles.getValue() &&
+            !_drawQuads.getValue() &&
+            !_drawTetra.getValue() &&
+            !_drawHexa.getValue() ) return;
+
+    const SeqPoints& x = seqPoints.getValue();
+
+    SReal minBBox[3] = {std::numeric_limits<SReal>::max(),std::numeric_limits<SReal>::max(),std::numeric_limits<SReal>::max()};
+    SReal maxBBox[3] = {std::numeric_limits<SReal>::lowest(),std::numeric_limits<SReal>::lowest(),std::numeric_limits<SReal>::lowest()};
+    for ( const auto& p : x )
+    {
+        for (int c=0; c<3; c++)
+        {
+            if (p[c] > maxBBox[c]) maxBBox[c] = p[c];
+            else if (p[c] < minBBox[c]) minBBox[c] = p[c];
+        }
+    }
+    this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<SReal>(minBBox,maxBBox));
+}
+
+
 
 } // namespace topology
 

@@ -639,6 +639,8 @@ public:
     virtual void updateTetrahedra();
     virtual void updateHexahedra();
 
+    virtual void computeBBox(const core::ExecParams* params, bool onlyVisible=false);
+
 protected:
 
     sofa::core::topology::TopologyObjectType UpperTopology;
