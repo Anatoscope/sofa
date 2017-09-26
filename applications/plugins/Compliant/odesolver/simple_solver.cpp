@@ -72,11 +72,19 @@ void simple_solver::solve(const core::ExecParams* ep,
 
     const core::MechanicalParams mp_sys = mechanical_params_system(*ep, dt);
     const system_type sys = assembler->assemble_system(mp_sys);
-
+    kkt->factor(sys);
 
     const core::MechanicalParams mp_rhs = mechanical_params_rhs(*ep, dt);    
-    const system_type::vec rhs = assembler->rhs_dynamics(mp_rhs); 
+    const system_type::vec rhs = assembler->rhs_dynamics(mp_rhs);
+
+    system_type::vec vel;
+    kkt->solve(vel, sys, rhs);
+
+    std::clog << vel.transpose() << std::endl;
     
+    // TODO correction
+
+    assembler->integrate(vel, dt);
 }
 
 

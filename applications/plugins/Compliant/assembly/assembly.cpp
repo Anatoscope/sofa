@@ -624,7 +624,7 @@ static void fetch_rhs(system_type::vec& out, const graph_type& graph,
     for(std::size_t v : vertices(graph)) {
         if(!graph[v].state) continue;
 
-        assert(graph[v].offset + graph[v].size < out.size());
+        assert(graph[v].offset + graph[v].size <= std::size_t(out.size()));
         auto chunk = out.segment(graph[v].offset, graph[v].size);
 
         // clear output
@@ -737,7 +737,7 @@ struct assembler : assembler_base {
         select_primal_dual(std::back_inserter(Ps), p, std::back_inserter(Ds), d, graph);
         log("primal/dual selected:", p, '/', d);
 
-        system_type res;
+        system_type res(p, d);
 
         if( p ) {
             P.resize(size, p); P.setFromTriplets(Ps.begin(), Ps.end());
@@ -778,7 +778,7 @@ struct assembler : assembler_base {
         
         system_type::vec storage = system_type::vec::Zero(size);
         
-        // 1. express forces/momentum/constraint values with correct
+        // 1. express forces/momentum/constraint values with correct mp
         fetch_rhs(storage, graph, mp, false);
         
         // 2. pull everything on primal/dual
@@ -806,6 +806,10 @@ struct assembler : assembler_base {
 
         assembly::integrate(graph, unproj, dt);
     }
+
+
+    
+    
 };
 
 

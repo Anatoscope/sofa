@@ -1,19 +1,25 @@
 
 
 def vec3_dofs(node, **kwargs):
-    return node.createObject('MechanicalObject', **kwargs)
+    res =  node.createObject('MechanicalObject', **kwargs)
+    res.drawMode = 2
+    res.showObject = True
+    
+    return res
 
 def vec3_mass(node, **kwargs):
     return node.createObject('UniformMass', **kwargs)
 
 
+import Sofa
+Sofa.loadPlugin('Compliant')
 
 def createScene(node):
 
+    
     node.createObject('simple_solver')
     node.createObject('LDLTSolver')
 
-    
     p1 = node.createChild('p1')
     n1 = vec3_dofs(p1)
     m1 = vec3_mass(p1)
@@ -40,4 +46,6 @@ def createScene(node):
     from SofaPython import console
     console.start( locals() )
     
+    
+    node.animate = True
     
