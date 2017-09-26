@@ -5,6 +5,9 @@
 
 #include <SofaEigen2Solver/EigenBaseSparseMatrix.h>
 
+// TODO mew
+#include <Compliant/constraint/ConstraintValue.h>
+
 
 namespace std {
 
@@ -706,6 +709,22 @@ static void select_primal_dual(OutputIterator pout, std::size_t& p,
 }
 
 
+
+static void write_constraint_value(real* out, simulation::Node* node,
+                                   std::size_t size, std::size_t deriv_size) {
+    assert( node_compliance(node) );
+    
+    using cv_type = component::odesolver::BaseConstraintValue;
+    
+    if(const cv_type* cv = node->get<cv_type>( core::objectmodel::BaseContext::Local ) ) {
+        cv->dynamics(out, size, deriv_size, true);
+    } else {
+        const component::odesolver::ConstraintValue fallback(node->getMechanicalState());
+        fallback.dynamics(out, size, deriv_size, true);
+    }
+    
+}
+
 static void fetch_rhs(system_type::vec& out, const graph_type& graph, 
                       const core::MechanicalParams& mp, bool correction = false) {
 
@@ -725,20 +744,25 @@ static void fetch_rhs(system_type::vec& out, const graph_type& graph,
         auto* node = node_cast(graph[v].state->getContext());
         for(auto* ff : node->forceField) {
             if(ff->isCompliance.getValue()) {
-                // TODO get constraintvalue
-                
+
+                // TODO: we should write this on the dual vertex only!
+                write_constraint_value(chunk.data(), node,  
+                                       graph[v].state->getSize(), graph[v].state->getMatrixBlockSize());
             } else {
                 ff->addForce(&mp, out_mid);
             }
         }
 
+        // force *= kfactor
+        graph[v].state->vOp(&mp, out_id, core::ConstVecId::null(), out_id, mp.kFactor());
+        
         // add momentum
         if(auto* mass = node->getMass()) {
             mass->addMDx(&mp, out_mid, 1.0);
         }
-        
+
+        assert(mp.mFactor() == 1);
         graph[v].state->copyToBuffer(chunk.data(), out_id, graph[v].size);
-        
     }
 }
 

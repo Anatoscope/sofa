@@ -42,7 +42,7 @@ def createScene(node):
     p1.addChild(d1)
     p2.addChild(d1)
     
-    c = d1.createObject('UniformCompliance', compliance = 1e-2, isCompliance = False)
+    c = d1.createObject('UniformCompliance', compliance = 1e-2, isCompliance = True)
 
     m = d1.createObject('DifferenceMultiMapping',
                         input = '{0} {1}'.format(n1.getLinkPath(),
