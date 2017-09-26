@@ -41,10 +41,30 @@ def createSceneAndController(node):
 
 
     # WriteAccessor as Context
-    print( "before:",mo.position[0][0] )
-    with SofaPython.SofaNumpy.edit_data( mo, "position" ) as pos:
-        pos[0][0] = 456
+    print( "before:", mo.position[0][0] )
+    with SofaPython.SofaNumpy.edit_data( mo, "position" ) as w_pos:
+        w_pos[0][0] = 456
     print( "after:",mo.position[0][0] )
+    print( "WriteAccessor as Context are unfortunately still accessible...:",w_pos[0][0] )
+
+    # check to read-only are not writeable
+    ro = SofaPython.SofaNumpy.read_only( mo, "position" )
+    try:
+        # this must throw ValueError since m is read-only outside context
+        ro[0] = [0,0,0]
+        assert(False)
+    except ValueError:
+        pass
+
+    # check that old WriteAccessor as Context are no longer writeable
+    try:
+        # this must throw ValueError since m is read-only outside context
+        w_pos[0] = [0,0,0]
+        assert(False)
+    except ValueError:
+        pass
+    print
+
 
 
 
