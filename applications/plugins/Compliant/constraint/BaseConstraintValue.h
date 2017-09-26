@@ -32,9 +32,11 @@ class SOFA_Compliant_API BaseConstraintValue : public core::objectmodel::BaseObj
   protected:
 
     typedef core::behavior::BaseMechanicalState mstate_type;
+
+    // TODO this has nothing to do in the base class god dammit
 	mstate_type::SPtr mstate;
 	
-  public:
+ public:
 
     SOFA_ABSTRACT_CLASS(BaseConstraintValue, core::objectmodel::BaseObject);
 
@@ -54,6 +56,16 @@ class SOFA_Compliant_API BaseConstraintValue : public core::objectmodel::BaseObj
 
     }
 
+    // TODO fix the following broken stuff
+    // - we sure don't need n/dim, only the buffer size for consistency
+    // - alternatively, we could use a MultiVecCoordId to write to
+    // - we most certainely want to pass a cFactor when writing value
+    // - filterConstraint seems like a big hack and should be removed
+    // - why the fuck are we passing stabilization flag to dynamics? is this
+    //   some unfinished refactor?
+
+
+    
     /// Value for stabilization: right-hand term for velocity correction
     /// @param n nb constraint blocks
     /// @param dim nb lines per constraint
