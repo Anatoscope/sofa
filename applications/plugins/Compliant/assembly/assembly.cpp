@@ -24,7 +24,7 @@ static Iterator end(const std::pair<Iterator, Iterator>& range) { return range.s
 namespace sofa {
 namespace assembly {
 
-struct vertex_type {
+struct vertex {
 
     using state_type = core::behavior::BaseMechanicalState*;
     state_type state = nullptr;
@@ -41,7 +41,7 @@ struct vertex_type {
 
 
 
-struct edge_type { };
+struct edge { };
 
 template<class Vertex, class Edge>
 using graph = boost::adjacency_list<boost::vecS, boost::vecS,
@@ -49,7 +49,7 @@ using graph = boost::adjacency_list<boost::vecS, boost::vecS,
                                     Vertex, Edge>;
 
 
-using graph_type = graph<vertex_type, edge_type>;
+using graph_type = graph<vertex, edge>;
 
 
 
@@ -82,7 +82,7 @@ static inline void log(Args&& ... args) { }
 struct Visitor : public simulation::Visitor {
 
     graph_type& graph;
-    std::map< vertex_type::state_type, std::size_t > table;
+    std::map< vertex::state_type, std::size_t > table;
 
     Visitor(graph_type& graph, const core::ExecParams* ep)
         : simulation::Visitor(ep),
@@ -95,7 +95,7 @@ struct Visitor : public simulation::Visitor {
             const auto err = table.emplace(state, num_vertices(graph));
 
             if(err.second) {
-                vertex_type prop;
+                vertex prop;
                 
                 prop.state = state;
                 prop.is_mechanical = node->mass.get() || node->forceField.size();
@@ -518,7 +518,7 @@ static void extend_graph(graph_type& graph) {
     for(std::size_t c : compliant) {
 
         // lambda node
-        vertex_type vprop;
+        vertex vprop;
         vprop.state = graph[c].state;
         
         const std::size_t v = add_vertex(vprop, graph);
@@ -748,6 +748,7 @@ static void fetch_rhs(system_type::vec& out, const graph_type& graph,
                 // TODO: we should write this on the dual vertex only!
                 write_constraint_value(chunk.data(), node,  
                                        graph[v].state->getSize(), graph[v].state->getMatrixBlockSize());
+                
             } else {
                 ff->addForce(&mp, out_mid);
             }
