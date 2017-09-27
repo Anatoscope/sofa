@@ -44,11 +44,11 @@ class Image:
         """ create by applying TransferFunction to input image
             note: using a different name than container allows inplace use of this function
         """
-        self.node.createObject("TransferFunction", template=inputImage.template()+","+self.template(), name="transferFunction", inputImage=inputImage.getImagePath()+".branchingImage", param=param)
-        self.image = self.node.createObject("ImageContainer", template=self.template(), name="transferedImage", branchingImage="@transferFunction.outputImage", transform=inputImage.getImagePath()+".transform", drawBB="false")
+        self.node.createObject("TransferFunction", template=inputImage.template()+","+self.template(), name="transferFunction", inputImage=inputImage.getImagePath()+".image", param=param)
+        self.image = self.node.createObject("ImageContainer", template=self.template(), name="transferedImage", image="@transferFunction.outputImage", transform=inputImage.getImagePath()+".transform", drawBB="false")
 
     def fromImages(self, images,  overlap="1"):
-        """ Merge the input regular images using the MergeImagesIntoBranching component, returns the corresponding BranchingImage.API.Image
+        """ Merge the input regular images
         """
         args=dict()
         i=1
