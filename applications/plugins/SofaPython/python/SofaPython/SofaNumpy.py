@@ -133,5 +133,14 @@ def vec_as_numpy( (ptr, size, typename) ):
 def numpify(obj, name):
     # i very much want to alias data buffers in a read-write way without
     # triggering anything data-related, so please leave this be
-    return as_numpy( obj.findData(name), True )
+
+    # MattN: this defeats the data graph purpose, and will generate
+    # tons of non-debuggable bugs, a warning is mandatory.
+    # We need to find a similar writing that triggers the data graph.
+
+    # @warning read-write here is a hack
+    Sofa.msg_warning("SofaPython.SofaNumpy",
+                     "using read-write data incorrectly, a modification won't trigger the data-graph"
+                     " ("+ obj.getLinkPath()+"."+name  +")" )
+    return as_numpy( obj.findData(name), False )
 
