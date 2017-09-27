@@ -28,14 +28,12 @@
 #include <sofa/defaulttype/Vec.h>
 #include <sofa/defaulttype/Mat.h>
 #include "../types/DeformationGradientTypes.h"
-#include <sofa/simulation/Simulation.h>
+//#include <sofa/simulation/Simulation.h>
 
 #include "../shapeFunction/BaseShapeFunction.h"
-#include "../quadrature/BaseGaussPointSampler.h"
-#include <SofaBaseTopology/TopologyData.inl>
+//#include <SofaBaseTopology/TopologyData.inl>
 #include <sofa/core/topology/BaseMeshTopology.h>
-#include <SofaBaseMechanics/MechanicalObject.h>
-#include <sofa/core/visual/VisualParams.h>
+//#include <SofaBaseMechanics/MechanicalObject.h>
 #include <sofa/helper/OptionsGroup.h>
 #include <sofa/helper/kdTree.h>
 
@@ -43,6 +41,14 @@
 
 namespace sofa
 {
+namespace component
+{
+namespace engine
+{
+class BaseGaussPointSampler; // forward declaration
+} // namespace engine
+
+} // namespace component
 
 
 ///Class used to provide material_dimensions and tells if position/defo gradients are mapped or not

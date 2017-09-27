@@ -27,10 +27,7 @@
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/Vec.h>
 #include <sofa/defaulttype/Mat.h>
-#include <sofa/core/objectmodel/BaseContext.h>
-#include <SofaBaseMechanics/MechanicalObject.h>
 #include <sofa/helper/vector.h>
-#include <sofa/helper/rmath.h>
 #include <sofa/helper/random.h>
 #ifdef SOFA_SMP
 #include <sofa/defaulttype/SharedTypes.h>
@@ -741,77 +738,6 @@ static defaulttype::Mat<N,N,Real> cauchyStrainTensor( const defaulttype::Mat<N,N
 
 } // namespace defaulttype
 
-
-
-
-// ==========================================================================
-// Mechanical Object
-
-namespace component
-{
-
-namespace container
-{
-
-#if defined(SOFA_EXTERN_TEMPLATE) && !defined(FLEXIBLE_StrainTYPES_CPP)
-#ifndef SOFA_FLOAT
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::E331dTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::E331dTypes>;
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::E332dTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::E332dTypes>;
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::E333dTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::E333dTypes>;
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::E321dTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::E321dTypes>;
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::E311dTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::E311dTypes>;
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::E221dTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::E221dTypes>;
-
-
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::I331dTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::I331dTypes>;
-
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::U331dTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::U331dTypes>;
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::U321dTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::U321dTypes>;
-
-
-#endif
-#ifndef SOFA_DOUBLE
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::E331fTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::E331fTypes>;
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::E332fTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::E332fTypes>;
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::E333fTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::E333fTypes>;
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::E321fTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::E321fTypes>;
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::E311fTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::E311fTypes>;
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::E221fTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::E221fTypes>;
-
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::I331fTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::I331fTypes>;
-
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::U331fTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::U331fTypes>;
-//extern template class SOFA_Flexible_API MechanicalObjectInternalData<defaulttype::U321fTypes>;
-extern template class SOFA_Flexible_API MechanicalObject<defaulttype::U321fTypes>;
-#endif
-#endif
-
-
-
-
-
-
-
-} // namespace container
-
-} // namespace component
 
 
 

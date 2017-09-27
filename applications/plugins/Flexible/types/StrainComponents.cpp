@@ -19,16 +19,74 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#define FLEXIBLE_StrainTYPES_CPP
+#define FLEXIBLE_StrainComponents_CPP
 
-#include "../types/StrainTypes.h"
+#include "../types/StrainComponents.h"
 #include <sofa/core/ObjectFactory.h>
 
 #include <sofa/core/State.inl>
 #include <SofaBaseMechanics/MechanicalObject.inl>
 
+
+using namespace sofa::defaulttype;
+
 namespace sofa
 {
+
+
+namespace core
+{
+
+#ifndef SOFA_FLOAT
+
+template <> void State<E331dTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<E321dTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<E311dTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<E332dTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<E333dTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<E221dTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<I331dTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<U331dTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<U321dTypes>::computeBBox(const core::ExecParams*, bool) {}
+
+
+template class SOFA_Flexible_API State<E331dTypes>;
+template class SOFA_Flexible_API State<E321dTypes>;
+template class SOFA_Flexible_API State<E311dTypes>;
+template class SOFA_Flexible_API State<E332dTypes>;
+template class SOFA_Flexible_API State<E333dTypes>;
+template class SOFA_Flexible_API State<E221dTypes>;
+template class SOFA_Flexible_API State<I331dTypes>;
+template class SOFA_Flexible_API State<U331dTypes>;
+template class SOFA_Flexible_API State<U321dTypes>;
+#endif
+#ifndef SOFA_DOUBLE
+
+
+template <> void State<E331fTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<E321fTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<E311fTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<E332fTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<E333fTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<E221fTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<I331fTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<U331fTypes>::computeBBox(const core::ExecParams*, bool) {}
+template <> void State<U321fTypes>::computeBBox(const core::ExecParams*, bool) {}
+
+template class SOFA_Flexible_API State<E331fTypes>;
+template class SOFA_Flexible_API State<E321fTypes>;
+template class SOFA_Flexible_API State<E311fTypes>;
+template class SOFA_Flexible_API State<E332fTypes>;
+template class SOFA_Flexible_API State<E333fTypes>;
+template class SOFA_Flexible_API State<E221fTypes>;
+template class SOFA_Flexible_API State<I331fTypes>;
+template class SOFA_Flexible_API State<U331fTypes>;
+template class SOFA_Flexible_API State<U321fTypes>;
+#endif
+
+} // namespace core
+
+
 namespace component
 {
 namespace container
@@ -39,7 +97,6 @@ namespace container
 
 SOFA_DECL_CLASS ( StrainMechanicalObject )
 
-using namespace sofa::defaulttype;
 
 int StrainMechanicalObjectClass = core::RegisterObject ( "mechanical state vectors" )
 #ifndef SOFA_FLOAT
@@ -85,6 +142,18 @@ int StrainMechanicalObjectClass = core::RegisterObject ( "mechanical state vecto
         ;
 
 #ifndef SOFA_FLOAT
+
+template <> void MechanicalObject<E331dTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<E321dTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<E311dTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<E332dTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<E333dTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<E221dTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<I331dTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<U331dTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<U321dTypes>::draw(const core::visual::VisualParams*) {}
+
+
 template class SOFA_Flexible_API MechanicalObject<E331dTypes>;
 template class SOFA_Flexible_API MechanicalObject<E321dTypes>;
 template class SOFA_Flexible_API MechanicalObject<E311dTypes>;
@@ -105,6 +174,17 @@ template class SOFA_Flexible_API MechanicalObject<U331dTypes>;
 template class SOFA_Flexible_API MechanicalObject<U321dTypes>;
 #endif
 #ifndef SOFA_DOUBLE
+
+template <> void MechanicalObject<E331fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<E321fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<E311fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<E332fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<E333fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<E221fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<I331fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<U331fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<U321fTypes>::draw(const core::visual::VisualParams*) {}
+
 template class SOFA_Flexible_API MechanicalObject<E331fTypes>;
 template class SOFA_Flexible_API MechanicalObject<E321fTypes>;
 template class SOFA_Flexible_API MechanicalObject<E311fTypes>;

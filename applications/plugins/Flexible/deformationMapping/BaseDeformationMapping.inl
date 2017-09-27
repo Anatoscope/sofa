@@ -28,6 +28,7 @@
 #include <sofa/helper/gl/Color.h>
 #include <sofa/helper/system/glu.h>
 #include <sofa/helper/IndexOpenMP.h>
+#include "../quadrature/BaseGaussPointSampler.h"
 
 #ifdef _OPENMP
 #include <omp.h>

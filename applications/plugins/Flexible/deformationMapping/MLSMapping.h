@@ -24,7 +24,6 @@
 
 #include <Flexible/config.h>
 #include "BaseDeformationMapping.h"
-#include "BaseDeformationImpl.inl"
 #include "MLSJacobianBlock_point.inl"
 #include "MLSJacobianBlock_affine.inl"
 #include "MLSJacobianBlock_rigid.inl"
