@@ -731,16 +731,16 @@ static void select_primal_dual(OutputIterator pout, std::size_t& p,
 
 
 
-static void write_constraint_value(real* out, simulation::Node* node,
-                                   std::size_t size, std::size_t deriv_size) {
+template<class ... Args>
+static void write_constraint_value(simulation::Node* node, Args&& ... args) {
 
     using cv_type = component::odesolver::BaseConstraintValue;
     
     if(const cv_type* cv = node->get<cv_type>( core::objectmodel::BaseContext::Local ) ) {
-        cv->dynamics(out, size, deriv_size, true);
+        cv->value(std::forward<Args>(args)...);
     } else {
         const component::odesolver::ConstraintValue fallback(node->getMechanicalState());
-        fallback.dynamics(out, size, deriv_size, true);
+        fallback.value(std::forward<Args>(args)...);
     }
     
 }
@@ -751,6 +751,8 @@ static void fetch_rhs(system_type::vec& out, const graph_type& graph,
     static const core::VecDerivId out_id = core::VecId::force();
     static const core::MultiVecDerivId out_mid = out_id;
 
+    const real c_factor = -1.0 / mp.kFactor();
+    
     for(std::size_t v : vertices(graph)) {
         if(!graph[v].state) continue;
 
@@ -758,17 +760,13 @@ static void fetch_rhs(system_type::vec& out, const graph_type& graph,
         auto chunk = out.segment(graph[v].offset, graph[v].size);
 
         auto* node = node_cast(graph[v].state->getContext());
+
+        // clear output
+        graph[v].state->vOp(&mp, out_id);
         
         if(graph[v].flags[vertex::is_dual]) {
-            // TODO cFactor
-            write_constraint_value(chunk.data(), node,  
-                                   graph[v].state->getSize(), graph[v].state->getMatrixBlockSize());
-            
+            write_constraint_value(node, out_id, core::VecId::position(), core::VecId::velocity(), c_factor);
         } else {
-
-            // clear output
-            graph[v].state->vOp(&mp, out_id);
-            
             // add forces
             for(auto* ff : node->forceField) {
                 // note: compliance should NOT write forces here anyways
@@ -786,9 +784,10 @@ static void fetch_rhs(system_type::vec& out, const graph_type& graph,
             }
 
             assert(mp.mFactor() == 1);
-            graph[v].state->copyToBuffer(chunk.data(), out_id, graph[v].size);
             
         }
+
+        graph[v].state->copyToBuffer(chunk.data(), out_id, graph[v].size);        
     }
 }
 

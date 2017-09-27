@@ -26,6 +26,12 @@ class SOFA_Compliant_API ConstraintValue : public BaseConstraintValue {
 	// value for dynamics
     virtual void dynamics(SReal* dst, unsigned n, unsigned dim, bool, const core::MultiVecCoordId& posId = core::VecCoordId::position(), const core::MultiVecDerivId& velId = core::VecDerivId::velocity()) const;
 
+
+    virtual void value(const core::VecDerivId& out,
+                       const core::VecCoordId& pos, const core::VecDerivId& vel,
+                       SReal factor = 1.0) const;
+    
+    
 };
 
 }

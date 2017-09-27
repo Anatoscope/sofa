@@ -95,7 +95,14 @@ class SOFA_Compliant_API BaseConstraintValue : public core::objectmodel::BaseObj
     /// clear an eventual violated mask
     virtual void clear() {}
 
+    
 
+    // new (hopefully) sane api
+    // TODO this should actually go to some Compliance base class
+    virtual void value(const core::VecDerivId& out,
+                       const core::VecCoordId& pos, const core::VecDerivId& vel,
+                       SReal factor) const { };
+    
 };
 
 }

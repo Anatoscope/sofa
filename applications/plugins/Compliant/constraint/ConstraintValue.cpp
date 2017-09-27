@@ -1,7 +1,8 @@
 #include "ConstraintValue.h"
 
 #include <sofa/core/ObjectFactory.h>
-#include "../utils/map.h"
+#include <Compliant/utils/map.h>
+
 using std::cerr;
 using std::endl;
 
@@ -11,7 +12,7 @@ namespace odesolver {
 
 
 SOFA_DECL_CLASS(ConstraintValue)
-int ConstaintValueClass = core::RegisterObject("Constraint value abstraction").add< ConstraintValue >();
+static int ConstaintValueClass = core::RegisterObject("Constraint value abstraction").add< ConstraintValue >();
 
 
 ConstraintValue::ConstraintValue( mstate_type* mstate )
@@ -40,6 +41,14 @@ void ConstraintValue::dynamics(SReal* dst, unsigned n, unsigned dim, bool, const
     map(dst, size) *= (-1.0/this->getContext()->getDt());
 }
 
+
+void ConstraintValue::value(const core::VecDerivId& out, 
+                            const core::VecCoordId& pos, const core::VecDerivId& vel, 
+                            SReal factor) const {
+    static const core::ExecParams ep;
+    mstate->vOp(&ep, out, core::VecId::null(), pos, factor);
+}
+    
 
 
 }

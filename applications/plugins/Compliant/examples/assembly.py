@@ -22,7 +22,7 @@ def createScene(node):
     node.createObject('CompliantAttachButtonSetting')
     
     node.createObject('simple_solver')
-    # node.createObject('CompliantImplicitSolver')
+    # node.createObject('CompliantImplicitSolver', debug = True)
     
     node.createObject('LDLTSolver', schur = False)
 
@@ -53,6 +53,6 @@ def createScene(node):
     from SofaPython import console
     console.start( locals() )
     
-    node.dt = 1e-5
+    node.dt = 1e-1
     node.animate = False
     
