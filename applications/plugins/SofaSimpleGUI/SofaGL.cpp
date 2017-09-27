@@ -48,7 +48,7 @@ void SofaGL::draw()
         _vparams->viewport() = sofa::helper::fixed_array<int, 4>(_viewport[0], _viewport[1], _viewport[2], _viewport[3]);
         SReal xmin,xmax,ymin,ymax,zmin,zmax;
         _sofaScene->getBoundingBox(&xmin,&xmax,&ymin,&ymax,&zmin,&zmax);
-        _vparams->sceneBBox() = sofa::defaulttype::BoundingBox(xmin,xmax,ymin,ymax,zmin,zmax);
+        _vparams->sceneBBox() = sofa::defaulttype::BoundingBox(defaulttype::Vector3(xmin,ymin,zmin),defaulttype::Vector3(xmax,ymax,zmax));
         _vparams->setProjectionMatrix(_projmatrix);
         _vparams->setModelViewMatrix(_mvmatrix);
     }
