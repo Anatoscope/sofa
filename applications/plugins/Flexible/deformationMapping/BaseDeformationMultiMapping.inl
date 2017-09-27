@@ -194,9 +194,6 @@ void BaseDeformationMultiMappingT<JacobianBlockType1,JacobianBlockType2>::resize
         }
     }
 
-    // init jacobians
-    initJacobianBlocks();
-
     // clear forces
     if(this->toModel->write(core::VecDerivId::force())) { helper::WriteOnlyAccessor<Data< OutVecDeriv > >  f(*this->toModel->write(core::VecDerivId::force())); for(size_t i=0;i<f.size();i++) f[i].clear(); }
     // clear velocities
@@ -323,6 +320,8 @@ void BaseDeformationMultiMappingT<JacobianBlockType1,JacobianBlockType2>::init()
 template <class JacobianBlockType1,class JacobianBlockType2>
 void BaseDeformationMultiMappingT<JacobianBlockType1,JacobianBlockType2>::reinit()
 {
+    initJacobianBlocks(); // reinit jacobian blocks given computed weights and dof rest positions (stored in state for the parent, and in pos0/F0 for the child)
+
     if(this->assemble.getValue()) { updateJ1(); updateJ2(); }
 
     // force apply

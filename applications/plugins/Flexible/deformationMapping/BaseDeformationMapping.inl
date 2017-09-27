@@ -298,15 +298,13 @@ void BaseDeformationMappingT<JacobianBlockType>::resizeOut()
 
     //    updateIndex();
 
-    // init jacobians
-    initJacobianBlocks();
 
     // clear forces
     if(this->toModel->write(core::VecDerivId::force())) { helper::WriteOnlyAccessor<Data< OutVecDeriv > >  f(*this->toModel->write(core::VecDerivId::force())); for(size_t i=0;i<f.size();i++) f[i].clear(); }
     // clear velocities
     if(this->toModel->write(core::VecDerivId::velocity())) { helper::WriteOnlyAccessor<Data< OutVecDeriv > >  vel(*this->toModel->write(core::VecDerivId::velocity())); for(size_t i=0;i<vel.size();i++) vel[i].clear(); }
 
-    //Apply mapping to init child positions
+    //init jacobian
     reinit();
 
     // set deformation gradient state rest position when defined by gaussPointSampler
@@ -417,6 +415,8 @@ void BaseDeformationMappingT<JacobianBlockType>::init()
 template <class JacobianBlockType>
 void BaseDeformationMappingT<JacobianBlockType>::reinit()
 {
+    initJacobianBlocks(); // reinit jacobian blocks given computed weights and dof rest positions (stored in state for the parent, and in pos0/F0 for the child)
+
     if(this->isMechanical() && this->assemble.getValue()) updateJ();
 
     // force apply
