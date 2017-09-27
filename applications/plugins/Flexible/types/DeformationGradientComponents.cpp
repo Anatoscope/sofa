@@ -169,11 +169,11 @@ template class SOFA_Flexible_API MechanicalObject<F221dTypes>;
 #endif
 #ifndef SOFA_DOUBLE
 
-template <> void StateMechanicalObject<F331fTypes>::draw(const core::visual::VisualParams*) {}
-template <> void StateMechanicalObject<F321fTypes>::draw(const core::visual::VisualParams*) {}
-template <> void StateMechanicalObject<F311fTypes>::draw(const core::visual::VisualParams*) {}
-template <> void StateMechanicalObject<F332fTypes>::draw(const core::visual::VisualParams*) {}
-template <> void StateMechanicalObject<F221fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<F331fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<F321fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<F311fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<F332fTypes>::draw(const core::visual::VisualParams*) {}
+template <> void MechanicalObject<F221fTypes>::draw(const core::visual::VisualParams*) {}
 
 template class SOFA_Flexible_API MechanicalObject<F331fTypes>;
 template class SOFA_Flexible_API MechanicalObject<F321fTypes>;
