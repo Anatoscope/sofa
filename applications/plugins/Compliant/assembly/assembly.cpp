@@ -33,8 +33,9 @@ struct vertex {
 
     enum {
         is_mechanical,
-        is_primal,
-        is_dual,
+        
+        is_primal,              // independent dofs
+        is_dual,                // slack vertex for compliant dofs
         flags_size
     };
     
@@ -329,9 +330,10 @@ static void fill_matrix_chunk(OutputIterator out, const defaulttype::BaseMatrix*
 
 
 template<class OutputIterator>
-static void fill_identity_chunk(OutputIterator out, std::size_t row_off, std::size_t col_off, std::size_t size) {
+static void fill_identity_chunk(OutputIterator out, std::size_t row_off,
+                                std::size_t col_off, std::size_t size, real value = 1) {
     for(std::size_t i = 0; i < size; ++i) {
-        *out++ = {row_off + i, col_off + i, 1};
+        *out++ = {row_off + i, col_off + i, value};
     }
 }
 
@@ -475,9 +477,9 @@ static void fill_compliance(OutputIterator out, const graph_type& graph, const c
 
             const std::size_t size = graph[p1].size;
 
-            // fill [[0, 1], [1, 0]] pattern
-            fill_identity_chunk(out, graph[p1].offset, graph[p2].offset, size);
-            fill_identity_chunk(out, graph[p2].offset, graph[p1].offset, size);            
+            // fill [[0, -1], [-1, 0]] pattern
+            fill_identity_chunk(out, graph[p1].offset, graph[p2].offset, size, -1);
+            fill_identity_chunk(out, graph[p2].offset, graph[p1].offset, size, -1);            
 
         } else if(!out_degree(v, graph) ) {
             // independent node
@@ -515,7 +517,7 @@ static std::size_t number_vertices(graph_type& graph, const std::vector<std::siz
 
 
 
-// extend graph with compliance nodes
+// extend graph with compliance/dual nodes
 // precondition: all vertices have non-null state
 static void extend_graph(graph_type& graph) {
 
@@ -526,6 +528,9 @@ static void extend_graph(graph_type& graph) {
 
         auto* node = node_cast(graph[v].state->getContext());
         if( node_compliance(node) ) {
+            if(!graph[v].mapping) {
+                throw assembly_error("compliant dofs must be mapped");
+            }
             compliant.emplace_back(v);
         }
     }
@@ -536,6 +541,7 @@ static void extend_graph(graph_type& graph) {
         // lambda node
         vertex vprop;
         vprop.state = graph[c].state;
+        vprop.flags[vertex::is_dual] = true;
         
         const std::size_t v = add_vertex(vprop, graph);
 
@@ -693,20 +699,20 @@ static void select_primal_dual(OutputIterator pout, std::size_t& p,
     
     for(std::size_t v : vertices(graph)) {
         if(out_degree(v, graph) > 0) continue;
-
         assert(graph[v].state);
-        
-        // TODO store primal/dual status in stage3 ?
-        auto* node = node_cast(graph[v].state->getContext());
 
-        if( node_compliance(node) ) {
-            // dual variables
+
+        // consistency
+        assert(graph[v].flags[vertex::is_dual] ^ graph[v].flags[vertex::is_primal]);
+        
+        if(graph[v].flags[vertex::is_dual]) {
             fill_identity_chunk(dout, graph[v].offset, d, graph[v].size);
             d += graph[v].size;
-        } else {
-            // primal variables
+        }
 
-            // TODO optionally include bilaterals
+        // TODO optionnally include bilateral constraints at this point
+        if(graph[v].flags[vertex::is_primal]) {
+            auto* node = node_cast(graph[v].state->getContext());
             const std::size_t constraints = node->projectiveConstraintSet.size();
             if(constraints > 1) {
                 throw assembly_error("only one projective constraint per mechanical state supported");
@@ -717,7 +723,6 @@ static void select_primal_dual(OutputIterator pout, std::size_t& p,
                 fill_identity_chunk(pout, graph[v].offset, p, graph[v].size);
                 p += graph[v].size;
             }
-                                       
         }
         
     }
@@ -728,8 +733,7 @@ static void select_primal_dual(OutputIterator pout, std::size_t& p,
 
 static void write_constraint_value(real* out, simulation::Node* node,
                                    std::size_t size, std::size_t deriv_size) {
-    assert( node_compliance(node) );
-    
+
     using cv_type = component::odesolver::BaseConstraintValue;
     
     if(const cv_type* cv = node->get<cv_type>( core::objectmodel::BaseContext::Local ) ) {
@@ -753,33 +757,38 @@ static void fetch_rhs(system_type::vec& out, const graph_type& graph,
         assert(graph[v].offset + graph[v].size <= std::size_t(out.size()));
         auto chunk = out.segment(graph[v].offset, graph[v].size);
 
-        // clear output
-        graph[v].state->vOp(&mp, out_id);
-        
-        // add forces
         auto* node = node_cast(graph[v].state->getContext());
-        for(auto* ff : node->forceField) {
-            if(ff->isCompliance.getValue()) {
-
-                // TODO: we should write this on the dual vertex only!
-                write_constraint_value(chunk.data(), node,  
-                                       graph[v].state->getSize(), graph[v].state->getMatrixBlockSize());
-                
-            } else {
-                ff->addForce(&mp, out_mid);
-            }
-        }
-
-        // force *= kfactor
-        graph[v].state->vOp(&mp, out_id, core::ConstVecId::null(), out_id, mp.kFactor());
         
-        // add momentum
-        if(auto* mass = node->getMass()) {
-            mass->addMDx(&mp, out_mid, 1.0);
-        }
+        if(graph[v].flags[vertex::is_dual]) {
+            // TODO cFactor
+            write_constraint_value(chunk.data(), node,  
+                                   graph[v].state->getSize(), graph[v].state->getMatrixBlockSize());
+            
+        } else {
 
-        assert(mp.mFactor() == 1);
-        graph[v].state->copyToBuffer(chunk.data(), out_id, graph[v].size);
+            // clear output
+            graph[v].state->vOp(&mp, out_id);
+            
+            // add forces
+            for(auto* ff : node->forceField) {
+                // note: compliance should NOT write forces here anyways
+                if(!ff->isCompliance.getValue()) {
+                    ff->addForce(&mp, out_mid);
+                }
+            }
+
+            // force *= kfactor
+            graph[v].state->vOp(&mp, out_id, core::ConstVecId::null(), out_id, mp.kFactor());
+
+            // add momentum
+            if(auto* mass = node->getMass()) {
+                mass->addMDx(&mp, out_mid, 1.0);
+            }
+
+            assert(mp.mFactor() == 1);
+            graph[v].state->copyToBuffer(chunk.data(), out_id, graph[v].size);
+            
+        }
     }
 }
 
