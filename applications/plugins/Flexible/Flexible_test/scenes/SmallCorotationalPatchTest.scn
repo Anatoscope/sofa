@@ -11,7 +11,7 @@
 
     <!--Nodes-->
     <RegularGrid name ="loader" nx="4" ny="4" nz="4" xmin="0" xmax="1" ymin="0" ymax="1" zmin="0" zmax="1"  drawHexahedra="true" />
-    <MechanicalObject name="defoDOF" showObject="1"  showObjectScale="5"  showIndices="1" position="@loader.position"  showIndicesScale="0.0001" />
+    <MechanicalObject name="defoDOF" showObject="1"  showObjectScale="5"  showIndices="1"  showIndicesScale="0.0001" />
     
     <!--Constraint and roi-->
     <BoxROI name="Box" box="-0.1 -0.1 -0.1  1.1 1.1 1.1" />
