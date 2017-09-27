@@ -674,16 +674,40 @@ class Behavior(object):
                     Sofa.msg_info("Flexible.API.Behavior",'Exported Strains in: '+filename)
 
     def addHooke(self, strainMeasure="Corotational", youngModulus=0, poissonRatio=0, viscosity=0, useOffset=False, assemble=True):
-        eNode = self.node.createChild("E")
-        self.strainDofs = eNode.createObject('MechanicalObject',  template="E"+self.type, name="E")
-        self.strainMapping = eNode.createObject(strainMeasure+'StrainMapping', template="F"+self.type+",E"+self.type, assemble=assemble)
-        if useOffset:
-            eOffNode = eNode.createChild("offsetE")
-            eOffNode.createObject('MechanicalObject',  template="E"+self.type, name="E")
-            self.relativeStrainMapping = eOffNode.createObject('RelativeStrainMapping', template="E"+self.type+",E"+self.type, assemble=assemble)
-            self.forcefield = eOffNode.createObject('HookeForceField', name="ff", template="E"+self.type, youngModulus= youngModulus, poissonRatio=poissonRatio, viscosity=viscosity, assemble=assemble, isCompliance=False)
-        else:
-            self.forcefield = eNode.createObject('HookeForceField', name="ff", template="E"+self.type, youngModulus= youngModulus, poissonRatio=poissonRatio, viscosity=viscosity, assemble=assemble, isCompliance=False)
+
+        if strainMeasure=="PrincipalStretches" or strainMeasure=="principalStretches":
+            if self.type!="331":
+                    Sofa.msg_warning("Flexible.API",self.type+"not supported by PrincipalStretches measure -> use 331")
+            eNode = self.node.createChild("U")
+            self.strainDofs = eNode.createObject('MechanicalObject',  template="U331", name="U")
+            self.strainMapping = eNode.createObject('PrincipalStretchesMapping', template="F331"+",U331",
+                                                    asStrain="false",assemble=assemble) # threshold=0.6,PSDStabilization=True)
+            if useOffset:
+                Sofa.msg_warning("Flexible.API","cannot use strain offset with PrincipalStretches measure")
+            if viscosity:
+                Sofa.msg_warning("Flexible.API","viscosity not supported by PrincipalStretches measure")
+            self.forcefield = eNode.createObject('StabilizedHookeForceField', name="ff", template="U331", youngModulus= youngModulus, poissonRatio=poissonRatio, assemble=assemble, isCompliance=False)
+            # self.forcefield = eNode.createObject('HookeForceField', name="ff", template="U331", youngModulus= youngModulus, poissonRatio=poissonRatio,  viscosity=viscosity, assemble=assemble, isCompliance=False)
+            # self.forcefield = eNode.createObject('NeoHookeanForceField',  template="U331", name="ff", youngModulus=youngModulus, poissonRatio=poissonRatio)
+
+        else: # strainMeasure="Corotational" or "Green"
+            eNode = self.node.createChild("E")
+            self.strainDofs = eNode.createObject('MechanicalObject',  template="E"+self.type, name="E")
+            if strainMeasure=="Corotational" or strainMeasure=="corotational":
+                self.strainMapping = eNode.createObject('CorotationalStrainMapping', template="F"+self.type+",E"+self.type, assemble=assemble)
+            else:
+                if strainMeasure!="Green" and strainMeasure!="green":
+                    Sofa.msg_warning("Flexible.API",strainMeasure+" strain measure not supported -> use Green Lagrangian strain")
+                self.strainMapping = eNode.createObject('GreenStrainMapping', template="F"+self.type+",E"+self.type, assemble=assemble)
+            if useOffset:
+                eOffNode = eNode.createChild("offsetE")
+                eOffNode.createObject('MechanicalObject',  template="E"+self.type, name="E")
+                self.relativeStrainMapping = eOffNode.createObject('RelativeStrainMapping', template="E"+self.type+",E"+self.type, assemble=assemble)
+                self.forcefield = eOffNode.createObject('HookeForceField', name="ff", template="E"+self.type, youngModulus= youngModulus, poissonRatio=poissonRatio, viscosity=viscosity, assemble=assemble, isCompliance=False)
+            else:
+                self.forcefield = eNode.createObject('HookeForceField', name="ff", template="E"+self.type, youngModulus= youngModulus, poissonRatio=poissonRatio, viscosity=viscosity, assemble=assemble, isCompliance=False)
 
     def addProjective(self, youngModulus=0, viscosity=0, assemble=True):
-        self.forcefield = self.node.createObject('ProjectiveForceField', name="ff", template="F"+self.type,  youngModulus=youngModulus, viscosity=viscosity,assemble=assemble)
+        if self.type!="331":
+                Sofa.msg_warning("Flexible.API",self.type+"not supported by ProjectiveForceField  -> use 331")
+        self.forcefield = self.node.createObject('ProjectiveForceField', name="ff", template="F331",  youngModulus=youngModulus, viscosity=viscosity,assemble=assemble)
