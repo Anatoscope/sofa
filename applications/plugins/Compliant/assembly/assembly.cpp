@@ -5,6 +5,8 @@
 
 #include <SofaEigen2Solver/EigenBaseSparseMatrix.h>
 
+#include <bitset>
+
 // TODO mew
 #include <Compliant/constraint/ConstraintValue.h>
 
@@ -29,9 +31,16 @@ struct vertex {
     using state_type = core::behavior::BaseMechanicalState*;
     state_type state = nullptr;
 
+    enum {
+        is_mechanical,
+        is_primal,
+        is_dual,
+        flags_size
+    };
+    
     // stage1
-    bool is_mechanical = false;
-
+    std::bitset<flags_size> flags;
+    
     using mapping_type = core::BaseMapping*;
     mapping_type mapping = nullptr;
     
@@ -98,8 +107,8 @@ struct Visitor : public simulation::Visitor {
                 vertex prop;
                 
                 prop.state = state;
-                prop.is_mechanical = node->mass.get() || node->forceField.size();
-                
+                prop.flags[vertex::is_mechanical] = node->mass.get() || node->forceField.size();
+
                 const std::size_t v = add_vertex(prop, graph); (void) v;
                 assert(v == err.first->second && "bad vertex index");
             }
@@ -109,61 +118,68 @@ struct Visitor : public simulation::Visitor {
     }
     
 	virtual void processNodeBottomUp(simulation::Node* node) {
+        auto* state = node->mechanicalState.get();
+        if(!state) return;
 
+        assert( table.find(state) != table.end() && "unknown dofs");        
+        const std::size_t v = table.find(state)->second;
+        
         // construct graph edges
         if(auto* mapping = node->mechanicalMapping.get()) {
-            auto* state = node->mechanicalState.get();
-            if(!state) throw assembly_error("no output dof");
-            
-            const auto src = table.find(state);
-            if(src == table.end()) throw assembly_error("unknown output dof");
 
-            // remember this dof is mapped
-            graph[src->second].mapping = mapping;
+            // remember dof mapping
+            graph[v].mapping = mapping;
             
-            for(auto* state : mapping->getFrom()) {
-                auto* mstate = state->toBaseMechanicalState();
-                if(!mstate) continue;
-                
-                const auto dst = table.find(mstate);
-                if(dst == table.end()) throw assembly_error("unknown input dof");
+            for(auto* from : mapping->getFrom()) {
+                auto* input = from->toBaseMechanicalState();
+                if(!input) continue;
+
+                assert( table.find(input) != table.end() && "unknown input dofs");
+                const std::size_t u = table.find(input)->second;
                 
                 // boost::graph topological sort orders nodes for a *dependency*
                 // graph: edges go from outputs to inputs
-                add_edge(src->second, dst->second, graph);
+                add_edge(v, u, graph);
             }
+            
+        } else {
+            graph[v].flags[vertex::is_primal] = true;
         }
     }
     
 };
 
 
-
+// prune non-mechanical vertices in the graph
 static graph_type prune_graph(const graph_type& graph) {
+    static const std::size_t sentinel = -1;
     
-    // associate mechanical vertices
-    std::vector<std::size_t> map;
-    map.reserve(num_vertices(graph));
+    // count/associate mechanical vertices
+    std::vector<std::size_t> map(num_vertices(graph), sentinel);
+    std::size_t mechanical = 0;
     
     for(std::size_t v : vertices(graph) ) {
-        if(graph[v].is_mechanical) {
-            map.emplace_back(map.size());
-        } else {
-            // clear_vertex(v, graph);
-        }
+        if(graph[v].flags[vertex::is_mechanical]) {
+            map[v] = mechanical++;
+        } 
     }
 
-    // connect compacted graph
-    graph_type res(map.size());
+    // connect pruned graph
+    graph_type res(mechanical);
     
     for(std::size_t v : vertices(graph) ) {
-        if(graph[v].is_mechanical) {
-            const std::size_t s = map[v];
+        if(graph[v].flags[vertex::is_mechanical]) {
 
+            // copy vertex content
+            const std::size_t s = map[v];
             res[s] = graph[v];
 
+            // add edges
             for(auto e : out_edges(v, graph)) {
-                add_edge(s, map[target(e, graph)], graph[e], res);
+                const std::size_t t = target(e, graph);
+
+                assert(map[t] != sentinel && "vertex not associated");
+                add_edge(s, map[t], graph[e], res);
             }
         }            
     }
@@ -203,7 +219,7 @@ static graph_type create_graph(core::objectmodel::BaseContext* ctx) {
         if(graph[v].is_mechanical) {
             
             for(std::size_t s : adjacent_vertices(v, graph)) {
-                graph[s].is_mechanical = true;
+                graph[s].flags[vertex::is_mechanical] = true;
             }
         }
     }
