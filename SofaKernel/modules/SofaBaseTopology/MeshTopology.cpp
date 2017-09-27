@@ -2743,12 +2743,20 @@ void MeshTopology::computeBBox(const core::ExecParams* params, bool onlyVisible)
             !_drawTetra.getValue() &&
             !_drawHexa.getValue() ) return;
 
+
     const SeqPoints& x = seqPoints.getValue();
 
-    SReal minBBox[3] = {std::numeric_limits<SReal>::max(),std::numeric_limits<SReal>::max(),std::numeric_limits<SReal>::max()};
-    SReal maxBBox[3] = {std::numeric_limits<SReal>::lowest(),std::numeric_limits<SReal>::lowest(),std::numeric_limits<SReal>::lowest()};
-    for ( const auto& p : x )
+    const size_t size = x.size();
+
+    if( !size ) return;
+
+
+
+    SReal minBBox[3] = {x[0][0],x[0][1],x[0][2]};
+    SReal maxBBox[3] = {x[0][0],x[0][1],x[0][2]};
+    for ( size_t i=1 ; i<size ; ++i )
     {
+        const defaulttype::Vec<3, SReal>& p = x[i];
         for (int c=0; c<3; c++)
         {
             if (p[c] > maxBBox[c]) maxBBox[c] = p[c];
