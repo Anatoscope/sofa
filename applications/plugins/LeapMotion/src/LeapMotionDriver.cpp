@@ -285,10 +285,10 @@ void LeapMotionDriver::draw(const sofa::core::visual::VisualParams* vparams)
 
 void LeapMotionDriver::computeBBox(const core::ExecParams * params, bool /*onlyVisible=false*/ )
 {
-    const double max_real = std::numeric_limits<double>::max();
-    const double min_real = -std::numeric_limits<double>::max();
-    double maxBBox[3] = {min_real,min_real,min_real};
-    double minBBox[3] = {max_real,max_real,max_real};
+    static const double max_real = std::numeric_limits<double>::max();
+    static const double min_real = -std::numeric_limits<double>::max();
+    defaulttype::Vector3 maxBBox = {min_real,min_real,min_real};
+    defaulttype::Vector3 minBBox = {max_real,max_real,max_real};
 
     for(int i=0; i<15; i++)
     {
@@ -309,7 +309,7 @@ void LeapMotionDriver::computeBBox(const core::ExecParams * params, bool /*onlyV
         minBBox[c] = ((handPalmCoordinate.getValue()[c] - palmDiag) < minBBox[c]) ? (handPalmCoordinate.getValue()[c] - palmDiag) : minBBox[c] ;
         maxBBox[c] = ((handPalmCoordinate.getValue()[c] + palmDiag) > maxBBox[c]) ? (handPalmCoordinate.getValue()[c] + palmDiag) : maxBBox[c] ;
     }
-    this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<double>(minBBox,maxBBox));
+    this->f_bbox.setValue(params,defaulttype::BoundingBox(minBBox,maxBBox));
 }
 
 

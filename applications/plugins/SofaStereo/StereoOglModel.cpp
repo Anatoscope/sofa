@@ -156,10 +156,10 @@ void StereoOglModel::computeBBox(const core::ExecParams * params, bool /*onlyVis
     if ( leftModel && rightModel)
     {
         const SReal max_real = std::numeric_limits<SReal>::max();
-        const SReal min_real = std::numeric_limits<SReal>::min();
+        const SReal min_real = std::numeric_limits<SReal>::lowest();
 
-        SReal maxBBox[3] = {min_real,min_real,min_real};
-        SReal minBBox[3] = {max_real,max_real,max_real};
+        defaulttype::Vector3 maxBBox = {min_real,min_real,min_real};
+        defaulttype::Vector3 minBBox = {max_real,max_real,max_real};
 
         leftModel->computeBBox(params);
         rightModel->computeBBox(params);
@@ -176,7 +176,7 @@ void StereoOglModel::computeBBox(const core::ExecParams * params, bool /*onlyVis
         }
 
 
-        this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<SReal>(minBBox,maxBBox));
+        this->f_bbox.setValue(params,sofa::defaulttype::BoundingBox(minBBox,maxBBox));
     }
 }
 

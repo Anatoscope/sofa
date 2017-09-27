@@ -2744,26 +2744,11 @@ void MeshTopology::computeBBox(const core::ExecParams* params, bool onlyVisible)
             !_drawHexa.getValue() ) return;
 
 
-    const SeqPoints& x = seqPoints.getValue();
+    const SeqPoints& x = seqPoints.getValue(params);
 
-    const size_t size = x.size();
-
-    if( !size ) return;
-
-
-
-    SReal minBBox[3] = {x[0][0],x[0][1],x[0][2]};
-    SReal maxBBox[3] = {x[0][0],x[0][1],x[0][2]};
-    for ( size_t i=1 ; i<size ; ++i )
-    {
-        const defaulttype::Vec<3, SReal>& p = x[i];
-        for (int c=0; c<3; c++)
-        {
-            if (p[c] > maxBBox[c]) maxBBox[c] = p[c];
-            else if (p[c] < minBBox[c]) minBBox[c] = p[c];
-        }
-    }
-    this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<SReal>(minBBox,maxBBox));
+    sofa::defaulttype::BoundingBox& bbox = *this->f_bbox.beginWriteOnly(params);
+    bbox.setFromPointVector( x );
+    this->f_bbox.endEdit(params);
 }
 
 

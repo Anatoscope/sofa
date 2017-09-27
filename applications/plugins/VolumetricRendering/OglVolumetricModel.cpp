@@ -481,10 +481,10 @@ void OglVolumetricModel::computeBBox(const core::ExecParams * params, bool /* on
         Coord v;
         const defaulttype::ResizableExtVector<Coord>& position = m_positions.getValue();
         const SReal max_real = std::numeric_limits<SReal>::max();
-        const SReal min_real = std::numeric_limits<SReal>::min();
+        const SReal min_real = std::numeric_limits<SReal>::lowest();
 
-        SReal maxBBox[3] = { min_real,min_real,min_real };
-        SReal minBBox[3] = { max_real,max_real,max_real };
+        defaulttype::Vector3 maxBBox = { min_real,min_real,min_real };
+        defaulttype::Vector3 minBBox = { max_real,max_real,max_real };
 
         for (unsigned int i = 0; i< position.size(); i++)
         {
@@ -497,7 +497,7 @@ void OglVolumetricModel::computeBBox(const core::ExecParams * params, bool /* on
             if (maxBBox[1] < v[1]) maxBBox[1] = v[1];
             if (maxBBox[2] < v[2]) maxBBox[2] = v[2];
         }
-        this->f_bbox.setValue(params, sofa::defaulttype::TBoundingBox<SReal>(minBBox, maxBBox));
+        this->f_bbox.setValue(params, sofa::defaulttype::BoundingBox(minBBox, maxBBox));
     }
 }
 

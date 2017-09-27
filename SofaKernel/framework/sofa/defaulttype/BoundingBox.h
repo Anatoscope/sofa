@@ -19,37 +19,68 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#ifndef SOFA_DEFAULTTYPE_BOUNDINGBOX_H
-#define SOFA_DEFAULTTYPE_BOUNDINGBOX_H
+#ifndef SOFA_DEFAULTTYPE_BoundingBox_H
+#define SOFA_DEFAULTTYPE_BoundingBox_H
 
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/defaulttype.h>
-
+#include <vector>
 
 namespace sofa
 {
 namespace defaulttype
 {
 
-
-class SOFA_DEFAULTTYPE_API BoundingBox
+template<int N=3, class Real=SReal>
+class TBoundingBox
 {
 
 public:
-    typedef std::pair< Vector3, Vector3 > bbox_t;
 
-    BoundingBox();
+    enum { spatial_dimensions = N };
+    typedef Real value_type;
+
+    typedef Vec<N,Real> Coord;
+
+    typedef std::pair< Coord, Coord > bbox_t;
+
+    TBoundingBox();
     /// Define using the endpoints of the main diagonal
-    BoundingBox(const Vector3& minBBox, const Vector3& maxBBox);
-    BoundingBox(const bbox_t& bbox);
-    /// Define using xmin, xmax, ymin, ymax, zmin, zmax in this order
-    BoundingBox(SReal xmin, SReal xmax, SReal ymin, SReal ymax, SReal zmin, SReal zmax );
-    /// Define using xmin, xmax, ymin, ymax, zmin, zmax in this order
-    BoundingBox(const Vec6f& bbox);
-    /// Define using xmin, xmax, ymin, ymax, zmin, zmax in this order
-    BoundingBox(const Vec6d& bbox);
+    TBoundingBox(const Coord& minBBox, const Coord& maxBBox);
+    TBoundingBox(const bbox_t& bbox);
 
-    static BoundingBox neutral_bbox();
+    static TBoundingBox neutral_bbox();
+
+    template<class Vector>
+    void setFromPointVector( const Vector& points )
+    {
+        const size_t size = points.size();
+        if( !size ) return invalidate();
+
+        const int n = std::min<int>( N, Vector::value_type::spatial_dimensions );
+
+        int j=0;
+        for( ; j<n ; ++j )
+        {
+            bbox.first[j] = points[0][j];
+            bbox.second[j] = points[0][j];
+        }
+        for( ; j<N ; ++j )
+        {
+            bbox.first[j] = 0;
+            bbox.second[j] = 0;
+        }
+
+        for( size_t i=1 ; i<size ; ++i )
+        {
+            for( j=0 ; j<n ; ++j )
+            {
+                if( points[i][j] < bbox.first[j] ) bbox.first[j] = points[i][j];
+                else if( points[i][j] > bbox.second[j] ) bbox.second[j] = points[i][j];
+            }
+        }
+    }
+
 
     operator bbox_t() const;
 
@@ -59,43 +90,43 @@ public:
     bool isNegligeable() const; // !valid || flat
     bool isNull()  const;
 
-    SReal* minBBoxPtr();
-    SReal* maxBBoxPtr();
-    const SReal* minBBoxPtr() const;
-    const SReal* maxBBoxPtr() const;
-    const Vector3&  minBBox() const;
-    const Vector3&  maxBBox() const;
-    Vector3& minBBox();
-    Vector3& maxBBox();
+    Real* minBBoxPtr();
+    Real* maxBBoxPtr();
+    const Real* minBBoxPtr() const;
+    const Real* maxBBoxPtr() const;
+    const Coord&  minBBox() const;
+    const Coord&  maxBBox() const;
+    Coord& minBBox();
+    Coord& maxBBox();
 
 
 
 
 
-    bool contains( const sofa::defaulttype::Vector3& point) const;
-    bool contains( const BoundingBox& other) const;
+    bool contains( const Coord& point) const;
+    bool contains( const TBoundingBox& other) const;
 
-    bool intersect( const BoundingBox& other) const;
-    void intersection( const BoundingBox& other);
+    bool intersect( const TBoundingBox& other) const;
+    void intersection( const TBoundingBox& other);
 
-    void include( const sofa::defaulttype::Vector3& point);
-    void include( const BoundingBox& other);
+    void include( const Coord& point);
+    void include( const TBoundingBox& other);
 
-    void inflate( SReal amount );
+    void inflate( Real amount );
 
-    BoundingBox getIntersection( const BoundingBox& other ) const;
-    BoundingBox getInclude( const sofa::defaulttype::Vector3& point ) const;
-    BoundingBox getInclude( const BoundingBox& other ) const;
-    BoundingBox getInflate( SReal amount ) const;
+    TBoundingBox getIntersection( const TBoundingBox& other ) const;
+    TBoundingBox getInclude( const Coord& point ) const;
+    TBoundingBox getInclude( const TBoundingBox& other ) const;
+    TBoundingBox getInflate( Real amount ) const;
 
 
-    friend std::ostream& operator << ( std::ostream& out, const BoundingBox& bbox)
+    friend std::ostream& operator << ( std::ostream& out, const TBoundingBox& bbox)
     {
         out << bbox.minBBox() << " " <<  bbox.maxBBox();
         return out;
     }
 
-    friend std::istream& operator >> ( std::istream& in, BoundingBox& bbox)
+    friend std::istream& operator >> ( std::istream& in, TBoundingBox& bbox)
     {
         in >> bbox.minBBox() >> bbox.maxBBox();
         return in;
@@ -103,169 +134,34 @@ public:
 
 
 protected:
+
+
     bbox_t bbox;
-};
 
 
-template <typename TReal>
-class TBoundingBox : public BoundingBox
-{
-public:
-    TBoundingBox(const TReal* minBBoxPtr, const TReal* maxBBoxPtr)
-        :BoundingBox(Vector3(minBBoxPtr),Vector3(maxBBoxPtr))
-    {
-    }
+    static bbox_t make_neutralBBox();
 
 };
 
 
 
-/// bounding rectangle
-class SOFA_DEFAULTTYPE_API BoundingBox2D
-{
-
-public:
-    typedef std::pair< Vector2, Vector2 > bbox_t;
-
-    BoundingBox2D();
-    /// Define using the endpoints of the main diagonal
-    BoundingBox2D(const Vector2& minBBox, const Vector2& maxBBox);
-    BoundingBox2D(const bbox_t& bbox);
-    /// Define using xmin, xmax, ymin, ymax in this order
-    BoundingBox2D(SReal xmin, SReal xmax, SReal ymin, SReal ymax );
-    /// Define using xmin, xmax, ymin, ymax in this order
-    BoundingBox2D(const Vec4f& bbox);
-    /// Define using xmin, xmax, ymin, ymax in this order
-    BoundingBox2D(const Vec4d& bbox);
-
-    static BoundingBox2D neutral_bbox();
-
-    operator bbox_t() const;
-
-    void invalidate();
-    bool isValid() const;
-    bool isFlat()  const;
-    bool isNegligeable() const; // !valid || flat
-    bool isNull()  const;
-
-    SReal* minBBoxPtr();
-    SReal* maxBBoxPtr();
-    const SReal* minBBoxPtr() const;
-    const SReal* maxBBoxPtr() const;
-    const Vector2&  minBBox() const;
-    const Vector2&  maxBBox() const;
-    Vector2& minBBox();
-    Vector2& maxBBox();
 
 
+#if defined(SOFA_EXTERN_TEMPLATE) && !defined(SOFA_DEFAULTTYPE_TBoundingBox_CPP)
+
+extern template class SOFA_DEFAULTTYPE_API TBoundingBox<3,SReal>;
+extern template class SOFA_DEFAULTTYPE_API TBoundingBox<2,SReal>;
+extern template class SOFA_DEFAULTTYPE_API TBoundingBox<1,SReal>;
 
 
-
-    bool contains( const sofa::defaulttype::Vector2& point) const;
-    bool contains( const BoundingBox2D& other) const;
-
-    bool intersect( const BoundingBox2D& other) const;
-    void intersection( const BoundingBox2D& other);
-
-    void include( const sofa::defaulttype::Vector2& point);
-    void include( const BoundingBox2D& other);
-
-    void inflate( SReal amount);
-
-    BoundingBox2D getIntersection( const BoundingBox2D& other ) const;
-    BoundingBox2D getInclude( const sofa::defaulttype::Vector2& point ) const;
-    BoundingBox2D getInclude( const BoundingBox2D& other ) const;
-    BoundingBox2D getInflate( SReal amount ) const;
-
-    friend std::ostream& operator << ( std::ostream& out, const BoundingBox2D& bbox)
-    {
-        out << bbox.minBBox() << " " <<  bbox.maxBBox();
-        return out;
-    }
-
-    friend std::istream& operator >> ( std::istream& in, BoundingBox2D& bbox)
-    {
-        in >> bbox.minBBox() >> bbox.maxBBox();
-        return in;
-    }
-
-
-protected:
-    bbox_t bbox;
-};
-
-
-
-/// bounding interval
-class SOFA_DEFAULTTYPE_API BoundingBox1D
-{
-
-public:
-    typedef std::pair< SReal, SReal > bbox_t;
-
-    BoundingBox1D();
-    /// Define using the endpoints of the main diagonal
-    BoundingBox1D(SReal minBBox, SReal maxBBox);
-    BoundingBox1D(const bbox_t& bbox);
-    /// Define using xmin, xmax in this order
-    BoundingBox1D(const Vec2f& bbox);
-    /// Define using xmin, xmax in this order
-    BoundingBox1D(const Vec2d& bbox);
-
-    static BoundingBox1D neutral_bbox();
-
-    operator bbox_t() const;
-
-    void invalidate();
-    bool isValid() const;
-    bool isFlat()  const;
-    bool isNegligeable() const; // !valid || flat
-    bool isNull()  const;
-
-    const SReal&  minBBox() const;
-    const SReal&  maxBBox() const;
-    SReal& minBBox();
-    SReal& maxBBox();
-
-
-
-
-
-    bool contains( SReal point) const;
-    bool contains( const BoundingBox1D& other) const;
-
-    bool intersect( const BoundingBox1D& other) const;
-    void intersection( const BoundingBox1D& other);
-
-    void include( SReal point);
-    void include( const BoundingBox1D& other);
-
-    void inflate( SReal amount);
-
-    BoundingBox1D getIntersection( const BoundingBox1D& other ) const;
-    BoundingBox1D getInclude( SReal point ) const;
-    BoundingBox1D getInclude( const BoundingBox1D& other ) const;
-    BoundingBox1D getInflate( SReal amount ) const;
-
-    friend std::ostream& operator << ( std::ostream& out, const BoundingBox1D& bbox)
-    {
-        out << bbox.minBBox() << " " <<  bbox.maxBBox();
-        return out;
-    }
-
-    friend std::istream& operator >> ( std::istream& in, BoundingBox1D& bbox)
-    {
-        in >> bbox.minBBox() >> bbox.maxBBox();
-        return in;
-    }
-
-
-protected:
-    bbox_t bbox;
-};
+typedef TBoundingBox<3,SReal> BoundingBox3D; ///< bounding box
+typedef BoundingBox3D BoundingBox; ///< bounding box
+typedef TBoundingBox<2,SReal> BoundingBox2D; ///< bounding rectangle
+typedef TBoundingBox<1,SReal> BoundingBox1D; ///< bounding interval
+#endif
 
 
 }
 }
 
-#endif // SOFA_DEFAULTTYPE_BOUNDINGBOX_H
+#endif // SOFA_DEFAULTTYPE_BoundingBox_H

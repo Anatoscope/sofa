@@ -323,11 +323,11 @@ void OglTetrahedralModel<DataTypes>::computeBBox(const core::ExecParams * params
         core::topology::BaseMeshTopology::SeqTetrahedra::const_iterator it;
         Coord v;
         const defaulttype::ResizableExtVector<Coord>& position = m_positions.getValue();
-        const SReal max_real = std::numeric_limits<SReal>::max();
-        const SReal min_real = std::numeric_limits<SReal>::min();
+        static const SReal max_real = std::numeric_limits<SReal>::max();
+        static const SReal min_real = std::numeric_limits<SReal>::lowest();
 
-        SReal maxBBox[3] = { min_real,min_real,min_real };
-        SReal minBBox[3] = { max_real,max_real,max_real };
+        defaulttype::Vector3 maxBBox = { min_real,min_real,min_real };
+        defaulttype::Vector3 minBBox = { max_real,max_real,max_real };
 
         for (it = vec.begin(); it != vec.end(); it++)
         {
@@ -345,7 +345,7 @@ void OglTetrahedralModel<DataTypes>::computeBBox(const core::ExecParams * params
             }
         }
 
-        this->f_bbox.setValue(params, sofa::defaulttype::TBoundingBox<SReal>(minBBox, maxBBox));
+        this->f_bbox.setValue(params, sofa::defaulttype::BoundingBox(minBBox, maxBBox));
     }
 }
 

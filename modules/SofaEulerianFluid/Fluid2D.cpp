@@ -421,14 +421,14 @@ void Fluid2D::computeBBox(const core::ExecParams*  params , bool /*onlyVisible*/
     const int& ny = f_ny.getValue(params);
     const real& cellwidth = f_cellwidth.getValue(params);
 
-    SReal maxBBox[3];
-    SReal size[3] = { (nx-1)*cellwidth, (ny-1)*cellwidth, cellwidth/2 };
-    SReal minBBox[3] = { -size[0]/2, -size[1]/2, 0 };
+    defaulttype::Vector3 maxBBox;
+    defaulttype::Vector3 size = { (nx-1)*cellwidth, (ny-1)*cellwidth, cellwidth/2 };
+    defaulttype::Vector3 minBBox = { -size[0]/2, -size[1]/2, 0 };
     for (int c=0; c<3; c++)
     {
         maxBBox[c] = minBBox[c]+size[c];
     }
-    this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<SReal>(minBBox,maxBBox));
+    this->f_bbox.setValue(params,defaulttype::BoundingBox(minBBox,maxBBox));
 
 }
 

@@ -429,14 +429,9 @@ public:
         defaulttype::Vec<8,defaulttype::Vector3> c;
         getCorners(c);
 
-        Real bbmin[3]  = {c[0][0],c[0][1],c[0][2]} , bbmax[3]  = {c[0][0],c[0][1],c[0][2]};
-        for(unsigned int i=1;i<c.size();i++)
-            for(unsigned int j=0;j<3;j++)
-            {
-                if(bbmin[j]>c[i][j]) bbmin[j]=c[i][j];
-                if(bbmax[j]<c[i][j]) bbmax[j]=c[i][j];
-            }
-        this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<Real>(bbmin,bbmax));
+        sofa::defaulttype::BoundingBox& bbox = *this->f_bbox.beginWriteOnly(params);
+        bbox.setFromPointVector( c );
+        this->f_bbox.endEdit(params);
     }
     
     
