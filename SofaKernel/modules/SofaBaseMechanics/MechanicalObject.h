@@ -79,10 +79,10 @@ public:
     typedef typename DataTypes::VecCoord    VecCoord;
     typedef typename DataTypes::VecDeriv    VecDeriv;
     typedef typename DataTypes::MatrixDeriv						MatrixDeriv;
-    typedef typename DataTypes::MatrixDeriv::RowConstIterator	MatrixDerivRowConstIterator;
-    typedef typename DataTypes::MatrixDeriv::ColConstIterator	MatrixDerivColConstIterator;
-    typedef typename DataTypes::MatrixDeriv::RowIterator		MatrixDerivRowIterator;
-    typedef typename DataTypes::MatrixDeriv::ColIterator		MatrixDerivColIterator;
+    // typedef typename DataTypes::MatrixDeriv::RowConstIterator	MatrixDerivRowConstIterator;
+    // typedef typename DataTypes::MatrixDeriv::ColConstIterator	MatrixDerivColConstIterator;
+    // typedef typename DataTypes::MatrixDeriv::RowIterator		MatrixDerivRowIterator;
+    // typedef typename DataTypes::MatrixDeriv::ColIterator		MatrixDerivColIterator;
 
     typedef typename core::behavior::BaseMechanicalState::ConstraintBlock ConstraintBlock;
 
@@ -103,10 +103,8 @@ public:
     PointData< VecDeriv > f;
     Data< VecDeriv > externalForces;
     Data< VecDeriv > dx;
-    Data< VecCoord > xfree;
-    Data< VecDeriv > vfree;
     PointData< VecCoord > x0;
-    Data< MatrixDeriv > c;
+    // Data< MatrixDeriv > c;
     Data< VecCoord > reset_position;
     Data< VecDeriv > reset_velocity;
 
@@ -142,10 +140,8 @@ public:
     Data< VecDeriv > f;
     Data< VecDeriv > externalForces;
     Data< VecDeriv > dx;
-    Data< VecCoord > xfree;
-    Data< VecDeriv > vfree;
     Data< VecCoord > x0;
-    Data< MatrixDeriv > c;
+    // Data< MatrixDeriv > c;
     Data< VecCoord > reset_position;
     Data< VecDeriv > reset_velocity;
 #endif
@@ -186,6 +182,7 @@ public:
     virtual Data< VecDeriv >* write(core::VecDerivId v);
     virtual const Data< VecDeriv >* read(core::ConstVecDerivId v) const;
 
+    // unimplemented
     virtual Data< MatrixDeriv >* write(core::MatrixDerivId v);
     virtual const Data< MatrixDeriv >* read(core::ConstMatrixDerivId v) const;
 
@@ -286,21 +283,21 @@ public:
     /// @}
 
     /// Express the matrix L in term of block of matrices, using the indices of the lines in the MatrixDeriv container
-    virtual std::list<ConstraintBlock> constraintBlocks( const std::list<unsigned int> &indices) const;
-    virtual SReal getConstraintJacobianTimesVecDeriv( unsigned int line, core::ConstVecId id);
+    // virtual std::list<ConstraintBlock> constraintBlocks( const std::list<unsigned int> &indices) const;
+    // virtual SReal getConstraintJacobianTimesVecDeriv( unsigned int line, core::ConstVecId id);
 
     void setFilename(std::string s) {filename.setValue(s);}
 
     /// @name Initial transformations accessors.
     /// @{
 
-    void setTranslation(SReal dx, SReal dy, SReal dz) {translation.setValue(Vector3(dx,dy,dz));}
-    void setRotation(SReal rx, SReal ry, SReal rz) {rotation.setValue(Vector3(rx,ry,rz));}
-    void setScale(SReal sx, SReal sy, SReal sz) {scale.setValue(Vector3(sx,sy,sz));}
+    void setTranslation(SReal, SReal, SReal) { throw std::logic_error("unimplemented"); }
+    void setRotation(SReal, SReal, SReal) { throw std::logic_error("unimplemented"); }
+    void setScale(SReal, SReal, SReal) { throw std::logic_error("unimplemented"); }
 
-    virtual Vector3 getTranslation() const {return translation.getValue();}
-    virtual Vector3 getRotation() const {return rotation.getValue();}
-    virtual Vector3 getScale() const {return scale.getValue();}
+    Vector3 getTranslation() const { return {};}
+    // virtual Vector3 getRotation() const {return rotation.getValue();}
+    // virtual Vector3 getScale() const {return scale.getValue();}
 
     /// @}
 
@@ -381,11 +378,14 @@ public:
 
     virtual void resetAcc(const core::ExecParams* params, core::VecDerivId a = core::VecDerivId::dx());
 
+    // unimplemented
     virtual void resetConstraint(const core::ExecParams* params);
-
-    virtual void getConstraintJacobian(const core::ExecParams* params, sofa::defaulttype::BaseMatrix* J,unsigned int & off);
+    virtual void getConstraintJacobian(const core::ExecParams* params, 
+                                       sofa::defaulttype::BaseMatrix* J, 
+                                       unsigned int & off);
+    
 #if(SOFA_WITH_EXPERIMENTAL_FEATURES==1)
-    virtual void buildIdentityBlocksInJacobian(const sofa::helper::vector<unsigned int>& list_n, core::MatrixDerivId &mID);
+    // virtual void buildIdentityBlocksInJacobian(const sofa::helper::vector<unsigned int>& list_n, core::MatrixDerivId &mID);
 #endif
     /// @}
 
@@ -418,17 +418,6 @@ public:
 
 protected :
 
-    /// @name Initial geometric transformations
-    /// @{
-
-    Data< Vector3 > translation;
-    Data< Vector3 > rotation;
-    Data< Vector3 > scale;
-    Data< Vector3 > translation2;
-    Data< Vector3 > rotation2;
-
-    /// @}
-
     sofa::core::objectmodel::DataFileName filename;
     Data< bool> ignoreLoader;
     Data< int > f_reserve;
@@ -440,7 +429,7 @@ protected :
 
     sofa::helper::vector< Data< VecCoord >		* > vectorsCoord;		///< Coordinates DOFs vectors table (static and dynamic allocated)
     sofa::helper::vector< Data< VecDeriv >		* > vectorsDeriv;		///< Derivates DOFs vectors table (static and dynamic allocated)
-    sofa::helper::vector< Data< MatrixDeriv >	* > vectorsMatrixDeriv; ///< Constraint vectors table
+    // sofa::helper::vector< Data< MatrixDeriv >	* > vectorsMatrixDeriv; ///< Constraint vectors table
 
     size_t vsize; ///< Number of elements to allocate in vectors
 
@@ -454,10 +443,8 @@ protected :
      */
     void setVecDeriv(unsigned int /*index*/, Data< VecDeriv >* /*vDeriv*/);
 
-    /**
-     * @brief Inserts MatrixDeriv DOF  at index in the MatrixDeriv container.
-     */
-    void setVecMatrixDeriv(unsigned int /*index*/, Data< MatrixDeriv> * /*mDeriv*/);
+    // // unimplemented
+    // void setVecMatrixDeriv(unsigned int /*index*/, Data< MatrixDeriv> * /*mDeriv*/);
 
 
     /// @}
