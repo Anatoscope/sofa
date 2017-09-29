@@ -211,57 +211,34 @@ void MechanicalObject<DataTypes>::renumberValues( const sofa::helper::vector< un
 }
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::resize(const size_t size)
-{
+void MechanicalObject<DataTypes>::resize(const size_t size) {
+    vsize = size;
 
-    if(size>0)
-    {
-        //if (size!=vsize)
-        {
-            vsize = size;
-            for (unsigned int i = 0; i < vectorsCoord.size(); i++)
-            {
-                if (vectorsCoord[i] != NULL && vectorsCoord[i]->isSet())
-                {
-                    vectorsCoord[i]->beginWriteOnly()->resize(size);
-                    vectorsCoord[i]->endEdit();
-                }
-            }
+    // TODO there is something *REALLLY* fishy going on here
+    // TODO why do we need to check isSet ? (if we don't, it does not work)
+    
+    for (auto* vi : vectorsCoord) {
+        if (!vi || !vi->isSet()) continue;
 
-            for (unsigned int i = 0; i < vectorsDeriv.size(); i++)
-            {
-                if (vectorsDeriv[i] != NULL && vectorsDeriv[i]->isSet())
-                {
-                    vectorsDeriv[i]->beginWriteOnly()->resize(size);
-                    vectorsDeriv[i]->endEdit();
-                }
-            }
-        }
-        this->forceMask.resize(size);
+        if(size) vi->beginWriteOnly()->resize(size);
+        else vi->beginWriteOnly()->clear();
+        
+        vi->endEdit();
     }
-    else // clear
-    {
-        vsize = 0;
-        for (unsigned int i = 0; i < vectorsCoord.size(); i++)
-        {
-            if (vectorsCoord[i] != NULL && vectorsCoord[i]->isSet())
-            {
-                vectorsCoord[i]->beginWriteOnly()->clear();
-                vectorsCoord[i]->endEdit();
-            }
-        }
 
-        for (unsigned int i = 0; i < vectorsDeriv.size(); i++)
-        {
-            if (vectorsDeriv[i] != NULL && vectorsDeriv[i]->isSet())
-            {
-                vectorsDeriv[i]->beginWriteOnly()->clear();
-                vectorsDeriv[i]->endEdit();
-            }
-        }
-        this->forceMask.clear();
+    for (auto* vi : vectorsDeriv) {
+        if(!vi || !vi->isSet()) continue;
+
+        if(size) vi->beginWriteOnly()->resize(size);
+        else vi->beginWriteOnly()->clear();
+        
+        vi->endEdit();
     }
+
+    if(size) this->forceMask.resize(size);
+    else this->forceMask.clear();
 }
+
 
 template <class DataTypes>
 void MechanicalObject<DataTypes>::reserve(const size_t size)
@@ -1043,12 +1020,12 @@ struct ref_type {
 template<class Container>
 static ref_type<Container> ref(Container& container) { return {container}; }
 
-}
+} //
 
 // visit a (Const)VecId with proper type: (Const)CoordVecId or
 // (Const)DerivVecId, or the (unsigned) vector index for V_ALL
 
-// the visitor gets called with: visitor(vecid, args...);
+// visitor gets called with: visitor(vecid, args...);
 template<core::VecAccess MODE, class Visitor, class ... Args>
 static void visit(core::TVecId<core::V_ALL, MODE> id, const Visitor& visitor, Args&& ... args) {
     switch(id.type) {
@@ -1064,28 +1041,30 @@ static void visit(core::TVecId<core::V_ALL, MODE> id, const Visitor& visitor, Ar
         visitor(id.getIndex(), std::forward<Args>(args)...);
         break;
     default:
-        throw std::runtime_error("unimplemented vop for vecid:" + std::to_string(id.type));
+        throw std::runtime_error("unimplemented vop for vecid: " + std::to_string(id.type));
     }
 }
 
 
 
-
+// 1. do 3 dispatches to obtain proper types for arguments v, a, b
+// 2. prune non-legal v = a + b patterns through the various prune overloads
+// 3. call the dispatch operator on the resulting typed v, a, b
 struct dispatch_visitor {
 
-    // first
+    // first dispatch got type for v, continuing on a
     template<class V, class Dispatch>
     void operator()(V v, core::ConstVecId a, core::ConstVecId b, const Dispatch& dispatch) const {
         visit(a, *this, v, b, dispatch);
     }
 
-    // second
+    // second dispatch got type for a, continuing on b
     template<class A, class V, class Dispatch>
     void operator()(A a, V v, core::ConstVecId b, const Dispatch& dispatch) const {
         visit(b, *this, v, a, dispatch);
     }
 
-    // third
+    // third dispatch got type for b, continue with pruning v, a, b
     template<class B, class A, class V, class Dispatch>
     void operator()(B b, V v, A a, const Dispatch& dispatch) const {
         const prune_type<Dispatch> prune = { dispatch };
@@ -1096,7 +1075,7 @@ struct dispatch_visitor {
     struct prune_type {
         const Dispatch& dispatch;
 
-        // prune illegal patterns + normalize legal ones
+        // prune illegal patterns
         template<class V, class A, class B>
         void operator()(V, A, B) const {
             throw std::runtime_error("illegal vop");
@@ -1120,7 +1099,7 @@ struct dispatch_visitor {
             dispatch(v, a, b);
         }
 
-        // fixing v_all crap
+        // properly type zero vectors
         void operator()(core::VecCoordId v, unsigned a, core::ConstVecCoordId b) const {
             // coord = 0 + coord        
             dispatch(v, core::ConstVecCoordId(a), b);
@@ -1151,8 +1130,6 @@ struct dispatch_visitor {
             // deriv = 0 + 0
             dispatch(v, core::ConstVecDerivId(a), core::ConstVecDerivId(b));
         }
-        
-
         
         
     };
@@ -1232,8 +1209,6 @@ struct dispatch_type {
     static typename std::enable_if< !std::is_assignable<typename V::value_type,
                                                         typename E::value_type>::value  >::type
     assign(V, E) {
-        std::cerr << typeid( typename V::value_type ).name() << " "
-                  << typeid( typename E::value_type ).name() << std::endl;
         std::stringstream ss;
 
         ss << "type error when assigning \"" << defaulttype::DataTypeInfo<typename V::value_type>::name()
@@ -1251,13 +1226,13 @@ void MechanicalObject<DataTypes>::vOp(const core::ExecParams*, core::VecId v,
                                       core::ConstVecId a,
                                       core::ConstVecId b, SReal f) {
     try {
-        if(v.isNull()) throw std::runtime_error("cannot assign to null");
+        if(v.isNull()) throw std::runtime_error("cannot assign to null vector");
 
         const dispatch_type<DataTypes> dispatch = {this, f};
         visit(v, dispatch_visitor(), a, b, dispatch);
         
     } catch (std::runtime_error& e) {
-        msg_error() << e.what() << " in vop \"" << v << " = " << a << " + " << b << " * " << f << "\"";
+        msg_error() << "in vop " << v << " = " << a << " + " << b << " * " << f << ": " << e.what();
     }
 
 }
