@@ -482,7 +482,7 @@ void MechanicalObject<DataTypes>::resize(const size_t size)
             {
                 if (vectorsCoord[i] != NULL && vectorsCoord[i]->isSet())
                 {
-                    vectorsCoord[i]->beginEdit()->resize(size);
+                    vectorsCoord[i]->beginWriteOnly()->resize(size);
                     vectorsCoord[i]->endEdit();
                 }
             }
@@ -491,7 +491,7 @@ void MechanicalObject<DataTypes>::resize(const size_t size)
             {
                 if (vectorsDeriv[i] != NULL && vectorsDeriv[i]->isSet())
                 {
-                    vectorsDeriv[i]->beginEdit()->resize(size);
+                    vectorsDeriv[i]->beginWriteOnly()->resize(size);
                     vectorsDeriv[i]->endEdit();
                 }
             }
@@ -505,7 +505,7 @@ void MechanicalObject<DataTypes>::resize(const size_t size)
         {
             if (vectorsCoord[i] != NULL && vectorsCoord[i]->isSet())
             {
-                vectorsCoord[i]->beginEdit()->clear();
+                vectorsCoord[i]->beginWriteOnly()->clear();
                 vectorsCoord[i]->endEdit();
             }
         }
@@ -514,7 +514,7 @@ void MechanicalObject<DataTypes>::resize(const size_t size)
         {
             if (vectorsDeriv[i] != NULL && vectorsDeriv[i]->isSet())
             {
-                vectorsDeriv[i]->beginEdit()->clear();
+                vectorsDeriv[i]->beginWriteOnly()->clear();
                 vectorsDeriv[i]->endEdit();
             }
         }
@@ -531,7 +531,7 @@ void MechanicalObject<DataTypes>::reserve(const size_t size)
     {
         if (vectorsCoord[i] != NULL && vectorsCoord[i]->isSet())
         {
-            vectorsCoord[i]->beginEdit()->reserve(size);
+            vectorsCoord[i]->beginWriteOnly()->reserve(size);
             vectorsCoord[i]->endEdit();
         }
     }
@@ -540,7 +540,7 @@ void MechanicalObject<DataTypes>::reserve(const size_t size)
     {
         if (vectorsDeriv[i] != NULL && vectorsDeriv[i]->isSet())
         {
-            vectorsDeriv[i]->beginEdit()->reserve(size);
+            vectorsDeriv[i]->beginWriteOnly()->reserve(size);
             vectorsDeriv[i]->endEdit();
         }
     }
@@ -1152,7 +1152,7 @@ void MechanicalObject<DataTypes>::endIntegration(const core::ExecParams*
     this->forceMask.assign( this->getSize(), false );
 
     {
-        this->externalForces.beginEdit()->clear();
+        this->externalForces.beginWriteOnly()->clear();
         this->externalForces.endEdit();
     }
 }
@@ -1364,7 +1364,7 @@ void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::V
     if (v.index >= sofa::core::VecCoordId::V_FIRST_DYNAMIC_INDEX)
     {
         Data<VecCoord>* vec_d = this->write(v);
-        vec_d->beginEdit(params)->resize(vsize);
+        vec_d->beginWriteOnly(params)->resize(vsize);
         vec_d->endEdit(params);
     }
 
@@ -1378,7 +1378,7 @@ void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::V
     if (v.index >= sofa::core::VecDerivId::V_FIRST_DYNAMIC_INDEX)
     {
         Data<VecDeriv>* vec_d = this->write(v);
-        vec_d->beginEdit(params)->resize(vsize);
+        vec_d->beginWriteOnly(params)->resize(vsize);
         vec_d->endEdit(params);
     }
 
@@ -1392,7 +1392,7 @@ void MechanicalObject<DataTypes>::vRealloc(const core::ExecParams* params, core:
 
     if ( !vec_d->isSet(params) /*&& v.index >= sofa::core::VecCoordId::V_FIRST_DYNAMIC_INDEX*/ )
     {
-        vec_d->beginEdit(params)->resize(vsize);
+        vec_d->beginWriteOnly(params)->resize(vsize);
         vec_d->endEdit(params);
     }
 }
@@ -1404,7 +1404,7 @@ void MechanicalObject<DataTypes>::vRealloc(const core::ExecParams* params, core:
 
     if ( !vec_d->isSet(params) /*&& v.index >= sofa::core::VecDerivId::V_FIRST_DYNAMIC_INDEX*/ )
     {
-        vec_d->beginEdit(params)->resize(vsize);
+        vec_d->beginWriteOnly(params)->resize(vsize);
         vec_d->endEdit(params);
     }
 }
@@ -1416,7 +1416,7 @@ void MechanicalObject<DataTypes>::vFree(const core::ExecParams* params, core::Ve
     {
         Data< VecCoord >* vec_d = this->write(vId);
 
-        VecCoord *vec = vec_d->beginEdit(params);
+        VecCoord *vec = vec_d->beginWriteOnly(params);
         vec->resize(0);
         vec_d->endEdit(params);
 
@@ -1431,7 +1431,7 @@ void MechanicalObject<DataTypes>::vFree(const core::ExecParams* params, core::Ve
     {
         Data< VecDeriv >* vec_d = this->write(vId);
 
-        VecDeriv *vec = vec_d->beginEdit(params);
+        VecDeriv *vec = vec_d->beginWriteOnly(params);
         vec->resize(0);
         vec_d->endEdit(params);
 
