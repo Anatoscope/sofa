@@ -36,21 +36,16 @@
 #include <vector>
 #include <fstream>
 
-#ifdef SOFA_HAVE_NEW_TOPOLOGYCHANGES
-#include <SofaBaseTopology/TopologyData.h>
-#endif // SOFA_HAVE_NEW_TOPOLOGYCHANGES
+namespace sofa {
 
-namespace sofa
-{
+namespace component {
 
-namespace component
-{
-
-namespace container
-{
+namespace container {
 
 
-/// This class can be overridden if needed for additionnal storage within template specializations.
+// TODO remove this crap
+/// This class can be overridden if needed for additionnal storage within
+/// template specializations.
 template <class DataTypes>
 class MechanicalObject;
 
@@ -61,14 +56,15 @@ public:
     MechanicalObjectInternalData(MechanicalObject<DataTypes>* = NULL) {}
 };
 
-/**
- * @brief MechanicalObject class
+/** 
+ * @brief MechanicalObject class TODO no shit sherlock
  */
 template <class DataTypes>
 class MechanicalObject : public sofa::core::behavior::MechanicalState<DataTypes>
 {
 public:
-    SOFA_CLASS(SOFA_TEMPLATE(MechanicalObject, DataTypes),SOFA_TEMPLATE(sofa::core::behavior::MechanicalState, DataTypes));
+    SOFA_CLASS(SOFA_TEMPLATE(MechanicalObject, DataTypes),
+               SOFA_TEMPLATE(sofa::core::behavior::MechanicalState, DataTypes));
 
     typedef sofa::core::behavior::MechanicalState<DataTypes>      Inherited;
     typedef typename Inherited::VMultiOp    VMultiOp;
@@ -79,63 +75,24 @@ public:
     typedef typename DataTypes::VecCoord    VecCoord;
     typedef typename DataTypes::VecDeriv    VecDeriv;
     typedef typename DataTypes::MatrixDeriv						MatrixDeriv;
-    // typedef typename DataTypes::MatrixDeriv::RowConstIterator	MatrixDerivRowConstIterator;
-    // typedef typename DataTypes::MatrixDeriv::ColConstIterator	MatrixDerivColConstIterator;
-    // typedef typename DataTypes::MatrixDeriv::RowIterator		MatrixDerivRowIterator;
-    // typedef typename DataTypes::MatrixDeriv::ColIterator		MatrixDerivColIterator;
 
+    // TODO remove
     typedef typename core::behavior::BaseMechanicalState::ConstraintBlock ConstraintBlock;
 
     typedef sofa::defaulttype::Vector3 Vector3;
 
 protected:
+    // TODO public ffs
     MechanicalObject();
 public:
+    // TODO bad idea
     MechanicalObject& operator = ( const MechanicalObject& );
 protected:
     virtual ~MechanicalObject();
 public:
     virtual void parse ( core::objectmodel::BaseObjectDescription* arg );
 
-#ifdef SOFA_HAVE_NEW_TOPOLOGYCHANGES
-
-    PointData< VecCoord > x;
-    PointData< VecDeriv > v;
-    PointData< VecDeriv > f;
-    Data< VecDeriv > externalForces;
-    Data< VecDeriv > dx;
-    PointData< VecCoord > x0;
-    // Data< MatrixDeriv > c;
-    Data< VecCoord > reset_position;
-    Data< VecDeriv > reset_velocity;
-
-
-    class MOPointHandler : public sofa::component::topology::TopologyDataHandler<sofa::core::topology::Point,VecCoord >
-    {
-    public:
-        typedef typename MechanicalObject<DataTypes>::VecCoord VecCoord;
-        typedef typename MechanicalObject<DataTypes>::Coord Coord;
-        MOPointHandler(MechanicalObject<DataTypes>* _obj, sofa::component::topology::PointData<VecCoord>* _data) : sofa::component::topology::TopologyDataHandler<sofa::core::topology::Point, VecCoord >(_data), obj(_obj) {}
-
-        void applyCreateFunction(unsigned int /*pointIndex*/, Coord& /*dest*/,
-                const sofa::helper::vector< unsigned int > &ancestors,
-                const sofa::helper::vector< double > &coefs);
-
-        void applyDestroyFunction(unsigned int, Coord& );
-
-    protected:
-        MechanicalObject<DataTypes>* obj;
-    };
-
-
-
-
-
-    //static void PointCreationFunction (int , void* , Coord &, const sofa::helper::vector< unsigned int > & ,   const sofa::helper::vector< double >&);
-
-    //static void PointDestroyFunction (int, void*, Coord&);
-
-#else
+    // TODO find a way of NOT allocating each of these separately
     Data< VecCoord > x;
     Data< VecDeriv > v;
     Data< VecDeriv > f;
@@ -145,7 +102,6 @@ public:
     // Data< MatrixDeriv > c;
     Data< VecCoord > reset_position;
     Data< VecDeriv > reset_velocity;
-#endif
 
     defaulttype::MapMapSparseMatrix< Deriv > c2;
 
@@ -153,12 +109,17 @@ public:
 
     Data< bool >  showObject;
     Data< float > showObjectScale;
+
     Data< bool >  showIndices;
     Data< float > showIndicesScale;
+
     Data< bool >  showVectors;
     Data< float > showVectorsScale;
+
     Data< int > drawMode;
     Data< defaulttype::Vec4f > d_color;  ///< drawing color
+
+    // TODO wtf
     Data < bool > isToPrint; ///< ignore some Data for file export
 
     virtual void init();
@@ -170,9 +131,13 @@ public:
 
     virtual void writeVec(core::ConstVecId v, std::ostream &out);
     virtual void readVec(core::VecId v, std::istream &in);
-    virtual SReal compareVec(core::ConstVecId v, std::istream &in);
 
-    virtual void writeState( std::ostream& out );
+    // TODO wtf is this doing 
+    virtual void writeState( std::ostream& out );    
+
+    // TODO WTF
+    virtual SReal compareVec(core::ConstVecId v, std::istream &in);
+    
 
     /// @name New vectors access API based on VecId
     /// @{
@@ -194,6 +159,8 @@ public:
 
     size_t getSize() const { return vsize; }
 
+
+    // TODO deprecate and remove this shit
     SReal getPX(size_t i) const { Real x=0.0,y=0.0,z=0.0; DataTypes::get(x,y,z,(read(core::ConstVecCoordId::position())->getValue())[i]); return (SReal)x; }
     SReal getPY(size_t i) const { Real x=0.0,y=0.0,z=0.0; DataTypes::get(x,y,z,(read(core::ConstVecCoordId::position())->getValue())[i]); return (SReal)y; }
     SReal getPZ(size_t i) const { Real x=0.0,y=0.0,z=0.0; DataTypes::get(x,y,z,(read(core::ConstVecCoordId::position())->getValue())[i]); return (SReal)z; }
@@ -247,11 +214,18 @@ public:
     /// Get the indices of the particles located in the given bounding box
     void getIndicesInSpace(sofa::helper::vector<unsigned>& indices, Real xmin, Real xmax, Real ymin, Real ymax, Real zmin, Real zmax) const;
 
+
+    
+    // TODO fix this broken API
     /// update the given bounding box, to include this
     virtual bool addBBox(SReal* minBBox, SReal* maxBBox);
     /// Bounding Box computation method.
     virtual void computeBBox(const core::ExecParams* params, bool onlyVisible=false);
 
+
+
+
+    
     /// @name Base Matrices and Vectors Interface
     /// @{
 
@@ -267,6 +241,9 @@ public:
     /// @param offset the offset in the BaseVector where the scalar values will be used. It will be updated to the first scalar value after the ones used by this operation when this method returns
     virtual void addToBaseVector(defaulttype::BaseVector* dest, core::ConstVecId src, unsigned int &offset);
 
+
+    // TODO wtf is this crap?
+    
     /// src and dest must have the same size.
     /// Performs: dest[i][j] += src[offset + i][j] 0<= i < src_entries  0<= j < 3 (for 3D objects) 0 <= j < 2 (for 2D objects)
     /// @param offset the offset in the BaseVector where the scalar values will be used. It will be updated to the first scalar value after the ones used by this operation when this method returns
@@ -280,32 +257,30 @@ public:
 
     /// @}
 
-    /// Express the matrix L in term of block of matrices, using the indices of the lines in the MatrixDeriv container
-    // virtual std::list<ConstraintBlock> constraintBlocks( const std::list<unsigned int> &indices) const;
-    // virtual SReal getConstraintJacobianTimesVecDeriv( unsigned int line, core::ConstVecId id);
-
     void setFilename(std::string s) {filename.setValue(s);}
-
-    /// @name Initial transformations accessors.
-    /// @{
 
     void setTranslation(SReal, SReal, SReal) { throw std::logic_error("unimplemented"); }
     void setRotation(SReal, SReal, SReal) { throw std::logic_error("unimplemented"); }
     void setScale(SReal, SReal, SReal) { throw std::logic_error("unimplemented"); }
-
     Vector3 getTranslation() const { return {};}
+    
     // virtual Vector3 getRotation() const {return rotation.getValue();}
     // virtual Vector3 getScale() const {return scale.getValue();}
 
     /// @}
 
+
+    
     void setIgnoreLoader(bool b) {ignoreLoader.setValue(b);}
 
     std::string getFilename() {return filename.getValue();}
 
     /// Renumber the constraint ids with the given permutation vector
-    void renumberConstraintId(const sofa::helper::vector< unsigned >& renumbering);
-
+    
+    void renumberConstraintId(const sofa::helper::vector< unsigned >&) {
+        throw std::logic_error("unimplemented");
+    }
+    
 
     /// @name Integration related methods
     /// @{
@@ -314,6 +289,7 @@ public:
 
     virtual void endIntegration(const core::ExecParams* params, SReal dt);
 
+    // TODO remove
     virtual void accumulateForce(const core::ExecParams* params, core::VecDerivId f = core::VecDerivId::force()); // see BaseMechanicalState::accumulateForce(const ExecParams*, VecId)
 
     /// Increment the index of the given VecCoordId, so that all 'allocated' vectors in this state have a lower index
@@ -330,6 +306,7 @@ public:
     /// Allocate a new temporary vector
     //virtual void vAlloc(core::MatrixDerivId v);
 
+    // TODO WTF is this supposed to mean
     /// Reallocate a new temporary vector
     virtual void vRealloc(const core::ExecParams* params, core::VecCoordId v);
     /// Reallocate a new temporary vector
@@ -343,6 +320,7 @@ public:
     /// Free a temporary vector
     //virtual void vFree(core::MatrixDerivId v);
 
+    // TODO WTF is this supposed to mean
     /// Initialize an unset vector
     virtual void vInit(const core::ExecParams* params, core::VecCoordId v, core::ConstVecCoordId vSrc);
     /// Initialize an unset vector
@@ -352,14 +330,9 @@ public:
 
     virtual void vOp(const core::ExecParams* params, core::VecId v, core::ConstVecId a = core::ConstVecId::null(), core::ConstVecId b = core::ConstVecId::null(), SReal f=1.0);
 
-#ifdef SOFA_SMP
-    virtual void vOp(const core::ExecParams* params, core::VecId, core::ConstVecId, core::ConstVecId, double f, a1::Shared<double> *fSh);
-    virtual void vOpMEq(const core::ExecParams* params, core::VecId, core::ConstVecId  = core::ConstVecId::null(), a1::Shared<double> * =NULL);
-    virtual void vDot(const core::ExecParams* params, a1::Shared<double> *, core::ConstVecId , core::ConstVecId);
-#endif
-
     virtual void vMultiOp(const core::ExecParams* params, const VMultiOp& ops);
 
+    // TODO WTF IS THIS
     virtual void vThreshold(core::VecId a, SReal threshold );
 
     virtual SReal vDot(const core::ExecParams* params, core::ConstVecId a, core::ConstVecId b);
@@ -376,20 +349,16 @@ public:
 
     virtual void resetAcc(const core::ExecParams* params, core::VecDerivId a = core::VecDerivId::dx());
 
-    // unimplemented
+    // TODO deprecate and remove
     virtual void resetConstraint(const core::ExecParams* params);
     virtual void getConstraintJacobian(const core::ExecParams* params, 
                                        sofa::defaulttype::BaseMatrix* J, 
                                        unsigned int & off);
     
-#if(SOFA_WITH_EXPERIMENTAL_FEATURES==1)
-    // virtual void buildIdentityBlocksInJacobian(const sofa::helper::vector<unsigned int>& list_n, core::MatrixDerivId &mID);
-#endif
-    /// @}
-
     /// @name Debug
     /// @{
 
+    // TODO remove
     virtual void printDOF(core::ConstVecId, std::ostream& =std::cerr, int firstIndex=0, int range=-1 ) const ;
     virtual unsigned printDOFWithElapsedTime(core::ConstVecId, unsigned =0, unsigned =0, std::ostream& =std::cerr );
 
@@ -411,6 +380,7 @@ public:
             sofa::core::behavior::BaseMechanicalState*& ms, int& index, SReal& distance);
 
 
+    // TODO remove
    /// if this mechanical object stores independent dofs (in opposition to mapped dofs)
    bool isIndependent() const;
 
@@ -460,10 +430,12 @@ protected :
     /// Given the number of a constraint Equation, find the index in the MatrixDeriv C, where the constraint is actually stored
     // unsigned int getIdxConstraintFromId(unsigned int id) const;
 
+    // TODO remove
     MechanicalObjectInternalData<DataTypes> data;
-
     friend class MechanicalObjectInternalData<DataTypes>;
 
+
+    // TODO WTF
     sofa::core::topology::BaseMeshTopology* m_topology;
 };
 

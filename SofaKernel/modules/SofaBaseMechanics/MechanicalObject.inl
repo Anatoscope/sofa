@@ -2153,23 +2153,6 @@ void MechanicalObject<DataTypes>::buildIdentityBlocksInJacobian(const sofa::help
 }
 #endif
 
-template <class DataTypes>
-void MechanicalObject<DataTypes>::renumberConstraintId(const sofa::helper::vector<unsigned>& /*renumbering*/)
-{
-    throw std::logic_error("unimplemented");                    
-}
-
-// template <class DataTypes>
-// std::list< core::behavior::BaseMechanicalState::ConstraintBlock > MechanicalObject<DataTypes>::constraintBlocks( const std::list<unsigned int> &indices) const
-// {
-//     throw std::logic_error("unimplemented");                        
-// }
-
-// template <class DataTypes>
-// SReal MechanicalObject<DataTypes>::getConstraintJacobianTimesVecDeriv(unsigned int line, core::ConstVecId id)
-// {
-//     throw std::logic_error("unimplemented");                            
-// }
 
 template <class DataTypes>
 inline void MechanicalObject<DataTypes>::drawIndices(const core::visual::VisualParams* vparams)
