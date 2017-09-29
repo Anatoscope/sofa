@@ -86,17 +86,6 @@ template class SOFA_BASE_MECHANICS_API MechanicalObject<Rigid2fTypes>;
 #ifndef SOFA_FLOAT
 
 
-template<>
-void MechanicalObject<defaulttype::Rigid3dTypes>::applyRotation (const defaulttype::Quat q)
-{
-    helper::WriteAccessor< Data<VecCoord> > x = *this->write(core::VecCoordId::position());
-
-    for (unsigned int i = 0; i < x.size(); i++)
-    {
-        x[i].getCenter() = q.rotate(x[i].getCenter());
-        x[i].getOrientation() = q * x[i].getOrientation();
-    }
-}
 
 
 template<>
@@ -165,25 +154,6 @@ void MechanicalObject<defaulttype::Rigid3dTypes>::draw(const core::visual::Visua
 #endif
 
 #ifndef SOFA_DOUBLE
-template<>
-void MechanicalObject<defaulttype::Rigid3fTypes>::applyRotation (const defaulttype::Quat q)
-{
-    helper::WriteAccessor< Data<VecCoord> > x = *this->write(core::VecCoordId::position());
-
-    for (unsigned int i = 0; i < x.size(); i++)
-    {
-        x[i].getCenter() = q.rotate(x[i].getCenter());
-        x[i].getOrientation() = q * x[i].getOrientation();
-    }
-}
-
-
-
-// template <>
-//     bool MechanicalObject<Vec1fTypes>::addBBox(SReal* /*minBBox*/, SReal* /*maxBBox*/)
-// {
-//     return false; // ignore 1D DOFs for 3D bbox
-// }
 
 template<>
 void MechanicalObject<defaulttype::Rigid3fTypes>::draw(const core::visual::VisualParams* vparams)

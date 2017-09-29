@@ -29,6 +29,11 @@
 #include <sofa/core/topology/BaseTopology.h>
 #include <sofa/core/topology/TopologyChange.h>
 
+#include <sofa/defaulttype/Quat.h>
+#include <sofa/defaulttype/VecTypes.h>
+#include <sofa/defaulttype/RigidTypes.h>
+
+
 #include <sofa/defaulttype/DataTypeInfo.h>
 
 #include <sofa/helper/accessor.h>
@@ -91,7 +96,7 @@ MechanicalObject<DataTypes>::MechanicalObject()
 
     m_initialized = false;
 
-    data = MechanicalObjectInternalData<DataTypes>(this);
+    // data = MechanicalObjectInternalData<DataTypes>(this);
 
     x               .setGroup("Vector");
     v               .setGroup("Vector");
@@ -282,53 +287,6 @@ void MechanicalObject<DataTypes>::reserve(const size_t size)
     }
 }
 
-template <class DataTypes>
-void MechanicalObject<DataTypes>::applyTranslation (const SReal dx, const SReal dy, const SReal dz)
-{
-    helper::WriteAccessor< Data<VecCoord> > x_wA = *this->write(core::VecCoordId::position());
-
-    for (unsigned int i = 0; i < x_wA.size(); i++)
-    {
-        DataTypes::add(x_wA[i], dx, dy, dz);
-    }
-}
-
-//Apply Rotation from Euler angles (in degree!)
-template <class DataTypes>
-void MechanicalObject<DataTypes>::applyRotation (const SReal rx, const SReal ry, const SReal rz)
-{
-    sofa::defaulttype::Quaternion q =
-            helper::Quater< SReal >::createQuaterFromEuler(sofa::defaulttype::Vec< 3, SReal >(rx, ry, rz) * M_PI / 180.0);
-    applyRotation(q);
-}
-
-template <class DataTypes>
-void MechanicalObject<DataTypes>::applyRotation (const defaulttype::Quat q)
-{
-    helper::WriteAccessor< Data<VecCoord> > x_wA = *this->write(core::VecCoordId::position());
-
-    for (unsigned int i = 0; i < x_wA.size(); i++)
-    {
-        sofa::defaulttype::Vec<3,Real> pos;
-        DataTypes::get(pos[0], pos[1], pos[2], x_wA[i]);
-        sofa::defaulttype::Vec<3,Real> newposition = q.rotate(pos);
-        DataTypes::set(x_wA[i], newposition[0], newposition[1], newposition[2]);
-    }
-}
-
-template <class DataTypes>
-void MechanicalObject<DataTypes>::applyScale(const SReal sx,const SReal sy,const SReal sz)
-{
-    helper::WriteAccessor< Data<VecCoord> > x_wA = this->writePositions();
-
-    const sofa::defaulttype::Vec<3,Real> s((Real)sx, (Real)sy, (Real)sz);
-    for (unsigned int i=0; i<x_wA.size(); i++)
-    {
-        x_wA[i][0] = x_wA[i][0] * s[0];
-        x_wA[i][1] = x_wA[i][1] * s[1];
-        x_wA[i][2] = x_wA[i][2] * s[2];
-    }
-}
 
 template <class DataTypes>
 void MechanicalObject<DataTypes>::getIndicesInSpace(sofa::helper::vector<unsigned>& indices, Real xmin, Real xmax, Real ymin, Real ymax, Real zmin, Real zmax) const
@@ -346,72 +304,6 @@ void MechanicalObject<DataTypes>::getIndicesInSpace(sofa::helper::vector<unsigne
     }
 }
 
-template <class DataTypes>
-void MechanicalObject<DataTypes>::computeWeightedValue( const unsigned int i, const sofa::helper::vector< unsigned int >& ancestors, const sofa::helper::vector< double >& coefs)
-{
-    // HD interpolate position, speed,force,...
-    // assume all coef sum to 1.0
-    unsigned int j;
-
-    const unsigned int ancestorsSize = ancestors.size();
-
-    helper::vector< Coord > ancestorsCoord(ancestorsSize);
-    helper::vector< Deriv > ancestorsDeriv(ancestorsSize);
-    helper::vector< Real > ancestorsCoefs(ancestorsSize);
-
-    for (unsigned int k = 0; k < vectorsCoord.size(); k++)
-    {
-        if (vectorsCoord[k] != NULL)
-        {
-            VecCoord &vecCoord = *(vectorsCoord[k]->beginEdit());
-
-            if (vecCoord.size() != 0)
-            {
-                for (j = 0; j < ancestorsSize; ++j)
-                {
-                    ancestorsCoord[j] = vecCoord[ancestors[j]];
-                    ancestorsCoefs[j] = (Real)coefs[j];
-                }
-
-                vecCoord[i] = DataTypes::interpolate(ancestorsCoord, ancestorsCoefs);
-            }
-
-            vectorsCoord[k]->endEdit();
-        }
-    }
-
-    for (unsigned int k = 0; k < vectorsDeriv.size(); k++)
-    {
-        if (vectorsDeriv[k] != NULL)
-        {
-            VecDeriv &vecDeriv = *(vectorsDeriv[k]->beginEdit());
-
-            if (vecDeriv.size() != 0)
-            {
-                for (j = 0; j < ancestorsSize; ++j)
-                {
-                    ancestorsDeriv[j] = vecDeriv[ancestors[j]];
-                    ancestorsCoefs[j] = (Real)coefs[j];
-                }
-
-                vecDeriv[i] = DataTypes::interpolate(ancestorsDeriv, ancestorsCoefs);
-            }
-
-            vectorsDeriv[k]->endEdit();
-        }
-    }
-}
-
-// Force the position of a point (and force its velocity to zero value)
-template <class DataTypes>
-void MechanicalObject<DataTypes>::forcePointPosition(const unsigned int i, const sofa::helper::vector< double >& m_x)
-{
-    helper::WriteAccessor< Data<VecCoord> > x_wA = this->writePositions();
-    helper::WriteAccessor< Data<VecDeriv> > v_wA = this->writeVelocities();
-
-    DataTypes::set(x_wA[i], m_x[0], m_x[1], m_x[2]);
-    DataTypes::set(v_wA[i], (Real) 0.0, (Real) 0.0, (Real) 0.0);
-}
 
 template <class DataTypes>
 void MechanicalObject<DataTypes>::copyToBaseVector(defaulttype::BaseVector * dest, core::ConstVecId src, unsigned int &offset)
@@ -631,9 +523,10 @@ void MechanicalObject<DataTypes>::reinit() { }
 template <class DataTypes>
 void MechanicalObject<DataTypes>::storeResetState()
 {
-    // store a reset state only for independent dofs (mapped dofs are deduced from independent dofs)
-    if( !isIndependent() ) return;
-
+    if(!static_cast<const simulation::Node*>(this->getContext())->mechanicalMapping.empty() ) {
+        msg_warning() << "storeResetState on mapped dofs";
+    }
+    
     // Save initial state for reset button
     vOp(core::ExecParams::defaultInstance(), core::VecId::resetPosition(), core::VecId::position());
 
@@ -641,8 +534,7 @@ void MechanicalObject<DataTypes>::storeResetState()
     // we only store a resetVelocity if the velocity is not zero
     helper::ReadAccessor< Data<VecDeriv> > v = *this->read(core::VecDerivId::velocity());
     bool zero = true;
-    for (unsigned int i=0; i<v.size(); ++i)
-    {
+    for (unsigned int i=0; i<v.size(); ++i) {
         const Deriv& vi = v[i];
         for (unsigned int j=0; j<vi.size(); ++j)
             if (vi[j] != 0) zero = false;
@@ -1618,86 +1510,86 @@ size_t MechanicalObject<DataTypes>::vSize(const core::ExecParams* params, core::
 
 
 
-template <class DataTypes>
-void MechanicalObject<DataTypes>::printDOF( core::ConstVecId v, std::ostream& out, int firstIndex, int range) const
-{
-    const unsigned int size=this->getSize();
-    if ((unsigned int) (abs(firstIndex)) >= size) return;
-    const unsigned int first=((firstIndex>=0)?firstIndex:size+firstIndex);
-    const unsigned int max=( ( (range >= 0) && ( (range+first)<size) ) ? (range+first):size);
+// template <class DataTypes>
+// void MechanicalObject<DataTypes>::printDOF( core::ConstVecId v, std::ostream& out, int firstIndex, int range) const
+// {
+//     const unsigned int size=this->getSize();
+//     if ((unsigned int) (abs(firstIndex)) >= size) return;
+//     const unsigned int first=((firstIndex>=0)?firstIndex:size+firstIndex);
+//     const unsigned int max=( ( (range >= 0) && ( (range+first)<size) ) ? (range+first):size);
 
-    if( v.type==sofa::core::V_COORD)
-    {
-        const Data<VecCoord>* d_x = this->read(core::ConstVecCoordId(v));
-        if (d_x == NULL) return;
-        helper::ReadAccessor< Data<VecCoord> > x = *d_x;
+//     if( v.type==sofa::core::V_COORD)
+//     {
+//         const Data<VecCoord>* d_x = this->read(core::ConstVecCoordId(v));
+//         if (d_x == NULL) return;
+//         helper::ReadAccessor< Data<VecCoord> > x = *d_x;
 
-        if (x.empty())
-            return;
+//         if (x.empty())
+//             return;
 
-        for (unsigned i=first; i<max; ++i)
-        {
-            out << x[i];
-            if (i != max-1)
-                out <<" ";
-        }
-    }
-    else if( v.type==sofa::core::V_DERIV)
-    {
-        const Data<VecDeriv>* d_x = this->read(core::ConstVecDerivId(v));
-        if (d_x == NULL) return;
-        helper::ReadAccessor< Data<VecDeriv> > x = *d_x;
+//         for (unsigned i=first; i<max; ++i)
+//         {
+//             out << x[i];
+//             if (i != max-1)
+//                 out <<" ";
+//         }
+//     }
+//     else if( v.type==sofa::core::V_DERIV)
+//     {
+//         const Data<VecDeriv>* d_x = this->read(core::ConstVecDerivId(v));
+//         if (d_x == NULL) return;
+//         helper::ReadAccessor< Data<VecDeriv> > x = *d_x;
 
-        if (x.empty())
-            return;
+//         if (x.empty())
+//             return;
 
-        for (unsigned i=first; i<max; ++i)
-        {
-            out << x[i];
-            if (i != max-1)
-                out <<" ";
-        }
-    }
-    else
-        out<<"MechanicalObject<DataTypes>::printDOF, unknown v.type = "<<v.type<<std::endl;
-}
+//         for (unsigned i=first; i<max; ++i)
+//         {
+//             out << x[i];
+//             if (i != max-1)
+//                 out <<" ";
+//         }
+//     }
+//     else
+//         out<<"MechanicalObject<DataTypes>::printDOF, unknown v.type = "<<v.type<<std::endl;
+// }
 
-template <class DataTypes>
-unsigned MechanicalObject<DataTypes>::printDOFWithElapsedTime(core::ConstVecId v, unsigned count, unsigned time, std::ostream& out)
-{
-    if (v.type == sofa::core::V_COORD)
-    {
-        const Data<VecCoord>* d_x = this->read(core::ConstVecCoordId(v));
-        if (d_x == NULL) return 0;
-        helper::ReadAccessor< Data<VecCoord> > x = *d_x;
+// template <class DataTypes>
+// unsigned MechanicalObject<DataTypes>::printDOFWithElapsedTime(core::ConstVecId v, unsigned count, unsigned time, std::ostream& out)
+// {
+//     if (v.type == sofa::core::V_COORD)
+//     {
+//         const Data<VecCoord>* d_x = this->read(core::ConstVecCoordId(v));
+//         if (d_x == NULL) return 0;
+//         helper::ReadAccessor< Data<VecCoord> > x = *d_x;
 
-        for (unsigned i = 0; i < x.size(); ++i)
-        {
-            out << count + i << "\t" << time << "\t" << x[i] << std::endl;
-        }
-        out << std::endl << std::endl;
+//         for (unsigned i = 0; i < x.size(); ++i)
+//         {
+//             out << count + i << "\t" << time << "\t" << x[i] << std::endl;
+//         }
+//         out << std::endl << std::endl;
 
-        return x.size();
-    }
-    else if (v.type == sofa::core::V_DERIV)
-    {
-        const Data<VecDeriv>* d_x = this->read(core::ConstVecDerivId(v));
-        if (d_x == NULL) return 0;
-        helper::ReadAccessor< Data<VecDeriv> > x = *d_x;
+//         return x.size();
+//     }
+//     else if (v.type == sofa::core::V_DERIV)
+//     {
+//         const Data<VecDeriv>* d_x = this->read(core::ConstVecDerivId(v));
+//         if (d_x == NULL) return 0;
+//         helper::ReadAccessor< Data<VecDeriv> > x = *d_x;
 
-        for (unsigned i = 0; i < x.size(); ++i)
-        {
-            out << count + i << "\t" << time << "\t" << x[i] << std::endl;
-        }
-        out << std::endl << std::endl;
+//         for (unsigned i = 0; i < x.size(); ++i)
+//         {
+//             out << count + i << "\t" << time << "\t" << x[i] << std::endl;
+//         }
+//         out << std::endl << std::endl;
 
-        return x.size();
-    }
-    else
-        out << "MechanicalObject<DataTypes>::printDOFWithElapsedTime, unknown v.type = " << v.type << std::endl;
+//         return x.size();
+//     }
+//     else
+//         out << "MechanicalObject<DataTypes>::printDOFWithElapsedTime, unknown v.type = " << v.type << std::endl;
 
-    return 0;
-}
+//     return 0;
+// }
 
 template <class DataTypes>
 void MechanicalObject<DataTypes>::resetForce(const core::ExecParams* params, core::VecDerivId fid)
@@ -1720,18 +1612,6 @@ void MechanicalObject<DataTypes>::resetAcc(const core::ExecParams* params, core:
             a[i] = Deriv();
         }
     }
-}
-
-template <class DataTypes>
-void MechanicalObject<DataTypes>::resetConstraint(const core::ExecParams*)
-{
-    throw std::logic_error("unimplemented");        
-}
-
-template <class DataTypes>
-void MechanicalObject<DataTypes>::getConstraintJacobian(const core::ExecParams* /*params*/, sofa::defaulttype::BaseMatrix*,unsigned int &)
-{
-    throw std::logic_error("unimplemented");            
 }
 
 
@@ -1962,11 +1842,11 @@ void MechanicalObject<DataTypes>::computeBBox(const core::ExecParams* params, bo
     Inherited::computeBBox( params );
 }
 
-template <class DataTypes>
-bool MechanicalObject<DataTypes>::isIndependent() const
-{
-    return static_cast<const simulation::Node*>(this->getContext())->mechanicalMapping.empty();
-}
+// template <class DataTypes>
+// bool MechanicalObject<DataTypes>::isIndependent() const
+// {
+//     return static_cast<const simulation::Node*>(this->getContext())->mechanicalMapping.empty();
+// }
 
 
 } // namespace container
