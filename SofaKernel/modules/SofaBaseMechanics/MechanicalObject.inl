@@ -868,13 +868,9 @@ void MechanicalObject<DataTypes>::init()
     reinit();
 
     // storing X0 must be done after reinit() that possibly applies transformations
-    if( read(core::ConstVecCoordId::restPosition())->getValue().size()!=x_wA.size() )
-    {
+    if( read(core::ConstVecCoordId::restPosition())->getValue().size()!=x_wA.size() ) {
         // storing X0 from X
-        if( restScale.getValue()!=1 )
-            vOp(core::ExecParams::defaultInstance(), core::VecId::restPosition(), core::ConstVecId::null(), core::VecId::position(), restScale.getValue());
-        else
-            vOp(core::ExecParams::defaultInstance(), core::VecId::restPosition(), core::VecId::position());
+        vOp(core::ExecParams::defaultInstance(), core::VecId::restPosition(), core::VecId::position());
     }
 
     m_initialized = true;
@@ -1199,17 +1195,6 @@ const Data<typename MechanicalObject<DataTypes>::VecDeriv>* MechanicalObject<Dat
     }
 }
 
-template <class DataTypes>
-Data<typename MechanicalObject<DataTypes>::MatrixDeriv>* MechanicalObject<DataTypes>::write(core::MatrixDerivId )
-{
-    throw std::logic_error("unimplemented");
-}
-
-template <class DataTypes>
-const Data<typename MechanicalObject<DataTypes>::MatrixDeriv>* MechanicalObject<DataTypes>::read(core::ConstMatrixDerivId ) const
-{
-    throw std::logic_error("unimplemented");    
-}
 
 template <class DataTypes>
 void MechanicalObject<DataTypes>::setVecCoord(unsigned int index, Data< VecCoord > *v)

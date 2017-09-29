@@ -105,7 +105,7 @@ public:
 
     defaulttype::MapMapSparseMatrix< Deriv > c2;
 
-    Data< SReal > restScale;
+    // Data< SReal > restScale;
 
     Data< bool >  showObject;
     Data< float > showObjectScale;
@@ -132,9 +132,13 @@ public:
     // TODO wtf is this doing 
     virtual void writeState( std::ostream& out );    
 
-    // TODO WTF
-    virtual SReal compareVec(core::ConstVecId v, std::istream &in);
+    virtual SReal compareVec(core::ConstVecId , std::istream &) { 
+        throw std::logic_error("unimplemented");
+    }
     
+    void setIgnoreLoader(bool) { 
+        throw std::logic_error("unimplemented");
+    }
 
     /// @name New vectors access API based on VecId
     /// @{
@@ -145,9 +149,12 @@ public:
     virtual Data< VecDeriv >* write(core::VecDerivId v);
     virtual const Data< VecDeriv >* read(core::ConstVecDerivId v) const;
 
-    // unimplemented
-    virtual Data< MatrixDeriv >* write(core::MatrixDerivId v);
-    virtual const Data< MatrixDeriv >* read(core::ConstMatrixDerivId v) const;
+    virtual Data< MatrixDeriv >* write(core::MatrixDerivId) {
+        throw std::logic_error("unimplemented");
+    }
+    virtual const Data< MatrixDeriv >* read(core::ConstMatrixDerivId) const  {
+        throw std::logic_error("unimplemented");
+    }
 
     /// @}
 
@@ -157,16 +164,7 @@ public:
     size_t getSize() const { return vsize; }
 
 
-    // TODO deprecate and remove this shit
-    SReal getPX(size_t i) const { Real x=0.0,y=0.0,z=0.0; DataTypes::get(x,y,z,(read(core::ConstVecCoordId::position())->getValue())[i]); return (SReal)x; }
-    SReal getPY(size_t i) const { Real x=0.0,y=0.0,z=0.0; DataTypes::get(x,y,z,(read(core::ConstVecCoordId::position())->getValue())[i]); return (SReal)y; }
-    SReal getPZ(size_t i) const { Real x=0.0,y=0.0,z=0.0; DataTypes::get(x,y,z,(read(core::ConstVecCoordId::position())->getValue())[i]); return (SReal)z; }
-
-    SReal getVX(size_t i) const { Real x=0.0,y=0.0,z=0.0; DataTypes::get(x,y,z, read(core::ConstVecDerivId::velocity())->getValue()[i]); return (SReal)x; }
-    SReal getVY(size_t i) const { Real x=0.0,y=0.0,z=0.0; DataTypes::get(x,y,z, read(core::ConstVecDerivId::velocity())->getValue()[i]); return (SReal)y; }
-    SReal getVZ(size_t i) const { Real x=0.0,y=0.0,z=0.0; DataTypes::get(x,y,z, read(core::ConstVecDerivId::velocity())->getValue()[i]); return (SReal)z; }
-
-
+    // TODO remove this crap
     /** \brief Overwrite values at index outputIndex by the ones at inputIndex.
      *
      */
@@ -277,22 +275,21 @@ public:
 
     virtual void endIntegration(const core::ExecParams* params, SReal dt);
 
-    // TODO remove
-    virtual void accumulateForce(const core::ExecParams* params, core::VecDerivId f = core::VecDerivId::force()); // see BaseMechanicalState::accumulateForce(const ExecParams*, VecId)
+    // see BaseMechanicalState::accumulateForce(const ExecParams*, VecId)    
+    virtual void accumulateForce(const core::ExecParams* params, core::VecDerivId f = core::VecDerivId::force()); 
 
-    /// Increment the index of the given VecCoordId, so that all 'allocated' vectors in this state have a lower index
+    /// Increment the index of the given VecCoordId, so that all 'allocated'
+    /// vectors in this state have a lower index
     virtual void vAvail(const core::ExecParams* params, core::VecCoordId& v);
-    /// Increment the index of the given VecDerivId, so that all 'allocated' vectors in this state have a lower index
+    
+    /// Increment the index of the given VecDerivId, so that all 'allocated'
+    /// vectors in this state have a lower index
     virtual void vAvail(const core::ExecParams* params, core::VecDerivId& v);
-    /// Increment the index of the given MatrixDerivId, so that all 'allocated' vectors in this state have a lower index
-    //virtual void vAvail(core::MatrixDerivId& v);
 
     /// Allocate a new temporary vector
     virtual void vAlloc(const core::ExecParams* params, core::VecCoordId v);
     /// Allocate a new temporary vector
     virtual void vAlloc(const core::ExecParams* params, core::VecDerivId v);
-    /// Allocate a new temporary vector
-    //virtual void vAlloc(core::MatrixDerivId v);
 
     // TODO WTF is this supposed to mean
     /// Reallocate a new temporary vector
@@ -309,15 +306,17 @@ public:
     //virtual void vFree(core::MatrixDerivId v);
 
     // TODO WTF is this supposed to mean
+
     /// Initialize an unset vector
     virtual void vInit(const core::ExecParams* params, core::VecCoordId v, core::ConstVecCoordId vSrc);
     /// Initialize an unset vector
     virtual void vInit(const core::ExecParams* params, core::VecDerivId v, core::ConstVecDerivId vSrc);
-    /// Initialize an unset vector
-    //virtual void vInit(const core::ExecParams* params, core::MatrixDerivId v, core::ConstMatrixDerivId vSrc);
+    
+    virtual void vOp(const core::ExecParams* params, core::VecId v, 
+                     core::ConstVecId a = core::ConstVecId::null(), 
+                     core::ConstVecId b = core::ConstVecId::null(), SReal f=1.0);
 
-    virtual void vOp(const core::ExecParams* params, core::VecId v, core::ConstVecId a = core::ConstVecId::null(), core::ConstVecId b = core::ConstVecId::null(), SReal f=1.0);
-
+    // TODO wtf
     virtual void vMultiOp(const core::ExecParams* params, const VMultiOp& ops);
 
     // TODO WTF IS THIS
@@ -325,16 +324,19 @@ public:
 
     virtual SReal vDot(const core::ExecParams* params, core::ConstVecId a, core::ConstVecId b);
 
-    /// Sum of the entries of state vector a at the power of l>0. This is used to compute the l-norm of the vector.
+    /// Sum of the entries of state vector a at the power of l>0. This is used
+    /// to compute the l-norm of the vector.
     virtual SReal vSum(const core::ExecParams* params, core::ConstVecId a, unsigned l);
 
-    /// Maximum of the absolute values of the entries of state vector a. This is used to compute the infinite-norm of the vector.
+    /// Maximum of the absolute values of the entries of state vector a. This is
+    /// used to compute the infinite-norm of the vector.
     virtual SReal vMax(const core::ExecParams* params, core::ConstVecId a);
 
+    // TODO remove (wtf)
     virtual size_t vSize( const core::ExecParams* params, core::ConstVecId v );
 
+    // TODO remove
     virtual void resetForce(const core::ExecParams* params, core::VecDerivId f = core::VecDerivId::force());
-
     virtual void resetAcc(const core::ExecParams* params, core::VecDerivId a = core::VecDerivId::dx());
 
     // TODO deprecate and remove
@@ -360,12 +362,16 @@ public:
     /// Find mechanical particles hit by the given ray.
     /// A mechanical particle is defined as a 2D or 3D, position or rigid DOF
     /// Returns false if this object does not support picking
-    virtual bool pickParticles(const core::ExecParams* params, double rayOx, double rayOy, double rayOz, double rayDx, double rayDy, double rayDz, double radius0, double dRadius,
-            std::multimap< double, std::pair<sofa::core::behavior::BaseMechanicalState*, int> >& particles);
+    virtual bool pickParticles(const core::ExecParams* params, 
+                               double rayOx, double rayOy, double rayOz, 
+                               double rayDx, double rayDy, double rayDz, 
+                               double radius0, double dRadius,
+                               std::multimap< double, std::pair<sofa::core::behavior::BaseMechanicalState*, int> >& particles);
 
-    virtual bool closestParticle(const core::ExecParams* params, Vector3 const& point,
-            defaulttype::Vector3 const& origin, double radius0, double dRadius,
-            sofa::core::behavior::BaseMechanicalState*& ms, int& index, SReal& distance);
+    virtual bool closestParticle(const core::ExecParams* params,
+                                 Vector3 const& point, defaulttype::Vector3 const& origin,
+                                 double radius0, double dRadius,
+                                 sofa::core::behavior::BaseMechanicalState*& ms, int& index, SReal& distance);
 
 
     // TODO remove
@@ -413,9 +419,6 @@ protected :
     */
     void drawVectors(const core::visual::VisualParams* vparams);
 
-    /// Given the number of a constraint Equation, find the index in the MatrixDeriv C, where the constraint is actually stored
-    // unsigned int getIdxConstraintFromId(unsigned int id) const;
-
     // TODO remove
     MechanicalObjectInternalData<DataTypes> data;
     friend class MechanicalObjectInternalData<DataTypes>;
@@ -425,6 +428,9 @@ protected :
     sofa::core::topology::BaseMeshTopology* m_topology;
 };
 
+
+
+
 #ifndef SOFA_FLOAT
 template<> SOFA_BASE_MECHANICS_API
 void MechanicalObject<defaulttype::Rigid3dTypes>::applyRotation (const defaulttype::Quat q);
@@ -433,23 +439,7 @@ void MechanicalObject<defaulttype::Rigid3dTypes>::applyRotation (const defaultty
 template<> SOFA_BASE_MECHANICS_API
 void MechanicalObject<defaulttype::Rigid3fTypes>::applyRotation (const defaulttype::Quat q);
 #endif
-#ifndef SOFA_FLOAT
-template<> SOFA_BASE_MECHANICS_API
-void MechanicalObject<defaulttype::Rigid3dTypes>::addFromBaseVectorSameSize(core::VecId dest, const defaulttype::BaseVector* src, unsigned int &offset );
-#endif
-#ifndef SOFA_DOUBLE
-template<> SOFA_BASE_MECHANICS_API
-void MechanicalObject<defaulttype::Rigid3fTypes>::addFromBaseVectorSameSize(core::VecId dest, const defaulttype::BaseVector* src, unsigned int &offset );
-#endif
 
-#ifndef SOFA_FLOAT
-template<> SOFA_BASE_MECHANICS_API
-void MechanicalObject<defaulttype::Rigid3dTypes>::addFromBaseVectorDifferentSize(core::VecId dest, const defaulttype::BaseVector* src, unsigned int &offset );
-#endif
-#ifndef SOFA_DOUBLE
-template<> SOFA_BASE_MECHANICS_API
-void MechanicalObject<defaulttype::Rigid3fTypes>::addFromBaseVectorDifferentSize(core::VecId dest, const defaulttype::BaseVector* src, unsigned int &offset );
-#endif
 
 #ifndef SOFA_FLOAT
 template<> SOFA_BASE_MECHANICS_API
