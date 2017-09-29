@@ -242,17 +242,14 @@ public:
     virtual void addToBaseVector(defaulttype::BaseVector* dest, core::ConstVecId src, unsigned int &offset);
 
 
-    // TODO wtf is this crap?
-    
-    /// src and dest must have the same size.
-    /// Performs: dest[i][j] += src[offset + i][j] 0<= i < src_entries  0<= j < 3 (for 3D objects) 0 <= j < 2 (for 2D objects)
-    /// @param offset the offset in the BaseVector where the scalar values will be used. It will be updated to the first scalar value after the ones used by this operation when this method returns
-    virtual void addFromBaseVectorSameSize(core::VecId dest, const defaulttype::BaseVector* src, unsigned int &offset);
+    // TODO deprecated & remove this shit
+    virtual void addFromBaseVectorSameSize(core::VecId ,  const defaulttype::BaseVector*, unsigned int &) {
+        throw std::logic_error("unimplemented");
+    }
 
-    /// src size can be smaller or equal to dest size.
-    /// Performs: dest[ offset + i ][j] += src[i][j]  0<= i < src_entries  0<= j < 3 (for 3D objects) 0 <= j < 2 (for 2D objects)
-    /// @param offset the offset in the MechanicalObject local vector specified by VecId dest. It will be updated to the first scalar value after the ones used by this operation when this method returns.
-    virtual void addFromBaseVectorDifferentSize(core::VecId dest, const defaulttype::BaseVector* src, unsigned int &offset );
+    virtual void addFromBaseVectorDifferentSize(core::VecId, const defaulttype::BaseVector*, unsigned int& ) {
+        throw std::logic_error("unimplemented");
+    }
 
 
     /// @}

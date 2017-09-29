@@ -24,9 +24,7 @@
 
 #include <SofaBaseMechanics/MechanicalObject.h>
 #include <sofa/core/visual/VisualParams.h>
-#ifdef SOFA_SMP
-#include <SofaBaseMechanics/MechanicalObjectTasks.inl>
-#endif
+
 #include <SofaBaseLinearSolver/SparseMatrix.h>
 #include <sofa/core/topology/BaseTopology.h>
 #include <sofa/core/topology/TopologyChange.h>
@@ -47,7 +45,7 @@
 namespace {
 
 template<class V>
-void renumber(V* v, V* tmp, const sofa::helper::vector< unsigned int > &index )
+static inline void renumber(V* v, V* tmp, const sofa::helper::vector< unsigned int > &index )
 {
     if (v == NULL)
         return;
@@ -794,84 +792,7 @@ void MechanicalObject<DataTypes>::addToBaseVector(defaulttype::BaseVector* dest,
     }
 }
 
-template <class DataTypes>
-void MechanicalObject<DataTypes>::addFromBaseVectorSameSize(sofa::core::VecId dest, const defaulttype::BaseVector *src, unsigned int &offset)
-{
-    if (dest.type == sofa::core::V_COORD)
-    {
-        helper::WriteAccessor< Data<VecCoord> > vDest = *this->write(core::VecCoordId(dest));
-        const unsigned int coordDim = defaulttype::DataTypeInfo<Coord>::size();
 
-        for (unsigned int i = 0; i < vDest.size(); i++)
-        {
-            for (unsigned int j = 0; j < coordDim; j++)
-            {
-                Real tmp = (Real)0.0;
-                defaulttype::DataTypeInfo<Coord>::getValue(vDest[i], j, tmp);
-                defaulttype::DataTypeInfo<Coord>::setValue(vDest[i], j, tmp + src->element(offset + i * coordDim + j));
-            }
-        }
-
-        offset += vDest.size() * coordDim;
-    }
-    else
-    {
-        helper::WriteAccessor< Data<VecDeriv> > vDest = *this->write(core::VecDerivId(dest));
-        const unsigned int derivDim = defaulttype::DataTypeInfo<Deriv>::size();
-
-        for (unsigned int i = 0; i < vDest.size(); i++)
-        {
-            for (unsigned int j = 0; j < derivDim; j++)
-            {
-                Real tmp = (Real)0.0;
-                defaulttype::DataTypeInfo<Deriv>::getValue(vDest[i], j, tmp);
-                defaulttype::DataTypeInfo<Deriv>::setValue(vDest[i], j, tmp + src->element(offset + i * derivDim + j));
-            }
-        }
-
-        offset += vDest.size() * derivDim;
-    }
-}
-
-template <class DataTypes>
-void MechanicalObject<DataTypes>::addFromBaseVectorDifferentSize(sofa::core::VecId dest, const defaulttype::BaseVector* src, unsigned int &offset )
-{
-    if (dest.type == sofa::core::V_COORD)
-    {
-        helper::WriteAccessor< Data<VecCoord> > vDest = *this->write(core::VecCoordId(dest));
-        const unsigned int coordDim = defaulttype::DataTypeInfo<Coord>::size();
-        const unsigned int nbEntries = src->size()/coordDim;
-        for (unsigned int i=0; i<nbEntries; i++)
-        {
-            for (unsigned int j=0; j<coordDim; ++j)
-            {
-                Real tmp = (Real)0.0;
-                defaulttype::DataTypeInfo<Coord>::getValue(vDest[i+offset],j,tmp);
-                defaulttype::DataTypeInfo<Coord>::setValue(vDest[i+offset],j, tmp + src->element(i*coordDim+j));
-            }
-        }
-        offset += nbEntries;
-    }
-    else
-    {
-        helper::WriteAccessor< Data<VecDeriv> > vDest = *this->write(core::VecDerivId(dest));
-
-        const unsigned int derivDim = defaulttype::DataTypeInfo<Deriv>::size();
-        const unsigned int nbEntries = src->size()/derivDim;
-        for (unsigned int i=0; i<nbEntries; i++)
-        {
-            for (unsigned int j=0; j<derivDim; ++j)
-            {
-                Real tmp = (Real)0.0;
-                defaulttype::DataTypeInfo<Deriv>::getValue(vDest[i+offset],j,tmp);
-                defaulttype::DataTypeInfo<Deriv>::setValue(vDest[i+offset],j, tmp + src->element(i*derivDim+j));
-            }
-        }
-        offset += nbEntries;
-    }
-
-
-}
 
 
 template <class DataTypes>
@@ -1332,11 +1253,6 @@ void MechanicalObject<DataTypes>::setVecDeriv(unsigned int index, Data< VecDeriv
 }
 
 
-// template <class DataTypes>
-// void MechanicalObject<DataTypes>::setVecMatrixDeriv(unsigned int index, Data < MatrixDeriv > *m)
-// {
-//     throw std::logic_error("unimplemented");        
-// }
 
 template <class DataTypes>
 void MechanicalObject<DataTypes>::vAvail(const core::ExecParams* /* params */, core::VecCoordId& v)
@@ -2027,7 +1943,6 @@ size_t MechanicalObject<DataTypes>::vSize(const core::ExecParams* params, core::
 
 
 
-#ifndef SOFA_SMP
 template <class DataTypes>
 void MechanicalObject<DataTypes>::printDOF( core::ConstVecId v, std::ostream& out, int firstIndex, int range) const
 {
@@ -2071,7 +1986,6 @@ void MechanicalObject<DataTypes>::printDOF( core::ConstVecId v, std::ostream& ou
     else
         out<<"MechanicalObject<DataTypes>::printDOF, unknown v.type = "<<v.type<<std::endl;
 }
-#endif
 
 template <class DataTypes>
 unsigned MechanicalObject<DataTypes>::printDOFWithElapsedTime(core::ConstVecId v, unsigned count, unsigned time, std::ostream& out)
@@ -2144,14 +2058,6 @@ void MechanicalObject<DataTypes>::getConstraintJacobian(const core::ExecParams* 
 {
     throw std::logic_error("unimplemented");            
 }
-
-#if(SOFA_WITH_EXPERIMENTAL_FEATURES==1)
-template <class DataTypes>
-void MechanicalObject<DataTypes>::buildIdentityBlocksInJacobian(const sofa::helper::vector<unsigned int>& , core::MatrixDerivId &)
-{
-    throw std::logic_error("unimplemented");                
-}
-#endif
 
 
 template <class DataTypes>
