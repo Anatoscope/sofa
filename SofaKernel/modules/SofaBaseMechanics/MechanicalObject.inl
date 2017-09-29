@@ -77,7 +77,6 @@ MechanicalObject<DataTypes>::MechanicalObject()
     , x0(initData(&x0, "rest_position", "rest position coordinates of the degrees of freedom"))
     , reset_position(initData(&reset_position, "reset_position", "reset position coordinates of the degrees of freedom"))
     , reset_velocity(initData(&reset_velocity, "reset_velocity", "reset velocity coordinates of the degrees of freedom"))
-    , restScale(initData(&restScale, (SReal)1.0, "restScale", "optional scaling of rest position coordinates (to simulated pre-existing internal tension).(default = 1.0)"))
     , showObject(initData(&showObject, (bool) false, "showObject", "Show objects. (default=false)"))
     , showObjectScale(initData(&showObjectScale, (float) 0.1, "showObjectScale", "Scale for object display. (default=0.1)"))
     , showIndices(initData(&showIndices, (bool) false, "showIndices", "Show indices. (default=false)"))
@@ -86,17 +85,9 @@ MechanicalObject<DataTypes>::MechanicalObject()
     , showVectorsScale(initData(&showVectorsScale, (float) 0.0001, "showVectorsScale", "Scale for vectors display. (default=0.0001)"))
     , drawMode(initData(&drawMode,0,"drawMode","The way vectors will be drawn:\n- 0: Line\n- 1:Cylinder\n- 2: Arrow.\n\nThe DOFS will be drawn:\n- 0: point\n- >1: sphere. (default=0)"))
     , d_color(initData(&d_color, defaulttype::Vec4f(1,1,1,1), "showColor", "Color for object display. (default=[1 1 1 1])"))
-    , isToPrint( initData(&isToPrint, false, "isToPrint", "suppress somes data before using save as function. (default=false)"))
-    , filename(initData(&filename, std::string(""), "filename", "File corresponding to the Mechanical Object", false))
-    , ignoreLoader(initData(&ignoreLoader, (bool) false, "ignoreLoader", "Is the Mechanical Object do not use a loader. (default=false)"))
     , f_reserve(initData(&f_reserve, 0, "reserve", "Size to reserve when creating vectors. (default=0)"))
     , vsize(0)
 {
-    // HACK
-    if (!restScale.isSet())
-    {
-        restScale.setValue(1);
-    }
 
     m_initialized = false;
 
@@ -888,17 +879,7 @@ void MechanicalObject<DataTypes>::init()
 
     m_initialized = true;
 
-    if (f_reserve.getValue() > 0)
-        reserve(f_reserve.getValue());
-
-    if(isToPrint.getValue()==true) {
-        x.setPersistent(false);
-        v.setPersistent(false);
-        f.setPersistent(false);
-        externalForces.setPersistent(false);
-        dx.setPersistent(false);
-        x0.setPersistent(false);
-        reset_position.setPersistent(false);}
+    if (f_reserve.getValue() > 0) reserve(f_reserve.getValue());
 }
 
 template <class DataTypes>
@@ -917,15 +898,15 @@ void MechanicalObject<DataTypes>::storeResetState()
     // we only store a resetVelocity if the velocity is not zero
     helper::ReadAccessor< Data<VecDeriv> > v = *this->read(core::VecDerivId::velocity());
     bool zero = true;
-    for (unsigned int i=0; i<v.size(); ++i)
-    {
+    for (unsigned int i=0; i<v.size(); ++i) {
         const Deriv& vi = v[i];
         for (unsigned int j=0; j<vi.size(); ++j)
             if (vi[j] != 0) zero = false;
         if (!zero) break;
     }
-    if (!zero)
+    if (!zero) {
         vOp(core::ExecParams::defaultInstance(), core::VecId::resetVelocity(), core::VecId::velocity());
+    }
 }
 
 

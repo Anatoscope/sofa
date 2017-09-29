@@ -119,9 +119,6 @@ public:
     Data< int > drawMode;
     Data< defaulttype::Vec4f > d_color;  ///< drawing color
 
-    // TODO wtf
-    Data < bool > isToPrint; ///< ignore some Data for file export
-
     virtual void init();
     virtual void reinit();
 
@@ -254,8 +251,6 @@ public:
 
     /// @}
 
-    void setFilename(std::string s) {filename.setValue(s);}
-
     void setTranslation(SReal, SReal, SReal) { throw std::logic_error("unimplemented"); }
     void setRotation(SReal, SReal, SReal) { throw std::logic_error("unimplemented"); }
     void setScale(SReal, SReal, SReal) { throw std::logic_error("unimplemented"); }
@@ -268,10 +263,6 @@ public:
 
 
     
-    void setIgnoreLoader(bool b) {ignoreLoader.setValue(b);}
-
-    std::string getFilename() {return filename.getValue();}
-
     /// Renumber the constraint ids with the given permutation vector
     
     void renumberConstraintId(const sofa::helper::vector< unsigned >&) {
@@ -383,8 +374,6 @@ public:
 
 protected :
 
-    sofa::core::objectmodel::DataFileName filename;
-    Data< bool> ignoreLoader;
     Data< int > f_reserve;
 
     bool m_initialized;
