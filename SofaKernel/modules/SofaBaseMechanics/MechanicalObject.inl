@@ -233,21 +233,23 @@ void MechanicalObject<DataTypes>::resize(const size_t size) {
     // TODO why do we need to check isSet ? (if we don't, it does not work)
     
     for (auto* vi : vectorsCoord) {
-        if (!vi || !vi->isSet()) continue;
+        if (vi && vi->isSet() ) {
 
-        if(size) vi->beginWriteOnly()->resize(size);
-        else vi->beginWriteOnly()->clear();
+            if(size) vi->beginWriteOnly()->resize(size);
+            else vi->beginWriteOnly()->clear();
         
-        vi->endEdit();
+            vi->endEdit();
+        }
     }
 
     for (auto* vi : vectorsDeriv) {
-        if(!vi || !vi->isSet()) continue;
+        if(vi && vi->isSet() ) {
 
-        if(size) vi->beginWriteOnly()->resize(size);
-        else vi->beginWriteOnly()->clear();
+            if(size) vi->beginWriteOnly()->resize(size);
+            else vi->beginWriteOnly()->clear();
         
-        vi->endEdit();
+            vi->endEdit();
+        }
     }
 
     if(size) this->forceMask.resize(size);
@@ -256,25 +258,21 @@ void MechanicalObject<DataTypes>::resize(const size_t size) {
 
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::reserve(const size_t size)
-{
+void MechanicalObject<DataTypes>::reserve(const size_t size) {
     if (size == 0) return;
 
-    for (unsigned int i = 0; i < vectorsCoord.size(); i++)
-    {
-        if (vectorsCoord[i] != NULL && vectorsCoord[i]->isSet())
-        {
-            vectorsCoord[i]->beginWriteOnly()->reserve(size);
-            vectorsCoord[i]->endEdit();
+    for (auto* vi : vectorsCoord) {
+        if (vi && vi->isSet()) {
+            vi->beginWriteOnly()->reserve(size);
+            vi->endEdit();
         }
     }
 
-    for (unsigned int i = 0; i < vectorsDeriv.size(); i++)
-    {
-        if (vectorsDeriv[i] != NULL && vectorsDeriv[i]->isSet())
-        {
-            vectorsDeriv[i]->beginWriteOnly()->reserve(size);
-            vectorsDeriv[i]->endEdit();
+    for (auto* vi : vectorsDeriv ){
+        
+        if (vi && vi->isSet() ) {
+            vi->beginWriteOnly()->reserve(size);
+            vi->endEdit();
         }
     }
 }
@@ -973,21 +971,6 @@ template<class Expr>
 static scalar_type<Expr> operator*(SReal scalar, Expr expr) { return {scalar, expr}; }
 
 
-// ast optimizations (TODO check size consistency?)
-template<class T, class Expr>
-// static typename std::enable_if< std::is_same<T, typename Expr::value_type>::value, Expr>::type
-static Expr operator+(null<T>, Expr expr) { return expr; }
-
-template<class Expr, class T>
-// static typename std::enable_if< std::is_same<T, typename Expr::value_type>::value, Expr>::type
-static Expr operator+(Expr expr, null<T>) { return expr; }
-
-// note: null<T> + null<U> *must* remain ambiguous.
-template<class T> static null<T> operator+(null<T> lhs, null<T>) { return lhs; }
-
-template<class T> static null<T> operator*(SReal, null<T> x) { return x; }
-template<class T> static null<T> operator*(null<T> x, SReal) { return x; }
-
 // container reference
 template<class Container>
 struct ref_type {
@@ -1133,30 +1116,38 @@ struct dispatch_visitor {
 
 
 
-template<class T>
-const typename T::VecCoord& read_vector(const core::State<T>* state, core::ConstVecCoordId id)  {
+
+// map between VecTypes and actual types
+template<class T, core::VecType> struct vector_traits;
+
+template<class T> struct vector_traits<T, core::V_COORD> {
+    using type = typename T::VecCoord;
+};
+
+template<class T> struct vector_traits<T, core::V_DERIV> {
+    using type = typename T::VecDeriv;
+};
+
+
+// return a const expr::ref for the given vecid in state
+template<class T, core::VecType type>
+static expr::ref_type< const typename vector_traits<T, type>::type > vec_ref(const core::State<T>* state,
+                                                                             core::TVecId<type, core::V_READ> id) {
     assert(!id.isNull());
-    return state->read(id)->getValue();
-}
-
-template<class T>
-const typename T::VecDeriv& read_vector(const core::State<T>* state, core::ConstVecDerivId id) {
-    assert(!id.isNull());    
-    return state->read(id)->getValue();
+    return expr::ref(state->read(id)->getValue());
 }
 
 
-template<class T>
-typename T::VecCoord& write_vector(core::State<T>* state, core::VecCoordId id) {
-    assert(!id.isNull());    
-    return const_cast<typename T::VecCoord&>(state->read(id)->getValue());
+// return a writeable expr::ref for the given vecid in state
+template<class T, core::VecType type>
+static expr::ref_type< typename vector_traits<T, type>::type > vec_ref(core::State<T>* state,
+                                                                       core::TVecId<type, core::V_WRITE> id) {
+    assert(!id.isNull());
+    auto& cast = const_cast<typename vector_traits<T, type>::type&>(state->read(id)->getValue());
+    return expr::ref(cast);
 }
 
-template<class T>
-typename T::VecDeriv& write_vector(core::State<T>* state, core::VecDerivId id)  {
-    assert(!id.isNull());        
-    return const_cast<typename T::VecDeriv&>(state->read(id)->getValue());
-}
+
 
 template<class T>
 struct dispatch_type {
@@ -1170,20 +1161,21 @@ struct dispatch_type {
     // first: build proper expression types
     template<class V, class A, class B>
     void operator()(V v, A a, B b) const {
-        auto vref = expr::ref(write_vector(state, v));
+        auto lvalue = vec_ref(state, v);
         
-        const bool lhs_null = a.isNull();
-        const bool rhs_null = b.isNull() || f == 0;
+        const bool a_null = a.isNull();
+        const bool b_null = b.isNull() || f == 0;
         
-        // dispatch on a == 0, b == 0
-        if(lhs_null && rhs_null ) {
-            assign(vref, null(v));
-        } else if(rhs_null) {
-            assign(vref, expr::ref(read_vector(state, a)) );
-        } else if(lhs_null) {
-            assign(vref, f * expr::ref(read_vector(state, b)));
+        // note: we need to dispatch on a == 0 since coord + deriv yields coord
+        // or deriv depending on a == zero (lolwat)
+        if(a_null && b_null ) {
+            assign(lvalue, null(v));
+        } else if(b_null) {
+            assign(lvalue, vec_ref(state, a));
+        } else if(a_null) {
+            assign(lvalue, f * vec_ref(state, b));
         } else {
-            assign(vref, expr::ref(read_vector(state, a)) + f * expr::ref(read_vector(state, b)));
+            assign(lvalue, vec_ref(state, a) + f * vec_ref(state, b));
         }
         
         // signal modifications
@@ -1192,8 +1184,9 @@ struct dispatch_type {
         data->endEdit();
     }
 
-    // we add an extra safety layer since (coord + f * deriv) may be a coord or
-    // deriv depending on coord being null (wtf) "almost typesafe" lol.
+    // need an extra layer since assignment might trigger type errors (ie. coord
+    // = coord + deriv when coord == 0), which we detect and turn into runtime
+    // errors.
     template<class V, class E>
     static typename std::enable_if< std::is_assignable<typename V::value_type,
                                                        typename E::value_type>::value  >::type
