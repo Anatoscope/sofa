@@ -704,9 +704,9 @@ Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<DataTypes
     Data<typename MechanicalObject<DataTypes>::VecCoord>* d = vectorsCoord[v.index];
 #if defined(SOFA_DEBUG) || !defined(NDEBUG)
     const typename MechanicalObject<DataTypes>::VecCoord& val = d->getValue();
-    if (!val.empty() && val.size() != (unsigned int)this->getSize())
-    {
-        serr << "Writing to State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize() << sendl;
+    if (!val.empty() && val.size() != (unsigned int)this->getSize()) {
+        msg_error() << "writing to State vector " << v << " with incorrect size : " 
+                    << val.size() << " != " << this->getSize();
     }
 #endif
     return d;
@@ -719,7 +719,7 @@ const Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<Dat
 {
     if (v.isNull())
     {
-        serr << "Accessing null VecCoord" << sendl;
+        msg_error() << "Accessing null VecCoord";
     }
     if (v.index < vectorsCoord.size() && vectorsCoord[v.index] != NULL)
     {
@@ -728,14 +728,14 @@ const Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<Dat
         const typename MechanicalObject<DataTypes>::VecCoord& val = d->getValue();
         if (!val.empty() && val.size() != (unsigned int)this->getSize())
         {
-            serr << "Accessing State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize() << sendl;
+            msg_error() << "Accessing State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize();
         }
 #endif
         return d;
     }
     else
     {
-        serr << "Vector " << v << " does not exist" << sendl;
+        msg_error() << "Vector " << v << " does not exist";
         return NULL;
     }
 }
@@ -768,7 +768,7 @@ Data<typename MechanicalObject<DataTypes>::VecDeriv>* MechanicalObject<DataTypes
     const typename MechanicalObject<DataTypes>::VecDeriv& val = d->getValue();
     if (!val.empty() && val.size() != (unsigned int)this->getSize())
     {
-        serr << "Writing to State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize() << sendl;
+        msg_error() << "Writing to State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize();
     }
 #endif
     return d;
@@ -784,14 +784,14 @@ const Data<typename MechanicalObject<DataTypes>::VecDeriv>* MechanicalObject<Dat
         const typename MechanicalObject<DataTypes>::VecDeriv& val = d->getValue();
         if (!val.empty() && val.size() != (unsigned int)this->getSize())
         {
-            serr << "Accessing State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize() << sendl;
+            msg_error() << "Accessing State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize();
         }
 #endif
         return d;
     }
     else
     {
-        serr << "Vector " << v << "does not exist" << sendl;
+        msg_error() << "Vector " << v << "does not exist";
         return NULL;
     }
 }
@@ -1383,7 +1383,7 @@ void MechanicalObject<DataTypes>::vThreshold(core::VecId v, SReal t)
     }
     else
     {
-        serr<<"vThreshold does not apply to coordinate vectors"<<sendl;
+        msg_error()<<"vThreshold does not apply to coordinate vectors";
     }
 }
 
@@ -1414,7 +1414,7 @@ SReal MechanicalObject<DataTypes>::vDot(const core::ExecParams* params, core::Co
     }
     else
     {
-        serr << "Invalid dot operation ("<<a<<','<<b<<")" << sendl;
+        msg_error() << "Invalid dot operation ("<<a<<','<<b<<")";
     }
 
     return r;
@@ -1429,7 +1429,7 @@ SReal MechanicalObject<DataTypes>::vSum(const core::ExecParams* params, core::Co
 
     if (a.type == sofa::core::V_COORD )
     {
-        serr << "Invalid vSum operation: can not compute the sum of V_Coord terms in vector "<< a << sendl;
+        msg_error() << "Invalid vSum operation: can not compute the sum of V_Coord terms in vector "<< a;
     }
     else if (a.type == sofa::core::V_DERIV)
     {
@@ -1448,7 +1448,7 @@ SReal MechanicalObject<DataTypes>::vSum(const core::ExecParams* params, core::Co
     }
     else
     {
-        serr << "Invalid vSum operation ("<<a<<")" << sendl;
+        msg_error() << "Invalid vSum operation ("<<a<<")";
     }
 
     return r;
@@ -1481,7 +1481,7 @@ SReal MechanicalObject<DataTypes>::vMax(const core::ExecParams* params, core::Co
     }
     else
     {
-        serr << "Invalid vMax operation ("<<a<<")" << sendl;
+        msg_error() << "Invalid vMax operation ("<<a<<")";
     }
 
     return r;
@@ -1502,94 +1502,12 @@ size_t MechanicalObject<DataTypes>::vSize(const core::ExecParams* params, core::
     }
     else
     {
-        serr << "Invalid size operation ("<<v<<")" << sendl;
+        msg_error() << "Invalid size operation ("<<v<<")";
         return 0;
     }
 }
 
 
-
-
-// template <class DataTypes>
-// void MechanicalObject<DataTypes>::printDOF( core::ConstVecId v, std::ostream& out, int firstIndex, int range) const
-// {
-//     const unsigned int size=this->getSize();
-//     if ((unsigned int) (abs(firstIndex)) >= size) return;
-//     const unsigned int first=((firstIndex>=0)?firstIndex:size+firstIndex);
-//     const unsigned int max=( ( (range >= 0) && ( (range+first)<size) ) ? (range+first):size);
-
-//     if( v.type==sofa::core::V_COORD)
-//     {
-//         const Data<VecCoord>* d_x = this->read(core::ConstVecCoordId(v));
-//         if (d_x == NULL) return;
-//         helper::ReadAccessor< Data<VecCoord> > x = *d_x;
-
-//         if (x.empty())
-//             return;
-
-//         for (unsigned i=first; i<max; ++i)
-//         {
-//             out << x[i];
-//             if (i != max-1)
-//                 out <<" ";
-//         }
-//     }
-//     else if( v.type==sofa::core::V_DERIV)
-//     {
-//         const Data<VecDeriv>* d_x = this->read(core::ConstVecDerivId(v));
-//         if (d_x == NULL) return;
-//         helper::ReadAccessor< Data<VecDeriv> > x = *d_x;
-
-//         if (x.empty())
-//             return;
-
-//         for (unsigned i=first; i<max; ++i)
-//         {
-//             out << x[i];
-//             if (i != max-1)
-//                 out <<" ";
-//         }
-//     }
-//     else
-//         out<<"MechanicalObject<DataTypes>::printDOF, unknown v.type = "<<v.type<<std::endl;
-// }
-
-// template <class DataTypes>
-// unsigned MechanicalObject<DataTypes>::printDOFWithElapsedTime(core::ConstVecId v, unsigned count, unsigned time, std::ostream& out)
-// {
-//     if (v.type == sofa::core::V_COORD)
-//     {
-//         const Data<VecCoord>* d_x = this->read(core::ConstVecCoordId(v));
-//         if (d_x == NULL) return 0;
-//         helper::ReadAccessor< Data<VecCoord> > x = *d_x;
-
-//         for (unsigned i = 0; i < x.size(); ++i)
-//         {
-//             out << count + i << "\t" << time << "\t" << x[i] << std::endl;
-//         }
-//         out << std::endl << std::endl;
-
-//         return x.size();
-//     }
-//     else if (v.type == sofa::core::V_DERIV)
-//     {
-//         const Data<VecDeriv>* d_x = this->read(core::ConstVecDerivId(v));
-//         if (d_x == NULL) return 0;
-//         helper::ReadAccessor< Data<VecDeriv> > x = *d_x;
-
-//         for (unsigned i = 0; i < x.size(); ++i)
-//         {
-//             out << count + i << "\t" << time << "\t" << x[i] << std::endl;
-//         }
-//         out << std::endl << std::endl;
-
-//         return x.size();
-//     }
-//     else
-//         out << "MechanicalObject<DataTypes>::printDOFWithElapsedTime, unknown v.type = " << v.type << std::endl;
-
-//     return 0;
-// }
 
 template <class DataTypes>
 void MechanicalObject<DataTypes>::resetForce(const core::ExecParams* params, core::VecDerivId fid)
@@ -1719,7 +1637,7 @@ inline void MechanicalObject<DataTypes>::draw(const core::visual::VisualParams* 
             break;
         case 4:
            vparams->drawTool()->setLightingEnabled(true);
-            vparams->drawTool()->drawSpheres(positions,scale,defaulttype::Vec<4,float>(0.0,0.0,1.0,1.0));
+            vparams->drawTool()->drawSpheres(positions,scale,defaulttype::Vec4f(0.0,0.0,1.0,1.0));
             break;
         default:
             msg_error() << "unknown drawing mode";
@@ -1842,11 +1760,6 @@ void MechanicalObject<DataTypes>::computeBBox(const core::ExecParams* params, bo
     Inherited::computeBBox( params );
 }
 
-// template <class DataTypes>
-// bool MechanicalObject<DataTypes>::isIndependent() const
-// {
-//     return static_cast<const simulation::Node*>(this->getContext())->mechanicalMapping.empty();
-// }
 
 
 } // namespace container
