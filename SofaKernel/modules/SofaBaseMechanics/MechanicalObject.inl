@@ -25,26 +25,21 @@
 #include <SofaBaseMechanics/MechanicalObject.h>
 #include <sofa/core/visual/VisualParams.h>
 
-#include <SofaBaseLinearSolver/SparseMatrix.h>
-#include <sofa/core/topology/BaseTopology.h>
-#include <sofa/core/topology/TopologyChange.h>
-
 #include <sofa/defaulttype/Quat.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
-
-
 #include <sofa/defaulttype/DataTypeInfo.h>
 
 #include <sofa/helper/accessor.h>
 
 #include <sofa/simulation/Node.h>
 #include <sofa/simulation/Simulation.h>
+
 #ifdef SOFA_DUMP_VISITOR_INFO
 #include <sofa/simulation/Visitor.h>
 #endif
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 
 namespace {
@@ -96,8 +91,6 @@ MechanicalObject<DataTypes>::MechanicalObject()
 
     m_initialized = false;
 
-    // data = MechanicalObjectInternalData<DataTypes>(this);
-
     x               .setGroup("Vector");
     v               .setGroup("Vector");
     f               .setGroup("Vector");
@@ -118,14 +111,16 @@ MechanicalObject<DataTypes>::MechanicalObject()
     
     setVecCoord(core::VecCoordId::resetPosition().index, &reset_position);    
     setVecDeriv(core::VecDerivId::resetVelocity().index, &reset_velocity);
-    
-    // These vectors are set as modified as they are mandatory in the MechanicalObject.
-    x               .forceSet();
-    v               .forceSet();
-    f               .forceSet();
-    externalForces  .forceSet();
 
-    // there are not
+    // TODO wtf?
+    // These vectors are set as modified as they are mandatory in the
+    // MechanicalObject.
+    x.forceSet();
+    v.forceSet();
+    f.forceSet();
+    externalForces.forceSet();
+
+    // apparently, these are not
     //  x0              .forceSet();
     //  dx              .forceSet();
 
@@ -134,23 +129,43 @@ MechanicalObject<DataTypes>::MechanicalObject()
 
 
 template <class DataTypes>
-MechanicalObject<DataTypes>::~MechanicalObject()
-{
+MechanicalObject<DataTypes>::~MechanicalObject() {
 
-    for(unsigned i=core::VecCoordId::V_FIRST_DYNAMIC_INDEX; i<vectorsCoord.size(); i++)
-        if( vectorsCoord[i] != NULL ) { delete vectorsCoord[i]; vectorsCoord[i]=NULL; }
-    if( vectorsCoord[core::VecCoordId::null().getIndex()] != NULL )
-        { delete vectorsCoord[core::VecCoordId::null().getIndex()]; vectorsCoord[core::VecCoordId::null().getIndex()] = NULL; }
+    // TODO oh and by the way deleting a null pointer is a noop.
+    
+    // TODO auto pointers for the love of god
+    // TODO at the very least package this shit up in a class so we don't
+    // duplicate code between coord/deriv
+    for(unsigned i = core::VecCoordId::V_FIRST_DYNAMIC_INDEX; i<vectorsCoord.size(); i++) {
+        if( vectorsCoord[i] ) {
+            delete vectorsCoord[i];
+        }
+    }
 
-    for(unsigned i=core::VecDerivId::V_FIRST_DYNAMIC_INDEX; i<vectorsDeriv.size(); i++)
-        if( vectorsDeriv[i] != NULL )  { delete vectorsDeriv[i]; vectorsDeriv[i]=NULL; }
-    if( vectorsDeriv[core::VecDerivId::null().getIndex()] != NULL )
-        { delete vectorsDeriv[core::VecDerivId::null().getIndex()]; vectorsDeriv[core::VecDerivId::null().getIndex()] = NULL; }
-    if( core::VecDerivId::dforce().getIndex()<vectorsDeriv.size() && vectorsDeriv[core::VecDerivId::dforce().getIndex()] != NULL )
-        { delete vectorsDeriv[core::VecDerivId::dforce().getIndex()]; vectorsDeriv[core::VecDerivId::dforce().getIndex()] = NULL; }
+    // TODO are you fucking kidding me? we may allocate for zero vector? 
+    if( vectorsCoord[core::VecCoordId::null().getIndex()] ) {
+        delete vectorsCoord[core::VecCoordId::null().getIndex()];
+    }
 
-    // for(unsigned i=core::MatrixDerivId::V_FIRST_DYNAMIC_INDEX; i<vectorsMatrixDeriv.size(); i++)
-    //     if( vectorsMatrixDeriv[i] != NULL )  { delete vectorsMatrixDeriv[i]; vectorsMatrixDeriv[i]=NULL; }
+    // TODO auto pointers for the love of god
+    // TODO at the very least package this shit up in a class so we don't
+    // duplicate code between coord/deriv
+    for(unsigned i = core::VecDerivId::V_FIRST_DYNAMIC_INDEX; i<vectorsDeriv.size(); i++) {
+        if( vectorsDeriv[i] )  {
+            delete vectorsDeriv[i];
+        }
+    }
+
+    // TODO are you fucking kidding me? we may allocate for zero vector? 
+    if( vectorsDeriv[core::VecDerivId::null().getIndex()] ) {
+        delete vectorsDeriv[core::VecDerivId::null().getIndex()];
+    }
+
+    // TODO wtf is this shit
+    if( core::VecDerivId::dforce().getIndex() < vectorsDeriv.size() && vectorsDeriv[core::VecDerivId::dforce().getIndex()] ) {
+        delete vectorsDeriv[core::VecDerivId::dforce().getIndex()];
+    }
+
 }
 
 template <class DataTypes>
@@ -266,8 +281,10 @@ void MechanicalObject<DataTypes>::reserve(const size_t size)
 
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::getIndicesInSpace(sofa::helper::vector<unsigned>& indices, Real xmin, Real xmax, Real ymin, Real ymax, Real zmin, Real zmax) const
-{
+void MechanicalObject<DataTypes>::getIndicesInSpace(sofa::helper::vector<unsigned>& indices, 
+                                                    Real xmin, Real xmax,
+                                                    Real ymin, Real ymax,  
+                                                    Real zmin, Real zmax) const {
     helper::ReadAccessor< Data<VecCoord> > x_rA = this->readPositions();
 
     for( unsigned i=0; i<x_rA.size(); ++i )
@@ -406,13 +423,6 @@ template <class DataTypes>
 void MechanicalObject<DataTypes>::init()
 {
 
-    //Look at a topology associated to this instance of MechanicalObject by a tag
-    this->getContext()->get(m_topology, this->getTags());
-    // If no topology found, no association, then look to the nearest one
-    if(m_topology == NULL)
-        m_topology = this->getContext()->getMeshTopology();
-
-
     //helper::WriteAccessor< Data<VecCoord> > x_wA = *this->write(VecCoordId::position());
     //helper::WriteAccessor< Data<VecDeriv> > v_wA = *this->write(VecDerivId::velocity());
     Data<VecCoord>* x_wAData = this->write(sofa::core::VecCoordId::position());
@@ -426,33 +436,14 @@ void MechanicalObject<DataTypes>::init()
         vOp(core::ExecParams::defaultInstance(), core::VecId::position(), core::VecId::restPosition());
     }
 
+
+    // TODO these should all be errors, period.
+    
     // the given position and velocity vectors are empty
     // note that when a vector is not  explicitly specified, its size won't change (1 by default)
     if( x_wA.size() <= 1 && v_wA.size() <= 1 )
     {
-        // if a topology is present, implicitly copy position from it
-        if (m_topology != NULL && m_topology->getNbPoints() && m_topology->getContext() == this->getContext())
-        {
-            int nbp = m_topology->getNbPoints();
-            //std::cout<<"Setting "<<nbp<<" points from topology. " << this->getName() << " topo : " << m_topology->getName() <<std::endl;
-            // copy the last specified velocity to all points
-            if (v_wA.size() >= 1 && v_wA.size() < (unsigned)nbp)
-            {
-                unsigned int i = v_wA.size();
-                Deriv v1 = v_wA[i-1];
-                v_wA.resize(nbp);
-                while (i < v_wA.size())
-                    v_wA[i++] = v1;
-            }
-            this->resize(nbp);
-            for (int i=0; i<nbp; i++)
-            {
-                x_wA[i] = Coord();
-                DataTypes::set(x_wA[i], m_topology->getPX(i), m_topology->getPY(i), m_topology->getPZ(i));
-            }
-        }
-        else if( x_wA.size() == 0 )
-        {
+        if( x_wA.size() == 0 ) {
             // special case when the user manually explicitly defined an empty position vector
             // (e.g. linked to an empty vector)
             resize(0);
@@ -483,6 +474,7 @@ void MechanicalObject<DataTypes>::init()
 
     reinit();
 
+    // TODO there are no longer transformations lol
     // storing X0 must be done after reinit() that possibly applies transformations
     if( read(core::ConstVecCoordId::restPosition())->getValue().size()!=x_wA.size() ) {
         // storing X0 from X
@@ -491,7 +483,9 @@ void MechanicalObject<DataTypes>::init()
 
     m_initialized = true;
 
-    if (f_reserve.getValue() > 0) reserve(f_reserve.getValue());
+    if (f_reserve.getValue() > 0) {
+        reserve(f_reserve.getValue());
+    }
 }
 
 template <class DataTypes>

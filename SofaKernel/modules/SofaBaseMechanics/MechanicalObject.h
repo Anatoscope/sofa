@@ -431,9 +431,6 @@ protected :
     void drawVectors(const core::visual::VisualParams* vparams);
 
 
-    // TODO WTF
-    sofa::core::topology::BaseMeshTopology* m_topology;
-
     // TODO this is ridiculous
     MechanicalObjectInternalData<DataTypes> data;
     friend class MechanicalObjectInternalData<DataTypes>;
