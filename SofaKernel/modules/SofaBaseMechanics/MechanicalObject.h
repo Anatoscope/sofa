@@ -98,6 +98,7 @@ public:
     virtual void parse ( core::objectmodel::BaseObjectDescription* arg );
 
 #ifdef SOFA_HAVE_NEW_TOPOLOGYCHANGES
+
     PointData< VecCoord > x;
     PointData< VecDeriv > v;
     PointData< VecDeriv > f;
@@ -187,9 +188,6 @@ public:
     virtual const Data< MatrixDeriv >* read(core::ConstMatrixDerivId v) const;
 
     /// @}
-
-    virtual void initGnuplot(const std::string path);
-    virtual void exportGnuplot(SReal time);
 
     virtual void resize( size_t vsize);
     virtual void reserve(size_t vsize);
@@ -465,9 +463,6 @@ protected :
     MechanicalObjectInternalData<DataTypes> data;
 
     friend class MechanicalObjectInternalData<DataTypes>;
-
-    std::ofstream* m_gnuplotFileX;
-    std::ofstream* m_gnuplotFileV;
 
     sofa::core::topology::BaseMeshTopology* m_topology;
 };
