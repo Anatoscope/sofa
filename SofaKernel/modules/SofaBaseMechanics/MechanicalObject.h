@@ -178,16 +178,6 @@ public:
     }
     
 
-    // TODO remove this crap
-    /** \brief Overwrite values at index outputIndex by the ones at inputIndex.
-     *
-     */
-    void replaceValue (const int inputIndex, const int outputIndex);
-
-    /** \brief Exchange values at indices idx1 and idx2.
-     *
-     */
-    void swapValues (const int idx1, const int idx2);
 
     /** \brief Reorder values according to parameter.
      *
@@ -239,15 +229,21 @@ public:
     /// @{
 
     /// Copy data to a global BaseVector the state stored in a local vector
-    /// @param offset the offset in the BaseVector where the scalar values will be used. It will be updated to the first scalar value after the ones used by this operation when this method returns
+    /// @param offset the offset in the BaseVector where the scalar values will
+    /// be used. It will be updated to the first scalar value after the ones
+    /// used by this operation when this method returns
     virtual void copyToBaseVector(defaulttype::BaseVector* dest, core::ConstVecId src, unsigned int &offset);
 
     /// Copy data to a local vector the state stored in a global BaseVector
-    /// @param offset the offset in the BaseVector where the scalar values will be used. It will be updated to the first scalar value after the ones used by this operation when this method returns
+    /// @param offset the offset in the BaseVector where the scalar values will
+    /// be used. It will be updated to the first scalar value after the ones
+    /// used by this operation when this method returns
     virtual void copyFromBaseVector(core::VecId dest, const defaulttype::BaseVector* src, unsigned int &offset);
 
     /// Add data to a global BaseVector from the state stored in a local vector
-    /// @param offset the offset in the BaseVector where the scalar values will be used. It will be updated to the first scalar value after the ones used by this operation when this method returns
+    /// @param offset the offset in the BaseVector where the scalar values will
+    /// be used. It will be updated to the first scalar value after the ones
+    /// used by this operation when this method returns
     virtual void addToBaseVector(defaulttype::BaseVector* dest, core::ConstVecId src, unsigned int &offset);
 
 
@@ -369,9 +365,6 @@ public:
     void draw(const core::visual::VisualParams* vparams);
 
     /// @}
-
-    // handle state changes
-    virtual void handleStateChange();
 
     /// Find mechanical particles hit by the given ray.
     /// A mechanical particle is defined as a 2D or 3D, position or rigid DOF
