@@ -894,7 +894,8 @@ void MechanicalObject<DataTypes>::storeResetState()
     // we only store a resetVelocity if the velocity is not zero
     helper::ReadAccessor< Data<VecDeriv> > v = *this->read(core::VecDerivId::velocity());
     bool zero = true;
-    for (unsigned int i=0; i<v.size(); ++i) {
+    for (unsigned int i=0; i<v.size(); ++i)
+    {
         const Deriv& vi = v[i];
         for (unsigned int j=0; j<vi.size(); ++j)
             if (vi[j] != 0) zero = false;
@@ -989,44 +990,6 @@ void MechanicalObject<DataTypes>::readVec(core::VecId v, std::istream &in)
 }
 
 template <class DataTypes>
-SReal MechanicalObject<DataTypes>::compareVec(core::ConstVecId v, std::istream &in)
-{
-    std::string ref,cur;
-    getline(in, ref);
-
-    std::ostringstream out;
-
-    switch (v.type)
-    {
-    case sofa::core::V_COORD:
-        out << this->read(core::ConstVecCoordId(v))->getValue();
-        break;
-    case sofa::core::V_DERIV:
-        out << this->read(core::ConstVecDerivId(v))->getValue();
-        break;
-    default:
-        throw std::logic_error("unimplemented");
-    }
-
-    cur = out.str();
-
-    SReal error=0;
-    std::istringstream compare_ref(ref);
-    std::istringstream compare_cur(cur);
-
-    Real value_ref, value_cur;
-    unsigned int count=0;
-    while (compare_ref >> value_ref && compare_cur >> value_cur )
-    {
-        error += fabs(value_ref-value_cur);
-        count ++;
-    }
-    if( count == 0 ) return 0; //both vector are empy, so we return 0;
-
-    return error/count;
-}
-
-template <class DataTypes>
 void MechanicalObject<DataTypes>::writeState(std::ostream& out)
 {
     writeVec(core::VecId::position(),out);
@@ -1049,10 +1012,9 @@ void MechanicalObject<DataTypes>::endIntegration(const core::ExecParams*
 {
     this->forceMask.assign( this->getSize(), false );
 
-    {
-        this->externalForces.beginWriteOnly()->clear();
-        this->externalForces.endEdit();
-    }
+    this->externalForces.beginWriteOnly()->clear();
+    this->externalForces.endEdit();
+
 }
 
 template <class DataTypes>
@@ -2029,13 +1991,19 @@ void MechanicalObject<DataTypes>::getConstraintJacobian(const core::ExecParams* 
 template <class DataTypes>
 inline void MechanicalObject<DataTypes>::drawIndices(const core::visual::VisualParams* vparams)
 {
-    defaulttype::Vec4f color(1.0, 1.0, 1.0, 1.0);
+    const defaulttype::Vec4f color(1.0, 1.0, 1.0, 1.0);
 
-    float scale = (float)((vparams->sceneBBox().maxBBox() - vparams->sceneBBox().minBBox()).norm() * showIndicesScale.getValue());
-
+    const float scale = ((vparams->sceneBBox().maxBBox() - vparams->sceneBBox().minBBox()).norm() * showIndicesScale.getValue());
+    
     helper::vector<defaulttype::Vector3> positions;
-    for (size_t i = 0; i < vsize; ++i)
-        positions.push_back(defaulttype::Vector3(getPX(i), getPY(i), getPZ(i)));
+    
+    const VecCoord& pos = this->read(core::ConstVecCoordId::position())->getValue();
+    
+    for (const Coord& pi : pos) {
+        Real x, y, z;
+        DataTypes::get(x, y, z, pi);
+        positions.push_back( {x, y, z} );
+    }
 
     vparams->drawTool()->draw3DText_Indices(positions, scale, color);
 }
@@ -2044,36 +2012,42 @@ template <class DataTypes>
 inline void MechanicalObject<DataTypes>::drawVectors(const core::visual::VisualParams* vparams)
 {
     float scale = showVectorsScale.getValue();
-    sofa::helper::ReadAccessor< Data<VecDeriv> > v_rA = *this->read(core::ConstVecDerivId::velocity());
+
+    const VecCoord& pos = this->read(core::ConstVecCoordId::position())->getValue();
+    const VecDeriv& vel = this->read(core::ConstVecDerivId::velocity())->getValue();    
+
+    // this is for drawLines (lol)
     helper::vector<Vector3> points;
     points.resize(2);
-    for( unsigned i=0; i<v_rA.size(); ++i )
-    {
-        Real vx=0.0,vy=0.0,vz=0.0;
-        DataTypes::get(vx,vy,vz,v_rA[i]);
-        //v = DataTypes::getDPos(v_rA[i]);
-        //Real vx = v[0]; Real vy = v[1]; Real vz = v[2];
-        //std::cout << "v=" << vx << ", " << vy << ", " << vz << std::endl;
-        Vector3 p1 = Vector3(getPX(i), getPY(i), getPZ(i));
-        Vector3 p2 = Vector3(getPX(i)+scale*vx, getPY(i)+scale*vy, getPZ(i)+scale*vz);
+    
+    for(std::size_t i = 0, n = this->getSize(); i < n; ++i) {
+        Real x, y, z;
+        DataTypes::get(x, y, z, pos[i]);
+        
+        Real vx, vy, vz;
+        DataTypes::get(vx, vy, vz, vel[i]);
+        
+        const Vector3 p1 = {x, y, z};
+        const Vector3 p2 = {x + scale * vx,
+                            y + scale * vy,
+                            z + scale * vz};
 
-        float rad = (float)( (p1-p2).norm()/20.0 );
-        switch (drawMode.getValue())
-        {
+        const float rad = ( (p1 - p2).norm() / 20.0 ); // lolwat
+        switch (drawMode.getValue()) {
         case 0:
             points[0] = p1;
             points[1] = p2;
-            vparams->drawTool()->drawLines(points, 1, defaulttype::Vec<4,float>(1.0,1.0,1.0,1.0));
+            
+            vparams->drawTool()->drawLines(points, 1, defaulttype::Vec4f(1.0,1.0,1.0,1.0));
             break;
         case 1:
-            vparams->drawTool()->drawCylinder(p1, p2, rad, defaulttype::Vec<4,float>(1.0,1.0,1.0,1.0));
+            vparams->drawTool()->drawCylinder(p1, p2, rad, defaulttype::Vec4f(1.0,1.0,1.0,1.0));
             break;
         case 2:
-            vparams->drawTool()->drawArrow(p1, p2, rad, defaulttype::Vec<4,float>(1.0,1.0,1.0,1.0));
+            vparams->drawTool()->drawArrow(p1, p2, rad, defaulttype::Vec4f(1.0,1.0,1.0,1.0));
             break;
         default:
-            serr << "No proper drawing mode found!" << sendl;
-            break;
+            msg_error() << "unknown drawing mode found!";
         }
     }
 }
@@ -2084,51 +2058,67 @@ inline void MechanicalObject<DataTypes>::draw(const core::visual::VisualParams* 
     vparams->drawTool()->saveLastState();
     vparams->drawTool()->setLightingEnabled(false);
 
-    if (showIndices.getValue())
-    {
-        drawIndices(vparams);
-    }
+    if (showIndices.getValue()) { drawIndices(vparams); }
 
-    if (showVectors.getValue())
-    {
-        drawVectors(vparams);
-    }
+    if (showVectors.getValue()) { drawVectors(vparams); }
 
-    if (showObject.getValue())
-    {
-        const float& scale = showObjectScale.getValue();
+    if (showObject.getValue()) {
+        const float scale = showObjectScale.getValue();
+
+        const VecCoord& pos = this->read(core::ConstVecCoordId::position())->getValue();        
+
         helper::vector<Vector3> positions(vsize);
-        for (size_t i = 0; i < vsize; ++i)
-            positions[i] = Vector3(getPX(i), getPY(i), getPZ(i));
-
-        switch (drawMode.getValue())
-        {
+        for (size_t i = 0; i < vsize; ++i) {
+            Real x, y, z;
+            DataTypes::get(x, y, z, pos[i]);
+            positions[i] = {x, y, z};
+        }
+        
+        switch (drawMode.getValue()) {
         case 0:
-            vparams->drawTool()->drawPoints(positions,scale,defaulttype::Vec<4,float>(d_color.getValue()));
+            vparams->drawTool()->drawPoints(positions,scale,defaulttype::Vec4f(d_color.getValue()));
             break;
         case 1:
             vparams->drawTool()->setLightingEnabled(true);
-            vparams->drawTool()->drawSpheres(positions,scale,defaulttype::Vec<4,float>(d_color.getValue()));
+            vparams->drawTool()->drawSpheres(positions,scale,defaulttype::Vec4f(d_color.getValue()));
             break;
         case 2:
             vparams->drawTool()->setLightingEnabled(true);
-            vparams->drawTool()->drawSpheres(positions,scale,defaulttype::Vec<4,float>(1.0,0.0,0.0,1.0));
+            vparams->drawTool()->drawSpheres(positions,scale,defaulttype::Vec4f(1.0,0.0,0.0,1.0));
             break;
         case 3:
             vparams->drawTool()->setLightingEnabled(true);
-            vparams->drawTool()->drawSpheres(positions,scale,defaulttype::Vec<4,float>(0.0,1.0,0.0,1.0));
+            vparams->drawTool()->drawSpheres(positions,scale,defaulttype::Vec4f(0.0,1.0,0.0,1.0));
             break;
         case 4:
            vparams->drawTool()->setLightingEnabled(true);
             vparams->drawTool()->drawSpheres(positions,scale,defaulttype::Vec<4,float>(0.0,0.0,1.0,1.0));
             break;
         default:
-            serr << "No proper drawing mode found!" << sendl;
-            break;
+            msg_error() << "unknown drawing mode";
         }
     }
     vparams->drawTool()->restoreLastState();
 }
+
+// TODO this should probably go into standard traits anyways
+template<class T> struct pickable { static const bool value = false; };
+
+template<class U> struct pickable< defaulttype::Vec<2, U> > {
+    static const bool value = true;
+};
+
+template<class U> struct pickable< defaulttype::Vec<3, U> > {
+    static const bool value = true;
+};
+
+template<class U> struct pickable< defaulttype::RigidCoord<2, U> > {
+    static const bool value = true;
+};
+
+template<class U> struct pickable< defaulttype::RigidCoord<3, U> > {
+    static const bool value = true;
+};
 
 
 /// Find mechanical particles hit by the given ray.
@@ -2138,36 +2128,32 @@ template <class DataTypes>
 bool MechanicalObject<DataTypes>::pickParticles(const core::ExecParams* /* params */, double rayOx, double rayOy, double rayOz, double rayDx, double rayDy, double rayDz, double radius0, double dRadius,
                                                 std::multimap< double, std::pair<sofa::core::behavior::BaseMechanicalState*, int> >& particles)
 {
-    if (defaulttype::DataTypeInfo<Coord>::size() == 2 || defaulttype::DataTypeInfo<Coord>::size() == 3
-            || (defaulttype::DataTypeInfo<Coord>::size() == 7 && defaulttype::DataTypeInfo<Deriv>::size() == 6))
-        // TODO: this verification is awful and should be done by template specialization
-    {
+    if ( pickable<Coord>::value ) {
         // seems to be valid DOFs
         const VecCoord& x =this->read(core::ConstVecCoordId::position())->getValue();
 
         defaulttype::Vec<3,Real> origin((Real)rayOx, (Real)rayOy, (Real)rayOz);
         defaulttype::Vec<3,Real> direction((Real)rayDx, (Real)rayDy, (Real)rayDz);
-        for (size_t i=0; i< vsize; ++i)
-        {
+
+        for (size_t i=0; i< vsize; ++i) {
             defaulttype::Vec<3,Real> pos;
-            DataTypes::get(pos[0],pos[1],pos[2],x[i]);
+            DataTypes::get(pos[0], pos[1], pos[2], x[i]);
 
             if (pos == origin) continue;
-            SReal dist = (pos-origin)*direction;
+            const SReal dist = (pos - origin) * direction;
             if (dist < 0) continue; // discard particles behind the camera, such as mouse position
 
-            defaulttype::Vec<3,Real> vecPoint = (pos-origin) - direction*dist;
-            SReal distToRay = vecPoint.norm2();
-            SReal maxr = radius0 + dRadius*dist;
-            if (distToRay <= maxr*maxr)
-            {
-                particles.insert(std::make_pair(distToRay,std::make_pair(this,i)));
+            defaulttype::Vec<3,Real> vecPoint = (pos-origin) - direction * dist;
+            const SReal distToRay = vecPoint.norm2();
+            const SReal maxr = radius0 + dRadius * dist;
+            if (distToRay <= maxr*maxr) {
+                particles.insert( { distToRay, {this, i} } );
             }
         }
         return true;
     }
-    else
-        return false;
+
+    return false;
 }
 
 template <class DataTypes>
@@ -2175,16 +2161,16 @@ bool MechanicalObject<DataTypes>::closestParticle(const core::ExecParams* /*para
             defaulttype::Vector3 const& origin, double radius0, double dRadius,
             sofa::core::behavior::BaseMechanicalState*& ms, int& index, SReal& distance)
 {
-    if (defaulttype::DataTypeInfo<Coord>::size() == 2 || defaulttype::DataTypeInfo<Coord>::size() == 3
-            || (defaulttype::DataTypeInfo<Coord>::size() == 7 && defaulttype::DataTypeInfo<Deriv>::size() == 6)) {
-        // TODO: this verification is awful and should be done by template specialization
-        // seems to be valid DOFs
-        const VecCoord& x =this->read(core::ConstVecCoordId::position())->getValue();
+    if (pickable<Coord>::value ) {
+
+        const VecCoord& x = this->read(core::ConstVecCoordId::position())->getValue();
         for (size_t i=0; i< vsize; ++i) {
+            
             defaulttype::Vec<3,Real> pos;
-            DataTypes::get(pos[0],pos[1],pos[2],x[i]);
-            SReal d = (pos-point).norm();
-            if (d>radius0+(pos-origin).norm()*dRadius) // points too far away are ignored
+            DataTypes::get(pos[0], pos[1], pos[2], x[i]);
+            
+            const SReal d = (pos-point).norm();
+            if (d > radius0 + (pos-origin).norm() * dRadius) // points too far away are ignored
                 continue;
             if (d < distance) {
                 ms = this;
@@ -2194,9 +2180,8 @@ bool MechanicalObject<DataTypes>::closestParticle(const core::ExecParams* /*para
         }
         return true;
     }
-    else {
-        return false;
-    }
+
+    return false;
 }
 
 template <class DataTypes>
@@ -2208,15 +2193,14 @@ bool MechanicalObject<DataTypes>::addBBox(SReal* minBBox, SReal* maxBBox)
     static const unsigned spatial_dimensions = std::min( (unsigned)DataTypes::spatial_dimensions, 3u );
 
     const VecCoord& x = read(core::ConstVecCoordId::position())->getValue();
-    for( std::size_t i=0; i<x.size(); i++ )
-    {
+    for( std::size_t i=0; i<x.size(); i++ ) {
         defaulttype::Vec<3,Real> p;
         DataTypes::get( p[0], p[1], p[2], x[i] );
 
         for( unsigned int j=0 ; j<spatial_dimensions; ++j )
         {
-            if(p[j]<minBBox[j]) minBBox[j]=p[j];
-            if(p[j]>maxBBox[j]) maxBBox[j]=p[j];
+            if(p[j] < minBBox[j]) minBBox[j]=p[j];
+            if(p[j] > maxBBox[j]) maxBBox[j]=p[j];
         }
     }
     return true;

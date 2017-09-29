@@ -132,13 +132,9 @@ public:
     // TODO wtf is this doing 
     virtual void writeState( std::ostream& out );    
 
-    virtual SReal compareVec(core::ConstVecId , std::istream &) { 
-        throw std::logic_error("unimplemented");
-    }
-    
-    void setIgnoreLoader(bool) { 
-        throw std::logic_error("unimplemented");
-    }
+    // TODO WTF
+    virtual SReal compareVec(core::ConstVecId , std::istream &) { throw std::logic_error("unimplemented"); }
+    void setIgnoreLoader(bool) { throw std::logic_error("unimplemented"); }
 
     /// @name New vectors access API based on VecId
     /// @{
@@ -163,6 +159,24 @@ public:
 
     size_t getSize() const { return vsize; }
 
+    virtual SReal getPX(std::size_t i) const {
+        SReal x, y, z;
+        DataTypes::get(x, y, z, read( core::ConstVecCoordId::position() )->getValue()[i]);
+        return x;
+    }
+    
+    virtual SReal getPY(std::size_t i) const {
+        SReal x, y, z;
+        DataTypes::get(x, y, z, read( core::ConstVecCoordId::position() )->getValue()[i]);
+        return y;
+    }
+    
+    virtual SReal getPZ(std::size_t i) const {
+        SReal x, y, z;
+        DataTypes::get(x, y, z, read( core::ConstVecCoordId::position() )->getValue()[i]);
+        return z;
+    }
+    
 
     // TODO remove this crap
     /** \brief Overwrite values at index outputIndex by the ones at inputIndex.
