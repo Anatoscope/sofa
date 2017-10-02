@@ -42,23 +42,6 @@
 #include <cassert>
 #include <iostream>
 
-namespace {
-
-template<class V>
-static inline void renumber(V* v, V* tmp, const sofa::helper::vector< unsigned int > &index )
-{
-    if (v == NULL)
-        return;
-
-    if (v->empty())
-        return;
-
-    *tmp = *v;
-    for (unsigned int i = 0; i < v->size(); ++i)
-        (*v)[i] = (*tmp)[index[i]];
-}
-
-} // anonymous namespace
 
 
 namespace sofa {
@@ -200,30 +183,6 @@ void MechanicalObject<DataTypes>::parse ( sofa::core::objectmodel::BaseObjectDes
 
 
 
-template <class DataTypes>
-void MechanicalObject<DataTypes>::renumberValues( const sofa::helper::vector< unsigned int > &index )
-{
-    VecDeriv dtmp;
-    VecCoord ctmp;
-
-    for (unsigned int i = 0; i < vectorsCoord.size(); ++i)
-    {
-        if (vectorsCoord[i] != NULL)
-        {
-            renumber(vectorsCoord[i]->beginEdit(), &ctmp, index);
-            vectorsCoord[i]->endEdit();
-        }
-    }
-
-    for (unsigned int i = 0; i < vectorsDeriv.size(); ++i)
-    {
-        if (vectorsDeriv[i] != NULL)
-        {
-            renumber(vectorsDeriv[i]->beginEdit(), &dtmp, index);
-            vectorsDeriv[i]->endEdit();
-        }
-    }
-}
 
 template <class DataTypes>
 void MechanicalObject<DataTypes>::resize(const size_t size) {

@@ -167,14 +167,18 @@ public:
         return z;
     }
     
-
+    void replaceValue (const int, const int) {
+        throw std::logic_error("unimplemented");
+    }
 
     /** \brief Reorder values according to parameter.
      *
      * Result of this method is :
      * newValue[ i ] = oldValue[ index[i] ];
      */
-    void renumberValues( const sofa::helper::vector<unsigned int> &index );
+    void renumberValues( const sofa::helper::vector<unsigned int> & ) {
+        throw std::logic_error("unimplemented");
+    }
 
     /** \brief Replace the value at index by the sum of the ancestors values
      * weithed by the coefs.
