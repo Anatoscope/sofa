@@ -141,8 +141,7 @@ static PyObject * BaseContext_createObject_Impl(PyObject * self, PyObject * args
     BaseContext* context = get_basecontext( self );
 
     char *type;
-    if (!PyArg_ParseTuple(args, "s",&type))
-    {
+    if (!PyArg_ParseTuple(args, "s",&type)) {
         return NULL;
     }
 
@@ -193,8 +192,8 @@ static PyObject * BaseContext_createObject_Impl(PyObject * self, PyObject * args
         msg_warning(context) << msg.str();
     }
 
-    if (obj==0)
-    {
+    if (!obj) {
+        PyErr_SetString(PyExc_RuntimeError, "error creating component");
         return NULL;
     }
 
