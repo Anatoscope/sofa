@@ -26,6 +26,10 @@
 #pragma once
 #endif
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
 #include <SofaGeneralEngine/TextureInterpolation.h>
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/simulation/Node.h>

@@ -19,6 +19,11 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
+
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
 #include <SofaGeneralVisual/RecordedCamera.h>
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/core/ObjectFactory.h>

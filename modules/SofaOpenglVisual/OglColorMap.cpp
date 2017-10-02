@@ -166,7 +166,7 @@ void OglColorMap::drawVisual(const core::visual::VisualParams* vparams)
             image->init(width, height, 1, 1, Image::UNORM8, Image::RGB);
 
             unsigned char *data = image->getPixels();
-            for(int i = 0; i < image->getPixelCount(); ++i)
+            for(unsigned int i = 0; i < image->getPixelCount(); ++i)
             {
                 Color c = getColor(i);
 

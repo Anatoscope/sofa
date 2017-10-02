@@ -22,6 +22,10 @@
 #ifndef SOFA_IMAGE_IMAGESAMPLER_H
 #define SOFA_IMAGE_IMAGESAMPLER_H
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
 #include <image/config.h>
 #include "ImageTypes.h"
 #include "ImageAlgorithms.h"

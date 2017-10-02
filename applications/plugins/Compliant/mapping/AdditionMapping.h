@@ -1,6 +1,10 @@
 #ifndef AdditionMapping_H
 #define AdditionMapping_H
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
 
 #include "ConstantAssembledMapping.h"
 #include "ConstantAssembledMultiMapping.h"

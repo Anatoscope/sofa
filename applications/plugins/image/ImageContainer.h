@@ -22,6 +22,10 @@
 #ifndef IMAGE_IMAGECONTAINER_H
 #define IMAGE_IMAGECONTAINER_H
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
 #include <image/config.h>
 #include "ImageTypes.h"
 #include <limits.h>
