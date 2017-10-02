@@ -25,6 +25,10 @@
 #include <SofaBaseMechanics/MechanicalObject.h>
 #include <sofa/core/visual/VisualParams.h>
 
+#include <SofaBaseLinearSolver/SparseMatrix.h>
+#include <sofa/core/topology/BaseTopology.h>
+#include <sofa/core/topology/TopologyChange.h>
+
 #include <sofa/defaulttype/Quat.h>
 #include <sofa/defaulttype/VecTypes.h>
 #include <sofa/defaulttype/RigidTypes.h>
@@ -394,20 +398,49 @@ void MechanicalObject<DataTypes>::init()
     }
 
 
-    // TODO these should all be errors, period.
+    // // TODO these should all be errors, period.
+    sofa::core::topology::BaseMeshTopology* m_topology = nullptr;
+
+    //Look at a topology associated to this instance of MechanicalObject by a tag
+    this->getContext()->get(m_topology, this->getTags());
+     
+    // // If no topology found, no association, then look to the nearest one
+    if(!m_topology) {
+        m_topology = this->getContext()->getMeshTopology();
+    }
     
     // the given position and velocity vectors are empty
     // note that when a vector is not  explicitly specified, its size won't change (1 by default)
-    if( x_wA.size() <= 1 && v_wA.size() <= 1 )
-    {
-        if( x_wA.size() == 0 ) {
+    if( x_wA.size() <= 1 && v_wA.size() <= 1 ) {
+
+        // if a topology is present, implicitly copy position from it
+        if (m_topology != NULL && m_topology->getNbPoints() && m_topology->getContext() == this->getContext())
+        {
+            msg_warning() << "doing funny stuff during mechanical state init";
+            
+            int nbp = m_topology->getNbPoints();
+            //std::cout<<"Setting "<<nbp<<" points from topology. " << this->getName() << " topo : " << m_topology->getName() <<std::endl;
+            // copy the last specified velocity to all points
+            if (v_wA.size() >= 1 && v_wA.size() < (unsigned)nbp)
+            {
+                unsigned int i = v_wA.size();
+                Deriv v1 = v_wA[i-1];
+                v_wA.resize(nbp);
+                while (i < v_wA.size())
+                    v_wA[i++] = v1;
+            }
+            this->resize(nbp);
+            for (int i=0; i<nbp; i++)
+            {
+                x_wA[i] = Coord();
+                DataTypes::set(x_wA[i], m_topology->getPX(i), m_topology->getPY(i), m_topology->getPZ(i));
+            }
+        } else if( x_wA.size() == 0 ) {
             // special case when the user manually explicitly defined an empty position vector
             // (e.g. linked to an empty vector)
             resize(0);
         }
-    }
-    else if (x_wA.size() != vsize || v_wA.size() != vsize)
-    {
+    } else if (x_wA.size() != vsize || v_wA.size() != vsize) {
         // X and/or V were user-specified
         // copy the last specified velocity to all points
 
