@@ -26,12 +26,14 @@
 #ifndef SOFA_NO_OPENGL
 
 #include <sofa/core/objectmodel/Data.h>
+#include <sofa/core/objectmodel/DataFileName.h>
 #include <sofa/core/visual/VisualModel.h>
 #include <sofa/helper/OptionsGroup.h>
 #include <sofa/helper/ColorMap.h>
 #include <sofa/helper/vector.h>
 #include <sofa/helper/rmath.h>
 #include <sofa/helper/gl/template.h>
+#include <sofa/helper/gl/Texture.h>
 #include <sofa/defaulttype/Vec.h>
 #include <string>
 
@@ -60,6 +62,7 @@ protected:
 
 public:
     Data<unsigned int> f_paletteSize;
+    sofa::core::objectmodel::DataFileName f_rampTexture;
     Data<sofa::helper::OptionsGroup> f_colorScheme;
 
     Data<bool> f_showLegend;
@@ -69,7 +72,7 @@ public:
     Data<float> d_legendRangeScale; ///< to convert unit
 
     sofa::helper::ColorMap m_colorMap;
-    GLuint texture;
+    sofa::helper::gl::Texture* texture;
 
     void initOld(const std::string &data);
 
@@ -87,7 +90,7 @@ public:
 
     unsigned int getNbColors() { return m_colorMap.getNbColors(); }
 
-    Color getColor(unsigned int i) 
+    Color getColor(unsigned int i)
     {
         return m_colorMap.getColor(i);
     }

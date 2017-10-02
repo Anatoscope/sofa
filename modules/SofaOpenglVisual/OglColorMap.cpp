@@ -41,6 +41,8 @@ namespace component
 namespace visualmodel
 {
 
+using namespace sofa::helper::io;
+
 SOFA_DECL_CLASS(OglColorMap)
 
 int OglColorMapClass = core::RegisterObject("Provides color palette and support for conversion of numbers to colors.")
@@ -50,6 +52,7 @@ int OglColorMapClass = core::RegisterObject("Provides color palette and support 
 
 OglColorMap::OglColorMap()
 : f_paletteSize(initData(&f_paletteSize, (unsigned int)256, "paletteSize", "How many colors to use"))
+, f_rampTexture(initData(&f_rampTexture, "rampTexture", "Ramp texture filename"))
 , f_colorScheme(initData(&f_colorScheme, "colorScheme", "Color scheme to use"))
 , f_showLegend(initData(&f_showLegend, false, "showLegend", "Activate rendering of color scale legend on the side"))
 , f_legendOffset(initData(&f_legendOffset, defaulttype::Vec2f(10.0f,5.0f),"legendOffset", "Draw the legend on screen with an x,y offset"))
@@ -59,7 +62,7 @@ OglColorMap::OglColorMap()
 , d_legendRangeScale(initData(&d_legendRangeScale,1.f,"legendRangeScale","to change the unit of the min/max value of the legend"))
 , texture(0)
 {
-   f_colorScheme.beginEdit()->setNames(19,
+   f_colorScheme.beginEdit()->setNames(20,
         "Red to Blue",  // HSV space
         "Blue to Red",  // HSV space
         "HSV",          // HSV space
@@ -79,7 +82,7 @@ OglColorMap::OglColorMap()
 		"BlueInv",// HSV space
 		"GreenInv",// HSV space
 		"RedInv",// HSV space
-        "Custom"// TODO: Custom colors
+        "Custom"// Custom colors
         );
     f_colorScheme.beginEdit()->setSelectedItem("HSV");
     f_colorScheme.endEdit();
@@ -87,11 +90,7 @@ OglColorMap::OglColorMap()
 }
 
 OglColorMap::~OglColorMap() {
-    // Some components may use OglColorMap internally, in which case an OpenGL
-    // context might not exist.  That's why this 'if' is here, to avoid calling
-    // an OpenGL function in a destructor unless strictly necessary.
-    if (texture != 0)
-        glDeleteTextures(1, &texture);
+    delete texture;
 }
 
 // For backward compatibility only
@@ -117,10 +116,20 @@ void OglColorMap::init()
 
 void OglColorMap::reinit()
 {
+    if(f_rampTexture.isSet())
+    {
+        f_colorScheme.beginEdit()->setSelectedItem("Custom");
+        f_colorScheme.endEdit();
+    }
+
+    if(!texture)
+        delete m_colorMap.getRampImage();
+
     m_colorMap.setPaletteSize(f_paletteSize.getValue());
+    m_colorMap.setRampImage(Image::Create(f_rampTexture.getFullPath()));
     m_colorMap.setColorScheme(f_colorScheme.getValue().getSelectedItem());
     m_colorMap.reinit();
-    }
+}
 
 OglColorMap* OglColorMap::getDefault()
 {
@@ -136,51 +145,61 @@ OglColorMap* OglColorMap::getDefault()
 
 void OglColorMap::drawVisual(const core::visual::VisualParams* vparams)
 {
+    if(!vparams->isSupported(core::visual::API_OpenGL))
+        return;
+
     if( !vparams->displayFlags().getShowVisual() ) return;
 
     if (!f_showLegend.getValue()) return;
 
-    // Prepare texture for legend
-    // crashes on mac in batch mode (no GL context)
-    if (vparams->isSupported(core::visual::API_OpenGL)
-        && !texture)
+    // prepare texture for legend
+    GLenum textureTarget = GL_TEXTURE_2D;
+    if(!texture || (m_colorMap.getRampImage() && texture->getImage() != m_colorMap.getRampImage()))
     {
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_1D, texture);
-        //glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        Image* image = m_colorMap.getRampImage();
+        if(!image)
+        {
+            image = new Image();
 
-        int width = getNbColors();
-        unsigned char *data = new unsigned char[ width * 3 ];
+            unsigned int width = getNbColors();
+            unsigned int height = 1;
+            image->init(width, height, 1, 1, Image::UNORM8, Image::RGB);
 
-        for (int i=0; i<width; i++) {
-            Color c = getColor(i);
-            data[i*3+0] = (unsigned char)(c[0]*255);
-            data[i*3+1] = (unsigned char)(c[1]*255);
-            data[i*3+2] = (unsigned char)(c[2]*255);
+            unsigned char *data = image->getPixels();
+            for(int i = 0; i < image->getPixelCount(); ++i)
+            {
+                Color c = getColor(i);
+
+                data[i*3+0] = (unsigned char)(c[0]*255);
+                data[i*3+1] = (unsigned char)(c[1]*255);
+                data[i*3+2] = (unsigned char)(c[2]*255);
+            }
         }
 
-        glBindTexture(GL_TEXTURE_1D, texture);
+        delete texture;
+        texture = new sofa::helper::gl::Texture(image);
+        texture->init();
 
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, width, 0, GL_RGB, GL_UNSIGNED_BYTE,
-            data);
-
-        delete[] data;
+//        texture->bind();
+//        glTexImage1D(textureTarget, 0, GL_RGB, width, 0, GL_RGB, GL_UNSIGNED_BYTE,
+//            data);
+//        delete[] data;
     }
 
+    texture->bind();
 
+    //glTexParameterf(textureTarget, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(textureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
     //
     // Draw legend
     //
     // TODO: move the code to DrawTool
 
-
     const std::string& legendTitle = f_legendTitle.getValue();
     int yoffset = legendTitle.empty() ? 0 : 25;
-
 
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT,viewport);
@@ -214,8 +233,8 @@ void OglColorMap::drawVisual(const core::visual::VisualParams* vparams)
     }
 
     glActiveTexture(GL_TEXTURE0);
-    glEnable(GL_TEXTURE_1D);
-    glBindTexture(GL_TEXTURE_1D, texture);
+    glEnable(textureTarget);
+    texture->bind();
 
     //glBlendFunc(GL_ONE, GL_ONE);
     glColor3f(1.0f, 1.0f, 1.0f);
@@ -240,7 +259,7 @@ void OglColorMap::drawVisual(const core::visual::VisualParams* vparams)
 
     glEnd();
 
-    glDisable(GL_TEXTURE_1D);
+    glDisable(textureTarget);
 
     // Restore model view matrix
     glPopMatrix(); // GL_MODELVIEW
