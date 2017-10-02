@@ -416,7 +416,7 @@ void MechanicalObject<DataTypes>::init()
         // if a topology is present, implicitly copy position from it
         if (m_topology != NULL && m_topology->getNbPoints() && m_topology->getContext() == this->getContext())
         {
-            msg_warning() << "doing funny stuff during mechanical state init";
+            msg_warning() << "doing funny shit w/topology during mechanical state init";
             
             int nbp = m_topology->getNbPoints();
             //std::cout<<"Setting "<<nbp<<" points from topology. " << this->getName() << " topo : " << m_topology->getName() <<std::endl;
@@ -761,6 +761,11 @@ const Data<typename MechanicalObject<DataTypes>::VecDeriv>* MechanicalObject<Dat
 template <class DataTypes>
 void MechanicalObject<DataTypes>::setVecCoord(unsigned int index, Data< VecCoord > *v)
 {
+    if(index == core::VecCoordId::null().getIndex()) {
+        msg_error() << "setting null coord vector lol";
+        return;
+    }
+    
     if (index >= vectorsCoord.size())
     {
         vectorsCoord.resize(index + 1, 0);
@@ -772,6 +777,12 @@ void MechanicalObject<DataTypes>::setVecCoord(unsigned int index, Data< VecCoord
 template <class DataTypes>
 void MechanicalObject<DataTypes>::setVecDeriv(unsigned int index, Data< VecDeriv > *v)
 {
+    if(index == core::VecDerivId::null().getIndex()) {
+        msg_error() << "setting null deriv vector lol";
+        return;
+    }
+
+    
     if (index >= vectorsDeriv.size())
     {
         vectorsDeriv.resize(index + 1, 0);
