@@ -1280,8 +1280,8 @@ void HexahedronFEMForceField<DataTypes>::computeBBox(const core::ExecParams* par
 
     static const Real max_real = std::numeric_limits<Real>::max();
     static const Real min_real = std::numeric_limits<Real>::lowest();
-    Real maxBBox[3] = {min_real,min_real,min_real};
-    Real minBBox[3] = {max_real,max_real,max_real};
+    defaulttype::Vector3 maxBBox = {min_real,min_real,min_real};
+    defaulttype::Vector3 minBBox = {max_real,max_real,max_real};
     for (size_t i=0; i<x.size(); i++)
     {
         for (int c=0; c<3; c++)
@@ -1291,7 +1291,7 @@ void HexahedronFEMForceField<DataTypes>::computeBBox(const core::ExecParams* par
         }
     }
 
-    this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<Real>(minBBox,maxBBox));
+    this->f_bbox.setValue(params,defaulttype::BoundingBox(minBBox,maxBBox));
 }
 
 

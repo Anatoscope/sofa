@@ -108,11 +108,13 @@ set(HEADER_FILES
     types/ComponentSpecializationsUndef.h
     types/DeformableFrameMass.h
     types/DeformationGradientTypes.h
+    types/DeformationGradientComponents.h
     types/PolynomialBasis.h
     types/QuadraticComponents.h
     types/QuadraticTypes.h
     types/RigidConstraint.h
     types/StrainTypes.h
+    types/StrainComponents.h
 )
 
 set(SOURCE_FILES
@@ -176,14 +178,14 @@ set(SOURCE_FILES
     types/AffineComponents_forcefield.cpp
     types/AffineComponents_mapping.cpp
     types/AffineComponents_misc.cpp
-    types/DeformationGradientTypes.cpp
+    types/DeformationGradientComponents.cpp
     types/QuadraticComponents_constraint.cpp
     types/QuadraticComponents_core.cpp
     types/QuadraticComponents_forcefield.cpp
     types/QuadraticComponents_mapping.cpp
     types/QuadraticComponents_misc.cpp
     types/RigidConstraint.cpp
-    types/StrainTypes.cpp
+    types/StrainComponents.cpp
 )
 
 set(PYTHON_FILES

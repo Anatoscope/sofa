@@ -278,8 +278,8 @@ void TSphereModel<DataTypes>::computeBBox(const core::ExecParams* params, bool o
         return;
 
     static const Real max_real = std::numeric_limits<Real>::max();
-    Real maxBBox[3] = {-max_real,-max_real,-max_real}; //Warning: minimum of float/double is 0, not -inf
-    Real minBBox[3] = {max_real,max_real,max_real};
+    defaulttype::Vector3 maxBBox = {-max_real,-max_real,-max_real}; //Warning: minimum of float/double is 0, not -inf
+    defaulttype::Vector3 minBBox = {max_real,max_real,max_real};
 
     const int npoints = mstate->getSize();
 
@@ -296,7 +296,7 @@ void TSphereModel<DataTypes>::computeBBox(const core::ExecParams* params, bool o
         }
     }
 
-    this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<Real>(minBBox,maxBBox));
+    this->f_bbox.setValue(params,defaulttype::BoundingBox(minBBox,maxBBox));
 }
 
 

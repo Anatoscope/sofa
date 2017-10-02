@@ -60,30 +60,10 @@ template<class DataTypes>
 void State<DataTypes>::computeBBox(const core::ExecParams* params, bool)
 {
     const VecCoord& x = read(ConstVecCoordId::position())->getValue(params);
-    const size_t xSize = x.size();
 
-    if (xSize <= 0)
-        return;
-
-    Real p[3];
-    DataTypes::get(p[0], p[1], p[2], x[0]);
-    Real maxBBox[3] = {p[0], p[1], p[2]};
-    Real minBBox[3] = {p[0], p[1], p[2]};
-
-    for (size_t i = 1; i < xSize; i++)
-    {
-        DataTypes::get(p[0], p[1], p[2], x[i]);
-        for (int c = 0; c < 3; c++)
-        {
-            if (p[c] > maxBBox[c])
-                maxBBox[c] = p[c];
-
-            else if (p[c] < minBBox[c])
-                minBBox[c] = p[c];
-        }
-    }
-
-    this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<Real>(minBBox,maxBBox));
+    sofa::defaulttype::BoundingBox& bbox = *this->f_bbox.beginWriteOnly(params);
+    bbox.setFromPointVector( x );
+    this->f_bbox.endEdit(params);
 }
 
 } // namespace core

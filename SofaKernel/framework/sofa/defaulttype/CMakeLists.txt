@@ -5,6 +5,7 @@ set(HEADER_FILES
     BaseMatrix.h
     BaseVector.h
     BoundingBox.h
+    BoundingBox.inl
     DataTypeInfo.h
     Frame.h
     MapMapSparseMatrix.h

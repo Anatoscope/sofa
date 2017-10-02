@@ -30,8 +30,8 @@ def createScene(node):
     
     scene_bielle_manivelle.rigids["1"].node.createObject('FixedConstraint')
     
-    gravity = SofaPython.SofaNumpy.numpy_data(node, "gravity")
-    gravity[0] = SofaPython.units.acceleration_from_SI(gravity[0])
+    with SofaPython.SofaNumpy.edit_data( node, "gravity" ) as gravity:
+        gravity[0] = SofaPython.units.acceleration_from_SI(gravity[0])
     
     return node
 

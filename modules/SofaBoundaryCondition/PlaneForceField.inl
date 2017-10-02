@@ -371,9 +371,9 @@ void PlaneForceField<DataTypes>::computeBBox(const core::ExecParams * params, bo
     if (onlyVisible && !d_drawIsEnabled.getValue()) return;
 
     const Real max_real = std::numeric_limits<Real>::max();
-    const Real min_real = std::numeric_limits<Real>::min();
-    Real maxBBox[3] = {min_real,min_real,min_real};
-    Real minBBox[3] = {max_real,max_real,max_real};
+    const Real min_real = std::numeric_limits<Real>::lowest();
+    defaulttype::Vector3 maxBBox = {min_real,min_real,min_real};
+    defaulttype::Vector3 minBBox = {max_real,max_real,max_real};
 
     defaulttype::Vec3d normal; normal = d_planeNormal.getValue(params);
     SReal size=d_drawSize.getValue();
@@ -405,7 +405,7 @@ void PlaneForceField<DataTypes>::computeBBox(const core::ExecParams * params, bo
             if (corners[i][c] < minBBox[c]) minBBox[c] = (Real)corners[i][c];
         }
     }
-    this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<Real>(minBBox,maxBBox));
+    this->f_bbox.setValue(params,defaulttype::BoundingBox(minBBox,maxBBox));
 }
 
 } // namespace forcefield

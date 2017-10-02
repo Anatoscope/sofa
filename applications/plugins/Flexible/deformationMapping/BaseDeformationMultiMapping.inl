@@ -172,7 +172,7 @@ void BaseDeformationMultiMappingT<JacobianBlockType1,JacobianBlockType2>::resize
         for(size_t i=0; i<pos0.size(); ++i)  defaulttype::StdVectorTypes<mCoord,mCoord>::set( mpos0[i], pos0[i][0] , pos0[i][1] , pos0[i][2]);
 
         // interpolate weights at sample positions
-        if(this->f_cell.getValue().size()==size) _shapeFunction->computeShapeFunction(mpos0,*this->f_index.beginWriteOnly(),*this->f_w.beginWriteOnly(),*this->f_dw.beginWriteOnly(),*this->f_ddw.beginWriteOnly(),this->f_cell.getValue());
+        if(this->f_cell.getValue().size()) _shapeFunction->computeShapeFunction(mpos0,*this->f_index.beginWriteOnly(),*this->f_w.beginWriteOnly(),*this->f_dw.beginWriteOnly(),*this->f_ddw.beginWriteOnly(),this->f_cell.getValue());
         else _shapeFunction->computeShapeFunction(mpos0,*this->f_index.beginWriteOnly(),*this->f_w.beginWriteOnly(),*this->f_dw.beginWriteOnly(),*this->f_ddw.beginWriteOnly());
         this->f_index.endEdit();    this->f_w.endEdit();        this->f_dw.endEdit();        this->f_ddw.endEdit();
     }
@@ -193,9 +193,6 @@ void BaseDeformationMultiMappingT<JacobianBlockType1,JacobianBlockType2>::resize
             else wa_index2[i].push_back(index-this->getFromSize1());
         }
     }
-
-    // init jacobians
-    initJacobianBlocks();
 
     // clear forces
     if(this->toModel->write(core::VecDerivId::force())) { helper::WriteOnlyAccessor<Data< OutVecDeriv > >  f(*this->toModel->write(core::VecDerivId::force())); for(size_t i=0;i<f.size();i++) f[i].clear(); }
@@ -323,6 +320,8 @@ void BaseDeformationMultiMappingT<JacobianBlockType1,JacobianBlockType2>::init()
 template <class JacobianBlockType1,class JacobianBlockType2>
 void BaseDeformationMultiMappingT<JacobianBlockType1,JacobianBlockType2>::reinit()
 {
+    initJacobianBlocks(); // reinit jacobian blocks given computed weights and dof rest positions (stored in state for the parent, and in pos0/F0 for the child)
+
     if(this->assemble.getValue()) { updateJ1(); updateJ2(); }
 
     // force apply

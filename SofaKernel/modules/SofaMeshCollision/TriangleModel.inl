@@ -889,10 +889,10 @@ void TTriangleModel<DataTypes>::computeBBox(const core::ExecParams* params, bool
     if( !onlyVisible ) return;
 
     static const Real max_real = std::numeric_limits<Real>::max();
-    static const Real min_real = std::numeric_limits<Real>::min();
+    static const Real min_real = std::numeric_limits<Real>::lowest();
 
-    Real maxBBox[3] = {min_real,min_real,min_real};
-    Real minBBox[3] = {max_real,max_real,max_real};
+    defaulttype::Vector3 maxBBox = {min_real,min_real,min_real};
+    defaulttype::Vector3 minBBox = {max_real,max_real,max_real};
 
     // iterate on vertices
     const auto& vertices = this->mstate->read(core::ConstVecCoordId::position())->getValue();
@@ -924,7 +924,7 @@ void TTriangleModel<DataTypes>::computeBBox(const core::ExecParams* params, bool
     //     }
     // }
 
-    this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<Real>(minBBox,maxBBox));
+    this->f_bbox.setValue(params,defaulttype::BoundingBox(minBBox,maxBBox));
 }
 
 

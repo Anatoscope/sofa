@@ -55,7 +55,6 @@ using core::objectmodel::BaseData ;
 using core::objectmodel::Event ;
 using core::loader::MeshLoader ;
 using core::ExecParams ;
-using defaulttype::TBoundingBox ;
 using defaulttype::Vector3 ;
 using defaulttype::Vec4f ;
 using helper::WriteOnlyAccessor ;
@@ -990,9 +989,9 @@ void BoxROI<DataTypes>::computeBBox(const ExecParams*  params , bool onlyVisible
     const vector<Vec10>& orientedBoxes=d_orientedBoxes.getValue(params);
 
     const Real max_real = std::numeric_limits<Real>::max();
-    const Real min_real = std::numeric_limits<Real>::min();
-    Real maxBBox[3] = {min_real,min_real,min_real};
-    Real minBBox[3] = {max_real,max_real,max_real};
+    const Real min_real = std::numeric_limits<Real>::lowest();
+    defaulttype::Vector3 maxBBox = {min_real,min_real,min_real};
+    defaulttype::Vector3 minBBox = {max_real,max_real,max_real};
 
     for (unsigned int bi=0; bi<alignedBoxes.size(); ++bi)
     {
@@ -1024,7 +1023,7 @@ void BoxROI<DataTypes>::computeBBox(const ExecParams*  params , bool onlyVisible
         }
     }
 
-    this->f_bbox.setValue(params,TBoundingBox<Real>(minBBox,maxBBox));
+    this->f_bbox.setValue(params,defaulttype::BoundingBox(minBBox,maxBBox));
 }
 
 

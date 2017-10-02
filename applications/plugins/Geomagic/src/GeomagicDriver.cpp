@@ -360,8 +360,8 @@ void GeomagicDriver::draw(const sofa::core::visual::VisualParams* vparams) {
 }
 
 void GeomagicDriver::computeBBox(const core::ExecParams*  params, bool  ) {
-    SReal minBBox[3] = {1e10,1e10,1e10};
-    SReal maxBBox[3] = {-1e10,-1e10,-1e10};
+    defaulttype::Vector3 minBBox = {1e10,1e10,1e10};
+    defaulttype::Vector3 maxBBox = {-1e10,-1e10,-1e10};
 
     minBBox[0] = d_posDevice.getValue().getCenter()[0]-d_positionBase.getValue()[0]*d_scale.getValue();
     minBBox[1] = d_posDevice.getValue().getCenter()[1]-d_positionBase.getValue()[1]*d_scale.getValue();
@@ -371,7 +371,7 @@ void GeomagicDriver::computeBBox(const core::ExecParams*  params, bool  ) {
     maxBBox[1] = d_posDevice.getValue().getCenter()[1]+d_positionBase.getValue()[1]*d_scale.getValue();
     maxBBox[2] = d_posDevice.getValue().getCenter()[2]+d_positionBase.getValue()[2]*d_scale.getValue();
 
-    this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<SReal>(minBBox,maxBBox));
+    this->f_bbox.setValue(params,sofa::defaulttype::BoundingBox(minBBox,maxBBox));
 }
 
 void GeomagicDriver::handleEvent(core::objectmodel::Event *event) {

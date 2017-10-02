@@ -57,12 +57,15 @@ def as_numpy( data, read_only = -1 ):
 
     if read_only:
         ptr, shape, typename = data.getValueVoidPtr()
-        # TODO voir comment bloquer le numpy array en ecriture avec numpy.ctypeslib.ndpointer flags WRITEABLE
-        # https://docs.scipy.org/doc/numpy-1.10.0/reference/routines.ctypeslib.html
     else:
         ptr, shape, typename = data.beginEditVoidPtr()
 
-    return wrap_as_numpy_array(ptr, shape, typename)
+    nparray = wrap_as_numpy_array(ptr, shape, typename)
+
+    if read_only: nparray.flags['WRITEABLE'] = False
+
+    return nparray
+
 
 
 
@@ -90,6 +93,7 @@ def endEdit(obj, name):
     ## to unlock the data and set it as dirty
     data = obj.findData(name)
     data.endEditVoidPtr()
+    # @todo: the nparray returned by beginEdit is still writeable...
 
 from contextlib import contextmanager
 
@@ -103,6 +107,9 @@ def edit_data(obj, name):
         yield view
     finally:
         data.endEditVoidPtr()
+
+        # make sure that leaked handles are not writable
+        view.flags['WRITEABLE'] = False
         
 
 def vec_as_numpy( (ptr, size, typename) ):
@@ -126,5 +133,14 @@ def vec_as_numpy( (ptr, size, typename) ):
 def numpify(obj, name):
     # i very much want to alias data buffers in a read-write way without
     # triggering anything data-related, so please leave this be
-    return as_numpy( obj.findData(name), True )
+
+    # MattN: this defeats the data graph purpose, and will generate
+    # tons of non-debuggable bugs, a warning is mandatory.
+    # We need to find a similar writing that triggers the data graph.
+
+    # @warning read-write here is a hack
+    Sofa.msg_warning("SofaPython.SofaNumpy",
+                     "using read-write data incorrectly, a modification won't trigger the data-graph"
+                     " ("+ obj.getLinkPath()+"."+name  +")" )
+    return as_numpy( obj.findData(name), False )
 

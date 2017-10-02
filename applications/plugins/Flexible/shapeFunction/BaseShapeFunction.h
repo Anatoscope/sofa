@@ -196,7 +196,7 @@ public:
     {
         unsigned int nb=childPosition.size();
         ref.resize(nb);        w.resize(nb);   dw.resize(nb);  ddw.resize(nb);
-        for(unsigned i=0; i<nb; i++)            computeShapeFunction(childPosition[i],ref[i],w[i],&dw[i],&ddw[i],cells[i]);
+        for(size_t i=0; i<nb; i++)            computeShapeFunction(childPosition[i],ref[i],w[i],&dw[i],&ddw[i],cells[std::min(i,cells.size()-1)]);
     }
 
     /// used to make a partition of unity

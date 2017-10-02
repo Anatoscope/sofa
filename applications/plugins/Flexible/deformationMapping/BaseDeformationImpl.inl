@@ -25,6 +25,9 @@
 // NB: These implementations have been factored from BaseDeformationMapping.inl and BaseDeformationMultiMapping.inl
 // so that LinearMapping.h and LinearMultiMapping.h can be included together.
 
+
+#include <sofa/core/visual/VisualParams.h>
+
 namespace sofa
 {
 

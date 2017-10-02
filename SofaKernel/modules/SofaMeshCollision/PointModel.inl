@@ -503,9 +503,9 @@ void TPointModel<DataTypes>::computeBBox(const core::ExecParams* params, bool on
     if( !onlyVisible ) return;
 
     static const Real max_real = std::numeric_limits<Real>::max();
-    static const Real min_real = std::numeric_limits<Real>::min();
-    Real maxBBox[3] = {min_real,min_real,min_real};
-    Real minBBox[3] = {max_real,max_real,max_real};
+    static const Real min_real = std::numeric_limits<Real>::lowest();
+    defaulttype::Vector3 maxBBox = {min_real,min_real,min_real};
+    defaulttype::Vector3 minBBox = {max_real,max_real,max_real};
 
     for (int i=0; i<size; i++)
     {
@@ -519,7 +519,7 @@ void TPointModel<DataTypes>::computeBBox(const core::ExecParams* params, bool on
         }
     }
 
-    this->f_bbox.setValue(params,sofa::defaulttype::TBoundingBox<Real>(minBBox,maxBBox));
+    this->f_bbox.setValue(params,defaulttype::BoundingBox(minBBox,maxBBox));
 }
 
 

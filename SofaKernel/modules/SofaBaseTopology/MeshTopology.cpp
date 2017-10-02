@@ -26,6 +26,7 @@
 #include <sofa/helper/fixed_array.h>
 #include <set>
 #include <string.h>
+#include <limits>
 
 namespace sofa
 {
@@ -2731,6 +2732,26 @@ void MeshTopology::draw(const core::visual::VisualParams* vparams)
     }
 
 }
+
+
+void MeshTopology::computeBBox(const core::ExecParams* params, bool onlyVisible)
+{
+    if( onlyVisible &&
+        !_drawEdges.getValue() &&
+            !_drawTriangles.getValue() &&
+            !_drawQuads.getValue() &&
+            !_drawTetra.getValue() &&
+            !_drawHexa.getValue() ) return;
+
+
+    const SeqPoints& x = seqPoints.getValue(params);
+
+    sofa::defaulttype::BoundingBox& bbox = *this->f_bbox.beginWriteOnly(params);
+    bbox.setFromPointVector( x );
+    this->f_bbox.endEdit(params);
+}
+
+
 
 } // namespace topology
 
