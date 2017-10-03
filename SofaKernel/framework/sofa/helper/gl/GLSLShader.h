@@ -209,12 +209,12 @@ public:
     void SetMatrix3x4(GLint location,GLsizei count,GLboolean transpose, const GLfloat *value);
     void SetMatrix4x3(GLint location,GLsizei count,GLboolean transpose, const GLfloat *value);
 #else
-    void SetMatrix2x3(GLint /*location*/,GLsizei /*count*/,GLboolean /*transpose*/, const GLfloat */*value*/) { fprintf(stderr,"SetMatrix2x3 not supported ."); }
-    void SetMatrix3x2(GLint /*location*/,GLsizei /*count*/,GLboolean /*transpose*/, const GLfloat */*value*/) { fprintf(stderr,"SetMatrix3x2 not supported ."); }
-    void SetMatrix2x4(GLint /*location*/,GLsizei /*count*/,GLboolean /*transpose*/, const GLfloat */*value*/) { fprintf(stderr,"SetMatrix2x4 not supported ."); }
-    void SetMatrix4x2(GLint /*location*/,GLsizei /*count*/,GLboolean /*transpose*/, const GLfloat */*value*/) { fprintf(stderr,"SetMatrix4x2 not supported ."); }
-    void SetMatrix3x4(GLint /*location*/,GLsizei /*count*/,GLboolean /*transpose*/, const GLfloat */*value*/) { fprintf(stderr,"SetMatrix3x4 not supported ."); }
-    void SetMatrix4x3(GLint /*location*/,GLsizei /*count*/,GLboolean /*transpose*/, const GLfloat */*value*/) { fprintf(stderr,"SetMatrix4x3 not supported ."); }
+    void SetMatrix2x3(GLint /*location*/,GLsizei /*count*/,GLboolean /*transpose*/, const GLfloat * /*value*/) { fprintf(stderr,"SetMatrix2x3 not supported ."); }
+    void SetMatrix3x2(GLint /*location*/,GLsizei /*count*/,GLboolean /*transpose*/, const GLfloat * /*value*/) { fprintf(stderr,"SetMatrix3x2 not supported ."); }
+    void SetMatrix2x4(GLint /*location*/,GLsizei /*count*/,GLboolean /*transpose*/, const GLfloat * /*value*/) { fprintf(stderr,"SetMatrix2x4 not supported ."); }
+    void SetMatrix4x2(GLint /*location*/,GLsizei /*count*/,GLboolean /*transpose*/, const GLfloat * /*value*/) { fprintf(stderr,"SetMatrix4x2 not supported ."); }
+    void SetMatrix3x4(GLint /*location*/,GLsizei /*count*/,GLboolean /*transpose*/, const GLfloat * /*value*/) { fprintf(stderr,"SetMatrix3x4 not supported ."); }
+    void SetMatrix4x3(GLint /*location*/,GLsizei /*count*/,GLboolean /*transpose*/, const GLfloat * /*value*/) { fprintf(stderr,"SetMatrix4x3 not supported ."); }
 #endif
     /// @}
 
