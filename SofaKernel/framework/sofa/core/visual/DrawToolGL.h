@@ -27,6 +27,7 @@
 #include <sofa/core/visual/DrawTool.h>
 #include <sofa/defaulttype/Vec.h>
 #include <sofa/defaulttype/RGBAColor.h>
+#include <sofa/helper/gl/BasicShapesGL.h>
 
 namespace sofa
 {
@@ -184,6 +185,9 @@ protected:
     int  mPolygonMode;      //0: no cull, 1 front (CULL_CLOCKWISE), 2 back (CULL_ANTICLOCKWISE)
     bool mWireFrameEnabled;
     bool mUpdateCapabilities;
+
+    helper::gl::BasicShapesGL_Sphere<Vector3> m_sphereUtil;
+    helper::gl::BasicShapesGL_FakeSphere<Vector3> m_fakeSphereUtil;
 
 
 public:

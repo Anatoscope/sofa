@@ -57,9 +57,6 @@ namespace visual
 using namespace sofa::defaulttype;
 using namespace sofa::helper::gl;
 
-static helper::gl::BasicShapesGL_Sphere<Vector3> s_sphereUtil;
-static helper::gl::BasicShapesGL_FakeSphere<Vector3> s_fakeSphereUtil;
-
 
 
 DrawToolGL::DrawToolGL()
@@ -354,7 +351,7 @@ void DrawToolGL::drawSpheres(const std::vector<Vector3> &points, float radius, c
 {
     setMaterial(colour);
 
-    s_sphereUtil.draw(points, radius);
+    m_sphereUtil.draw(points, radius);
 
     resetMaterial(colour);
 }
@@ -365,7 +362,7 @@ void DrawToolGL::drawSpheres(const std::vector<Vector3> &points, const std::vect
 {
     setMaterial(colour);
 
-    s_sphereUtil.draw(points, radius);
+    m_sphereUtil.draw(points, radius);
 
     resetMaterial(colour);
 }
@@ -375,7 +372,7 @@ void DrawToolGL::drawFakeSpheres(const std::vector<Vector3> &points, float radiu
 {
     setMaterial(colour);
 
-    s_fakeSphereUtil.draw(points, radius);
+    m_fakeSphereUtil.draw(points, radius);
 
     resetMaterial(colour);
 }
@@ -386,7 +383,7 @@ void DrawToolGL::drawFakeSpheres(const std::vector<Vector3> &points, const std::
 {
     setMaterial(colour);
 
-    s_fakeSphereUtil.draw(points, radius);
+    m_fakeSphereUtil.draw(points, radius);
 
     resetMaterial(colour);
 }
