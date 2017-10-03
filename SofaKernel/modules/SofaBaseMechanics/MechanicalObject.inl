@@ -484,9 +484,8 @@ void MechanicalObject<DataTypes>::reinit() { }
 template <class DataTypes>
 void MechanicalObject<DataTypes>::storeResetState()
 {
-    if(!static_cast<const simulation::Node*>(this->getContext())->mechanicalMapping.empty() ) {
-        msg_warning() << "storeResetState on mapped dofs";
-    }
+    const bool is_mapped = !static_cast<const simulation::Node*>(this->getContext())->mechanicalMapping.empty();
+    if( is_mapped ) return;
     
     // Save initial state for reset button
     vOp(core::ExecParams::defaultInstance(), core::VecId::resetPosition(), core::VecId::position());
