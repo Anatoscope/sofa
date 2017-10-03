@@ -117,13 +117,22 @@ public:
     // TODO wtf is this doing 
     virtual void writeState( std::ostream& out );    
 
+
+    struct unimplemented : std::logic_error {
+        unimplemented(const MechanicalObject* self, const std::string& what) :
+            std::logic_error("unimplemented: " + what + " in " + self->getPathName()) {
+            
+        }
+    };
+
+    
     // TODO WTF
     virtual SReal compareVec(core::ConstVecId , std::istream &) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
     
     void setIgnoreLoader(bool) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
     /// @name New vectors access API based on VecId
@@ -136,10 +145,10 @@ public:
     virtual const Data< VecDeriv >* read(core::ConstVecDerivId v) const;
 
     virtual Data< MatrixDeriv >* write(core::MatrixDerivId) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
     virtual const Data< MatrixDeriv >* read(core::ConstMatrixDerivId) const  {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
     /// @}
@@ -168,7 +177,7 @@ public:
     }
     
     void replaceValue (const int, const int) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
     /** \brief Reorder values according to parameter.
@@ -177,7 +186,7 @@ public:
      * newValue[ i ] = oldValue[ index[i] ];
      */
     void renumberValues( const sofa::helper::vector<unsigned int> & ) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
     /** \brief Replace the value at index by the sum of the ancestors values
@@ -188,12 +197,12 @@ public:
     void computeWeightedValue( const unsigned int, 
                                const sofa::helper::vector< unsigned int >&, 
                                const sofa::helper::vector< double >& ) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
     /// Force the position of a point (and force its velocity to zero value)
     void forcePointPosition( const unsigned int, const sofa::helper::vector< double >&) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
     /// @name Initial transformations application methods.
@@ -202,20 +211,20 @@ public:
     /// Apply translation vector to the position.
     
     virtual void applyTranslation (const SReal, const SReal, const SReal) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
     /// Rotation using Euler Angles in degree.
     virtual void applyRotation (const SReal, const SReal, const SReal) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
     virtual void applyRotation (const defaulttype::Quat) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
     virtual void applyScale (const SReal, const SReal, const SReal) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
     /// @}
@@ -260,19 +269,19 @@ public:
 
     // TODO deprecated & remove this shit
     virtual void addFromBaseVectorSameSize(core::VecId ,  const defaulttype::BaseVector*, unsigned int &) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
     virtual void addFromBaseVectorDifferentSize(core::VecId, const defaulttype::BaseVector*, unsigned int& ) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
 
     /// @}
 
-    void setTranslation(SReal, SReal, SReal) { throw std::logic_error("unimplemented"); }
-    void setRotation(SReal, SReal, SReal) { throw std::logic_error("unimplemented"); }
-    void setScale(SReal, SReal, SReal) { throw std::logic_error("unimplemented"); }
+    void setTranslation(SReal, SReal, SReal) { throw unimplemented(this, __func__); }
+    void setRotation(SReal, SReal, SReal) { throw unimplemented(this, __func__); }
+    void setScale(SReal, SReal, SReal) { throw unimplemented(this, __func__); }
     Vector3 getTranslation() const { return {};}
     
     // virtual Vector3 getRotation() const {return rotation.getValue();}
@@ -285,7 +294,7 @@ public:
     /// Renumber the constraint ids with the given permutation vector
     
     void renumberConstraintId(const sofa::helper::vector< unsigned >&) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
     
 
@@ -357,13 +366,13 @@ public:
     
     // TODO remove
     virtual void resetConstraint(const core::ExecParams*) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
     
     virtual void getConstraintJacobian(const core::ExecParams* , 
                                        sofa::defaulttype::BaseMatrix*, 
                                        unsigned int & ) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
     
     /// @name Debug
@@ -371,11 +380,11 @@ public:
 
     // // TODO remove
     virtual void printDOF(core::ConstVecId, std::ostream&, int, int) const {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
     
     virtual unsigned printDOFWithElapsedTime(core::ConstVecId, unsigned, unsigned, std::ostream& ) {
-        throw std::logic_error("unimplemented");
+        throw unimplemented(this, __func__);
     }
 
     void draw(const core::visual::VisualParams* vparams);
