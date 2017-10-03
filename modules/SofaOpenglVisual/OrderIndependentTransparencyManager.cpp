@@ -31,6 +31,11 @@
 //
 //
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
+
 #include <SofaOpenglVisual/OglModel.h>
 #include <SofaOpenglVisual/OrderIndependentTransparencyManager.h>
 #include <sofa/core/visual/VisualParams.h>

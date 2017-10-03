@@ -31,8 +31,6 @@
 #include <sofa/defaulttype/Vec3Types.h>
 #include <SofaStereo/StereoCamera.h>
 
-#define   NB_MAX_TEXTURES 16
-
 namespace sofa
 {
 

@@ -111,8 +111,17 @@ static PyObject * Link_getSize(PyObject *self, PyObject * /*args*/)
     return PyInt_FromLong( link->getSize() );
 }
 
+static PyObject* Link_base_link_ptr(PyObject* self, PyObject* args) {
+    if (!PyArg_ParseTuple(args, "")) return NULL;
+
+    BaseLink* component = get_baselink(self);
+    return PyLong_FromVoidPtr(component);
+}
+
+
 
 SP_CLASS_METHODS_BEGIN(Link)
+SP_CLASS_METHOD(Link,base_link_ptr)
 SP_CLASS_METHOD(Link,getValueTypeString)
 SP_CLASS_METHOD(Link,getValueString)
 SP_CLASS_METHOD(Link,getSize)

@@ -25,6 +25,7 @@
 #include <sofa/helper/helper.h>
 
 #include <sofa/helper/vector.h>
+#include <sofa/helper/io/Image.h>
 #include <sofa/helper/rmath.h>
 #include <sofa/defaulttype/Vec.h>
 #include <string>
@@ -45,6 +46,7 @@ public:
     typedef defaulttype::Vec4f Color;   // ... with alpha value
     typedef sofa::helper::vector<Color> VecColor;
     
+    ColorMap(sofa::helper::io::Image* rampImage);
     ColorMap(unsigned int paletteSize = 256, const std::string& colorScheme = "HSV");
     virtual ~ColorMap();
 
@@ -80,6 +82,7 @@ public:
     };
 
     unsigned int m_paletteSize;
+    sofa::helper::io::Image* m_rampImage;
     std::string m_colorScheme;
     
     VecColor entries;
@@ -89,6 +92,9 @@ public:
     
     unsigned int getPaletteSize() { return m_paletteSize;  }
     void setPaletteSize(unsigned int paletteSize) { m_paletteSize = paletteSize; }
+
+    sofa::helper::io::Image* getRampImage() { return m_rampImage;  }
+    void setRampImage(sofa::helper::io::Image* rampImage) { m_rampImage = rampImage; }
 
     const std::string& getColorScheme() { return m_colorScheme;  }
     void setColorScheme(const std::string& colorScheme) { m_colorScheme = colorScheme; }

@@ -122,7 +122,7 @@ static std::string DefaultColorSchemes[NDefaultColorMapSchemes] =
     "BlueInv",// HSV space
     "GreenInv",// HSV space
     "RedInv",// HSV space
-    "Custom"// TODO: Custom colors
+    "Custom"// Custom colors
 };
 
 ColorMap* ColorMap::getDefault()
@@ -137,8 +137,17 @@ ColorMap* ColorMap::getDefault()
     return defaultColorMap;
 }
 
+ColorMap::ColorMap(sofa::helper::io::Image* rampImage)
+: m_paletteSize(rampImage->getWidth(0))
+, m_rampImage(rampImage)
+, m_colorScheme("Custom")
+{
+    init();
+}
+
 ColorMap::ColorMap(unsigned int paletteSize, const std::string& colorScheme)
 : m_paletteSize(paletteSize)
+, m_rampImage(0)
 , m_colorScheme(colorScheme)
 {
     init();
@@ -169,7 +178,19 @@ void ColorMap::reinit()
 
     std::string scheme = m_colorScheme;
     if (scheme == "Custom") {
-        // TODO
+        if(m_rampImage)
+        {
+            unsigned int width = m_rampImage->getWidth(0);
+            for(unsigned int i = 0; i < width; ++i)
+            {
+                Color color(((float) *(m_rampImage->getPixels() + m_rampImage->getBytesPerPixel() * i + 0)) / 255.0f,
+                            ((float) *(m_rampImage->getPixels() + m_rampImage->getBytesPerPixel() * i + 1)) / 255.0f,
+                            ((float) *(m_rampImage->getPixels() + m_rampImage->getBytesPerPixel() * i + 2)) / 255.0f,
+                            1.0f);
+
+                entries.push_back(color);
+            }
+        }
     } else if (scheme == "Red to Blue") {
         // List the colors
         float step = (2.0f/3.0f)/(nColors-1);

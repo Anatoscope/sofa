@@ -22,6 +22,10 @@
 #ifndef CLOSESTPOINTREGISTRATIONFORCEFIELD_INL
 #define CLOSESTPOINTREGISTRATIONFORCEFIELD_INL
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
 #include "ClosestPointRegistrationForceField.h"
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/core/objectmodel/BaseContext.h>

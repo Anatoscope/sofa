@@ -25,6 +25,10 @@
 #include <cassert>
 #include <iostream>
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
 namespace sofa
 {
 

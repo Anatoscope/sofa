@@ -789,12 +789,20 @@ static PyObject * Data_str(PyObject *self)
 }
 
 
-static PyObject * Data_getAsACreateObjectParameter(PyObject * self, PyObject * args)
-{
+static PyObject * Data_getAsACreateObjectParameter(PyObject * self, PyObject * args) {
     return Data_getLinkPath(self, args);
 }
 
+static PyObject* Data_base_data_ptr(PyObject* self, PyObject* args) {
+    if (!PyArg_ParseTuple(args, "")) return NULL;
+
+    BaseData* component = get_basedata(self);
+    return PyLong_FromVoidPtr(component);
+}
+
+
 SP_CLASS_METHODS_BEGIN(Data)
+SP_CLASS_METHOD(Data,base_data_ptr)
 SP_CLASS_METHOD(Data,getValueTypeString)
 SP_CLASS_METHOD(Data,getValueString)
 SP_CLASS_METHOD(Data,setValue)
@@ -820,6 +828,8 @@ SP_CLASS_ATTRS_BEGIN(Data)
 SP_CLASS_ATTR(Data,name)
 SP_CLASS_ATTR(Data,value)
 SP_CLASS_ATTRS_END
+
+
 
 namespace {
 static struct patch {

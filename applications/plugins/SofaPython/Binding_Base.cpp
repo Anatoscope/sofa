@@ -186,6 +186,14 @@ static PyObject * Base_downCast(PyObject *self, PyObject * /*args*/) {
 
 
 
+static PyObject* Base_base_ptr(PyObject* self, PyObject* args) {
+    if (!PyArg_ParseTuple(args, "")) return NULL;
+
+    Base* component = get_base(self);
+    return PyLong_FromVoidPtr(component);
+}
+
+
 SP_CLASS_METHODS_BEGIN(Base)
 SP_CLASS_METHOD(Base,findData)
 SP_CLASS_METHOD(Base,findLink)
@@ -194,6 +202,7 @@ SP_CLASS_METHOD(Base,getTemplateName)
 SP_CLASS_METHOD(Base,getName)
 SP_CLASS_METHOD(Base,getDataFields)
 SP_CLASS_METHOD(Base,downCast)
+SP_CLASS_METHOD(Base,base_ptr)
 SP_CLASS_METHODS_END;
 
 

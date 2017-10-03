@@ -22,6 +22,10 @@
 #ifndef SOFA_COMPONENT_MAPPING_SquareDistanceMapping_INL
 #define SOFA_COMPONENT_MAPPING_SquareDistanceMapping_INL
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
 #include "SquareDistanceMapping.h"
 #include <sofa/core/visual/VisualParams.h>
 #include <iostream>

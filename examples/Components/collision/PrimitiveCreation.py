@@ -26,7 +26,7 @@ def createRigidCapsule(parentNode,name,x,y,z,*args):
 	else:
 		radius = args[0]
 
-	meca = node.createObject('MechanicalObject',name='rigidDOF',template='Rigid',position=str(x)+' '+str(y)+' '+str(z)+' 0 0 0 1',velocity='0 0 '+str(falling_speed)+' 0 0 0 1')
+	meca = node.createObject('MechanicalObject',name='rigidDOF',template='Rigid',position=str(x)+' '+str(y)+' '+str(z)+' 0 0 0 1',velocity='0 0 '+str(falling_speed)+' 0 0 0')
 	mass = node.createObject('UniformMass',name='mass',totalMass=1)
 
 	x_rand=random.uniform(-0.5,0.5)
@@ -56,7 +56,7 @@ def createFlexCapsule(parentNode,name,x,y,z,*args):
 	z_rand=random.uniform(-0.5,0.5)
 
 	node = node.createChild('Surf')
-	node.createObject('MechanicalObject',template='Vec3d',name='falling_particle',position=str(x + x_rand)+' '+str(y + y_rand)+' '+str(z + z_rand + capsule_height)+' '+str(x - x_rand)+' '+str(y - y_rand)+' '+str(z - z_rand),velocity='0 0 '+str(falling_speed))
+	node.createObject('MechanicalObject',template='Vec3d',name='falling_particle',position=str(x + x_rand)+' '+str(y + y_rand)+' '+str(z + z_rand + capsule_height)+' '+str(x - x_rand)+' '+str(y - y_rand)+' '+str(z - z_rand),velocity='0 0 '+str(falling_speed)+' 0 0 '+str(falling_speed))
 	mass = node.createObject('UniformMass',name='mass')
 	node.createObject('MeshTopology', name='meshTopology34',edges='0 1',drawEdges='1')
 	node.createObject('TCapsuleModel',template='Vec3d',name='capsule_model',defaultRadius=str(radius))
@@ -123,7 +123,7 @@ def createOBB(parentNode,name,x,y,z,*args):
 
 	node = parentNode.createChild(name)
 
-	meca = node.createObject('MechanicalObject',name='rigidDOF',template='Rigid',position=str(x)+' '+str(y)+' '+str(z)+' 0 0 0 1',velocity='0 0 '+str(falling_speed)+' 0 0 0 1')
+	meca = node.createObject('MechanicalObject',name='rigidDOF',template='Rigid',position=str(x)+' '+str(y)+' '+str(z)+' 0 0 0 1',velocity='0 0 '+str(falling_speed)+' 0 0 0')
 	mass = node.createObject('UniformMass',name='mass',totalMass=1)
 
 	node.createObject('TOBBModel',template='Rigid',name='OBB_model',extents=str(a)+' '+str(b)+' '+str(c))
@@ -180,7 +180,7 @@ def createRigidSphere(parentNode,name,x,y,z,*args):
 	#                         str(z)+' 0 0 0 1')
 
 	#SurfNode = node.createChild('Surf')
-	node.createObject('MechanicalObject',template='Rigid',name='falling_particle',position=str(x)+' '+str(y)+' '+str(z)+' 0 0 0 1',velocity='0 0 '+str(falling_speed)+' 0 0 0 1')
+	node.createObject('MechanicalObject',template='Rigid',name='falling_particle',position=str(x)+' '+str(y)+' '+str(z)+' 0 0 0 1',velocity='0 0 '+str(falling_speed)+' 0 0 0')
 	node.createObject('TSphereModel',template='Rigid',name='sphere_model',radius=str(r))
 	node.createObject('UniformMass',name='mass',totalMass=1)
 	#SurfNode.createObject('RigidMapping',template='Rigid,Vec3d',name='rigid_mapping',input='@../rigidDOF',output='@falling_particle')

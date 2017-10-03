@@ -22,6 +22,10 @@
 #ifndef SOFA_COMPONENT_FORCEFIELD_CONICALFORCEFIELD_INL
 #define SOFA_COMPONENT_FORCEFIELD_CONICALFORCEFIELD_INL
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
 #include <SofaBoundaryCondition/ConicalForceField.h>
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/defaulttype/Quat.h>
