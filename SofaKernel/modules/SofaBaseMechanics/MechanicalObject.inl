@@ -386,87 +386,100 @@ void MechanicalObject<DataTypes>::init()
 
     //helper::WriteAccessor< Data<VecCoord> > x_wA = *this->write(VecCoordId::position());
     //helper::WriteAccessor< Data<VecDeriv> > v_wA = *this->write(VecDerivId::velocity());
-    Data<VecCoord>* x_wAData = this->write(sofa::core::VecCoordId::position());
-    Data<VecDeriv>* v_wAData = this->write(sofa::core::VecDerivId::velocity());
-    VecCoord& x_wA = *x_wAData->beginEdit();
-    VecDeriv& v_wA = *v_wAData->beginEdit();
+    Data<VecCoord>* pos_data = this->write(core::VecCoordId::position());
+    Data<VecDeriv>* vel_data = this->write(core::VecDerivId::velocity());
 
-    //case if X0 has been set but not X
-    if (read(core::ConstVecCoordId::restPosition())->getValue().size() > x_wA.size())
-    {
+
+    // case if X0 has been set but not X
+    if (read(core::ConstVecCoordId::restPosition())->getValue().size() > pos_data->getValue().size()) {
+        msg_warning() << "rest position is set but not position in " << this->getPathName();
         vOp(core::ExecParams::defaultInstance(), core::VecId::position(), core::VecId::restPosition());
     }
-
-
+    
     // // TODO these should all be errors, period.
-    sofa::core::topology::BaseMeshTopology* m_topology = nullptr;
+    core::topology::BaseMeshTopology* m_topology = nullptr;
 
-    //Look at a topology associated to this instance of MechanicalObject by a tag
+    // Look at a topology associated to this instance of MechanicalObject by a tag
     this->getContext()->get(m_topology, this->getTags());
      
     // // If no topology found, no association, then look to the nearest one
     if(!m_topology) {
-        m_topology = this->getContext()->getMeshTopology();
+        m_topology = this->getContext()->template get<core::topology::BaseMeshTopology>( core::objectmodel::BaseContext::Local);
+    } else {
+        msg_warning() << "found topology based on tags, which is silly";
     }
     
     // the given position and velocity vectors are empty
     // note that when a vector is not  explicitly specified, its size won't change (1 by default)
-    if( x_wA.size() <= 1 && v_wA.size() <= 1 ) {
+    const unsigned pos_size = pos_data->getValue().size(), vel_size = vel_data->getValue().size();
 
+    // TODO this is wrong, but at least now it is explicit
+    const bool default_initialized =  pos_size <= 1 && vel_size <= 1;
+    
+    if( default_initialized ) {
+        
         // if a topology is present, implicitly copy position from it
-        if (m_topology != NULL && m_topology->getNbPoints() && m_topology->getContext() == this->getContext())
-        {
-            msg_warning() << "doing funny shit w/topology during mechanical state init";
-            
-            int nbp = m_topology->getNbPoints();
-            //std::cout<<"Setting "<<nbp<<" points from topology. " << this->getName() << " topo : " << m_topology->getName() <<std::endl;
+        if (m_topology && m_topology->getNbPoints() ) {
+            const unsigned nbp = m_topology->getNbPoints();
+
             // copy the last specified velocity to all points
-            if (v_wA.size() >= 1 && v_wA.size() < (unsigned)nbp)
-            {
-                unsigned int i = v_wA.size();
-                Deriv v1 = v_wA[i-1];
-                v_wA.resize(nbp);
-                while (i < v_wA.size())
-                    v_wA[i++] = v1;
+            if (vel_size >= 1 && vel_size < nbp) {
+                msg_warning() << "silly velocity init";
+                
+                const Deriv value = vel_data->getValue()[ vel_size - 1]; // cannot use .back() here :-/
+                
+                VecDeriv* vel = vel_data->beginWriteOnly();
+
+                // TODO this should not even be possible
+                vel->resize(nbp);
+                
+                std::fill(vel->begin() + vel_size, vel->end(), value);
+                vel_data->endEdit();
             }
+            
             this->resize(nbp);
-            for (int i=0; i<nbp; i++)
-            {
-                x_wA[i] = Coord();
-                DataTypes::set(x_wA[i], m_topology->getPX(i), m_topology->getPY(i), m_topology->getPZ(i));
+            
+            for (unsigned i = 0; i < nbp; ++i) {
+                VecCoord* pos = pos_data->beginWriteOnly();
+                msg_warning() << "silly & inefficient implicit position init from topology";
+                DataTypes::set((*pos)[i], m_topology->getPX(i), m_topology->getPY(i), m_topology->getPZ(i));
             }
-        } else if( x_wA.size() == 0 ) {
+        } else if( pos_size == 0 ) {
             // special case when the user manually explicitly defined an empty position vector
             // (e.g. linked to an empty vector)
+            msg_warning() << "silly resize(0) based on position size";
             resize(0);
         }
-    } else if (x_wA.size() != vsize || v_wA.size() != vsize) {
+        
+    } else if (pos_size != vsize || vel_size != vsize) {
         // X and/or V were user-specified
         // copy the last specified velocity to all points
 
-        const unsigned int xSize = x_wA.size();
-        const unsigned int vSize = v_wA.size();
+        msg_warning() << "silly filling of velocities from the last one";
+        
+        if (vel_size >= 1 && vel_size < pos_size) {
+            const Deriv value = vel_data->getValue()[vel_size - 1]; // cannot use .back() here :-/
 
-        if (vSize >= 1 && vSize < xSize)
-        {
-            unsigned int i = vSize;
-            Deriv v1 = v_wA[i-1];
-            v_wA.resize(xSize);
-            while (i < xSize)
-                v_wA[i++] = v1;
+            VecDeriv* vel = vel_data->beginWriteOnly();
+
+            // TODO this should not even be possible
+            vel->resize(pos_size);
+            
+            std::fill(vel->begin() + vel_size, vel->end(), value);
+            vel_data->endEdit();            
         }
-
-        resize(xSize > v_wA.size() ? xSize : v_wA.size());
+        
+        resize( std::max(pos_size, vel_size) );
     }
 
-    x_wAData->endEdit();
-    v_wAData->endEdit();
-
+    // 
     reinit();
 
     // TODO there are no longer transformations lol
     // storing X0 must be done after reinit() that possibly applies transformations
-    if( read(core::ConstVecCoordId::restPosition())->getValue().size()!=x_wA.size() ) {
+    if( read(core::ConstVecCoordId::restPosition())->getValue().size() != pos_data->getValue().size() ) {
+        msg_error() << "this should really not happen";
+        
         // storing X0 from X
         vOp(core::ExecParams::defaultInstance(), core::VecId::restPosition(), core::VecId::position());
     }
