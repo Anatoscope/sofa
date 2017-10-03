@@ -653,21 +653,19 @@ template <class DataTypes>
 Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<DataTypes>::write(core::VecCoordId v)
 {
 
-    if (v.index >= vectorsCoord.size())
-    {
+    if (v.index >= vectorsCoord.size()) {
         vectorsCoord.resize(v.index + 1, 0);
     }
 
-    if (vectorsCoord[v.index] == NULL)
-    {
+    if (!vectorsCoord[v.index]) {
         vectorsCoord[v.index] = new Data< VecCoord >;
-        if (f_reserve.getValue() > 0)
-        {
+        
+        if (f_reserve.getValue() > 0) {
             vectorsCoord[v.index]->beginWriteOnly()->reserve(f_reserve.getValue());
             vectorsCoord[v.index]->endEdit();
         }
-        if (vectorsCoord[v.index]->getValue().size() != (size_t)getSize())
-        {
+        
+        if (vectorsCoord[v.index]->getValue().size() != (size_t)getSize()) {
             vectorsCoord[v.index]->beginWriteOnly()->resize( getSize() );
             vectorsCoord[v.index]->endEdit();
         }
@@ -676,7 +674,7 @@ Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<DataTypes
 #if defined(SOFA_DEBUG) || !defined(NDEBUG)
     const typename MechanicalObject<DataTypes>::VecCoord& val = d->getValue();
     if (!val.empty() && val.size() != (unsigned int)this->getSize()) {
-        msg_error() << "writing to State vector " << v << " with incorrect size : " 
+        msg_error() << "writing to state vector " << v << " with incorrect size : " 
                     << val.size() << " != " << this->getSize();
     }
 #endif
@@ -686,98 +684,84 @@ Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<DataTypes
 
 
 template <class DataTypes>
-const Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<DataTypes>::read(core::ConstVecCoordId v) const
-{
-    if (v.isNull())
-    {
-        msg_error() << "Accessing null VecCoord";
+const Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<DataTypes>::read(core::ConstVecCoordId v) const {
+    if (v.isNull()) {
+        msg_error() << "accessing null VecCoord";
     }
-    if (v.index < vectorsCoord.size() && vectorsCoord[v.index] != NULL)
-    {
-        const Data<typename MechanicalObject<DataTypes>::VecCoord>* d = vectorsCoord[v.index];
+    
+    if (v.index < vectorsCoord.size() && vectorsCoord[v.index]) {
+        const Data<VecCoord>* d = vectorsCoord[v.index];
+        
 #if defined(SOFA_DEBUG) || !defined(NDEBUG)
-        const typename MechanicalObject<DataTypes>::VecCoord& val = d->getValue();
-        if (!val.empty() && val.size() != (unsigned int)this->getSize())
-        {
-            msg_error() << "Accessing State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize();
+        const VecCoord& val = d->getValue();
+        if (!val.empty() && val.size() != (unsigned int)this->getSize()) {
+            msg_error() << "Accessing State vector " << v << " with incorrect size : " 
+                        << val.size() << " != " << this->getSize();
         }
 #endif
         return d;
-    }
-    else
-    {
+    } else {
         msg_error() << "Vector " << v << " does not exist";
-        return NULL;
+        return nullptr;
     }
 }
 
 template <class DataTypes>
-Data<typename MechanicalObject<DataTypes>::VecDeriv>* MechanicalObject<DataTypes>::write(core::VecDerivId v)
-{
+Data<typename MechanicalObject<DataTypes>::VecDeriv>* MechanicalObject<DataTypes>::write(core::VecDerivId v) {
 
-    if (v.index >= vectorsDeriv.size())
-    {
+    if (v.index >= vectorsDeriv.size()) {
         vectorsDeriv.resize(v.index + 1, 0);
     }
 
-    if (vectorsDeriv[v.index] == NULL)
-    {
+    if (!vectorsDeriv[v.index]) {
         vectorsDeriv[v.index] = new Data< VecDeriv >;
-        if (f_reserve.getValue() > 0)
-        {
+        if (f_reserve.getValue() > 0){
             vectorsDeriv[v.index]->beginWriteOnly()->reserve(f_reserve.getValue());
             vectorsDeriv[v.index]->endEdit();
         }
-        if (vectorsDeriv[v.index]->getValue().size() != (size_t)getSize())
-        {
+        if (vectorsDeriv[v.index]->getValue().size() != (size_t)getSize()) {
             vectorsDeriv[v.index]->beginWriteOnly()->resize( getSize() );
             vectorsDeriv[v.index]->endEdit();
         }
     }
-    Data<typename MechanicalObject<DataTypes>::VecDeriv>* d = vectorsDeriv[v.index];
+    
+    Data<VecDeriv>* d = vectorsDeriv[v.index];
 #if defined(SOFA_DEBUG) || !defined(NDEBUG)
-    const typename MechanicalObject<DataTypes>::VecDeriv& val = d->getValue();
-    if (!val.empty() && val.size() != (unsigned int)this->getSize())
-    {
-        msg_error() << "Writing to State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize();
+    const VecDeriv& val = d->getValue();
+    if (!val.empty() && val.size() != (unsigned int)this->getSize()) {
+        msg_error() << "writing state vector " << v << " with incorrect size : " 
+                    << val.size() << " != " << this->getSize();
     }
 #endif
     return d;
 }
 
 template <class DataTypes>
-const Data<typename MechanicalObject<DataTypes>::VecDeriv>* MechanicalObject<DataTypes>::read(core::ConstVecDerivId v) const
-{
-    if (v.index < vectorsDeriv.size())
-    {
-        const Data<typename MechanicalObject<DataTypes>::VecDeriv>* d = vectorsDeriv[v.index];
+const Data<typename MechanicalObject<DataTypes>::VecDeriv>* MechanicalObject<DataTypes>::read(core::ConstVecDerivId v) const {
+    if (v.index < vectorsDeriv.size()) {
+        const Data<VecDeriv>* d = vectorsDeriv[v.index];
 #if defined(SOFA_DEBUG) || !defined(NDEBUG)
-        const typename MechanicalObject<DataTypes>::VecDeriv& val = d->getValue();
-        if (!val.empty() && val.size() != (unsigned int)this->getSize())
-        {
-            msg_error() << "Accessing State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize();
+        const VecDeriv& val = d->getValue();
+        if (!val.empty() && val.size() != (unsigned int)this->getSize()) {
+            msg_error() << "accessing state vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize();
         }
 #endif
         return d;
-    }
-    else
-    {
-        msg_error() << "Vector " << v << "does not exist";
-        return NULL;
+    } else {
+        msg_error() << "state vector " << v << "does not exist";
+        return nullptr;
     }
 }
 
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::setVecCoord(unsigned int index, Data< VecCoord > *v)
-{
+void MechanicalObject<DataTypes>::setVecCoord(unsigned int index, Data< VecCoord > *v) {
     if(index == core::VecCoordId::null().getIndex()) {
         msg_error() << "setting null coord vector lol";
         return;
     }
     
-    if (index >= vectorsCoord.size())
-    {
+    if (index >= vectorsCoord.size()) {
         vectorsCoord.resize(index + 1, 0);
     }
 
@@ -793,8 +777,7 @@ void MechanicalObject<DataTypes>::setVecDeriv(unsigned int index, Data< VecDeriv
     }
 
     
-    if (index >= vectorsDeriv.size())
-    {
+    if (index >= vectorsDeriv.size()) {
         vectorsDeriv.resize(index + 1, 0);
     }
 
@@ -804,30 +787,28 @@ void MechanicalObject<DataTypes>::setVecDeriv(unsigned int index, Data< VecDeriv
 
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::vAvail(const core::ExecParams* /* params */, core::VecCoordId& v)
-{
-    for (unsigned int i = v.index; i < vectorsCoord.size(); ++i)
-    {
+void MechanicalObject<DataTypes>::vAvail(const core::ExecParams* /* params */, core::VecCoordId& v) {
+    // TODO why isSet() ?
+    for (unsigned int i = v.index; i < vectorsCoord.size(); ++i) {
         if (vectorsCoord[i] && vectorsCoord[i]->isSet())
             v.index = i+1;
     }
 }
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::vAvail(const core::ExecParams* /* params */, core::VecDerivId& v)
-{
-    for (unsigned int i = v.index; i < vectorsDeriv.size(); ++i)
-    {
-        if (vectorsDeriv[i] && vectorsDeriv[i]->isSet())
+void MechanicalObject<DataTypes>::vAvail(const core::ExecParams* /* params */, core::VecDerivId& v) {
+    // TODO why isSet() ?    
+    for (unsigned int i = v.index; i < vectorsDeriv.size(); ++i) {
+        if (vectorsDeriv[i] && vectorsDeriv[i]->isSet()) {
             v.index = i+1;
+        }
     }
 }
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::VecCoordId v)
-{
-    if (v.index >= sofa::core::VecCoordId::V_FIRST_DYNAMIC_INDEX)
-    {
+void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::VecCoordId v) {
+    
+    if (v.index >= sofa::core::VecCoordId::V_FIRST_DYNAMIC_INDEX)  {
         Data<VecCoord>* vec_d = this->write(v);
         vec_d->beginWriteOnly(params)->resize(vsize);
         vec_d->endEdit(params);
@@ -837,11 +818,9 @@ void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::V
 }
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::VecDerivId v)
-{
+void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::VecDerivId v) {
 
-    if (v.index >= sofa::core::VecDerivId::V_FIRST_DYNAMIC_INDEX)
-    {
+    if (v.index >= sofa::core::VecDerivId::V_FIRST_DYNAMIC_INDEX) {
         Data<VecDeriv>* vec_d = this->write(v);
         vec_d->beginWriteOnly(params)->resize(vsize);
         vec_d->endEdit(params);
