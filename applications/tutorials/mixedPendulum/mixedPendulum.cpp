@@ -28,7 +28,6 @@
 #include <SofaGraphComponent/Gravity.h>
 #include <SofaExplicitOdeSolver/EulerSolver.h>
 #include <SofaImplicitOdeSolver/StaticSolver.h>
-#include <SofaOpenglVisual/OglModel.h>
 #include <SofaBaseVisual/VisualStyle.h>
 // gui
 #include <sofa/gui/GUIManager.h>
@@ -44,6 +43,8 @@
 #include <SofaComponentMisc/initComponentMisc.h>
 
 #include <sofa/component/typedef/Sofa_typedef.h>
+
+#include <SofaOpenglVisual/OglModel.h>
 
 using namespace sofa::simulation::tree;
 typedef sofa::component::odesolver::EulerSolver Solver;
