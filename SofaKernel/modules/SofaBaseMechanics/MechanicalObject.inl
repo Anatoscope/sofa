@@ -386,88 +386,99 @@ void MechanicalObject<DataTypes>::init()
 
     //helper::WriteAccessor< Data<VecCoord> > x_wA = *this->write(VecCoordId::position());
     //helper::WriteAccessor< Data<VecDeriv> > v_wA = *this->write(VecDerivId::velocity());
-    Data<VecCoord>* x_wAData = this->write(sofa::core::VecCoordId::position());
-    Data<VecDeriv>* v_wAData = this->write(sofa::core::VecDerivId::velocity());
-    VecCoord& x_wA = *x_wAData->beginEdit();
-    VecDeriv& v_wA = *v_wAData->beginEdit();
+    Data<VecCoord>* pos_data = this->write(core::VecCoordId::position());
+    Data<VecDeriv>* vel_data = this->write(core::VecDerivId::velocity());
 
-    //case if X0 has been set but not X
-    if (read(core::ConstVecCoordId::restPosition())->getValue().size() > x_wA.size())
-    {
+
+    // case if X0 has been set but not X
+    if (read(core::ConstVecCoordId::restPosition())->getValue().size() > pos_data->getValue().size()) {
+        msg_warning() << "rest position is set but not position in " << this->getPathName();
         vOp(core::ExecParams::defaultInstance(), core::VecId::position(), core::VecId::restPosition());
     }
-
-
+    
     // // TODO these should all be errors, period.
-    sofa::core::topology::BaseMeshTopology* m_topology = nullptr;
+    core::topology::BaseMeshTopology* m_topology = nullptr;
 
-    //Look at a topology associated to this instance of MechanicalObject by a tag
+    // Look at a topology associated to this instance of MechanicalObject by a tag
     this->getContext()->get(m_topology, this->getTags());
      
     // // If no topology found, no association, then look to the nearest one
     if(!m_topology) {
-        m_topology = this->getContext()->getMeshTopology();
+        m_topology = this->getContext()->template get<core::topology::BaseMeshTopology>( core::objectmodel::BaseContext::Local);
+    } else {
+        msg_warning() << "found topology based on tags, which is silly";
     }
     
     // the given position and velocity vectors are empty
     // note that when a vector is not  explicitly specified, its size won't change (1 by default)
-    if( x_wA.size() <= 1 && v_wA.size() <= 1 ) {
+    const unsigned pos_size = pos_data->getValue().size(), vel_size = vel_data->getValue().size();
 
+    // TODO this is wrong, but at least now it is explicit
+    const bool default_initialized =  pos_size <= 1 && vel_size <= 1;
+    
+    if( default_initialized ) {
+        
         // if a topology is present, implicitly copy position from it
-        if (m_topology != NULL && m_topology->getNbPoints() && m_topology->getContext() == this->getContext())
-        {
-            msg_warning() << "doing funny shit w/topology during mechanical state init";
-            
-            int nbp = m_topology->getNbPoints();
-            //std::cout<<"Setting "<<nbp<<" points from topology. " << this->getName() << " topo : " << m_topology->getName() <<std::endl;
+        if (m_topology && m_topology->getNbPoints() ) {
+            const unsigned nbp = m_topology->getNbPoints();
+
             // copy the last specified velocity to all points
-            if (v_wA.size() >= 1 && v_wA.size() < (unsigned)nbp)
-            {
-                unsigned int i = v_wA.size();
-                Deriv v1 = v_wA[i-1];
-                v_wA.resize(nbp);
-                while (i < v_wA.size())
-                    v_wA[i++] = v1;
+            if (vel_size >= 1 && vel_size < nbp) {
+                msg_warning() << "silly velocity init";
+                
+                const Deriv value = vel_data->getValue()[ vel_size - 1]; // cannot use .back() here :-/
+                
+                VecDeriv* vel = vel_data->beginWriteOnly();
+
+                // TODO this should not even be possible
+                vel->resize(nbp);
+                
+                std::fill(vel->begin() + vel_size, vel->end(), value);
+                vel_data->endEdit();
             }
+            
             this->resize(nbp);
-            for (int i=0; i<nbp; i++)
-            {
-                x_wA[i] = Coord();
-                DataTypes::set(x_wA[i], m_topology->getPX(i), m_topology->getPY(i), m_topology->getPZ(i));
+            
+            for (unsigned i = 0; i < nbp; ++i) {
+                VecCoord* pos = pos_data->beginWriteOnly();
+                msg_warning() << "silly & inefficient implicit position init from topology";
+                DataTypes::set((*pos)[i], m_topology->getPX(i), m_topology->getPY(i), m_topology->getPZ(i));
             }
-        } else if( x_wA.size() == 0 ) {
+        } else if( pos_size == 0 ) {
             // special case when the user manually explicitly defined an empty position vector
             // (e.g. linked to an empty vector)
+            msg_warning() << "silly resize(0) based on position size";
             resize(0);
         }
-    } else if (x_wA.size() != vsize || v_wA.size() != vsize) {
+        
+    } else if (pos_size != vsize || vel_size != vsize) {
         // X and/or V were user-specified
         // copy the last specified velocity to all points
 
-        const unsigned int xSize = x_wA.size();
-        const unsigned int vSize = v_wA.size();
+        msg_warning() << "silly filling of velocities from the last one";
+        
+        if (vel_size >= 1 && vel_size < pos_size) {
+            const Deriv value = vel_data->getValue()[vel_size - 1]; // cannot use .back() here :-/
 
-        if (vSize >= 1 && vSize < xSize)
-        {
-            unsigned int i = vSize;
-            Deriv v1 = v_wA[i-1];
-            v_wA.resize(xSize);
-            while (i < xSize)
-                v_wA[i++] = v1;
+            VecDeriv* vel = vel_data->beginWriteOnly();
+
+            // TODO this should not even be possible
+            vel->resize(pos_size);
+            
+            std::fill(vel->begin() + vel_size, vel->end(), value);
+            vel_data->endEdit();            
         }
-
-        resize(xSize > v_wA.size() ? xSize : v_wA.size());
+        
+        resize( std::max(pos_size, vel_size) );
     }
 
-    x_wAData->endEdit();
-    v_wAData->endEdit();
-
+    // 
     reinit();
 
-    // TODO there are no longer transformations lol
-    // storing X0 must be done after reinit() that possibly applies transformations
-    if( read(core::ConstVecCoordId::restPosition())->getValue().size()!=x_wA.size() ) {
-        // storing X0 from X
+    // storing rest state from initial state if not specified
+    if( read(core::ConstVecCoordId::restPosition())->getValue().size() != pos_data->getValue().size() ) {
+        msg_warning() << "implicit storing rest state from initial state";
+        
         vOp(core::ExecParams::defaultInstance(), core::VecId::restPosition(), core::VecId::position());
     }
 
@@ -484,9 +495,8 @@ void MechanicalObject<DataTypes>::reinit() { }
 template <class DataTypes>
 void MechanicalObject<DataTypes>::storeResetState()
 {
-    if(!static_cast<const simulation::Node*>(this->getContext())->mechanicalMapping.empty() ) {
-        msg_warning() << "storeResetState on mapped dofs";
-    }
+    const bool is_mapped = !static_cast<const simulation::Node*>(this->getContext())->mechanicalMapping.empty();
+    if( is_mapped ) return;
     
     // Save initial state for reset button
     vOp(core::ExecParams::defaultInstance(), core::VecId::resetPosition(), core::VecId::position());
@@ -643,21 +653,19 @@ template <class DataTypes>
 Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<DataTypes>::write(core::VecCoordId v)
 {
 
-    if (v.index >= vectorsCoord.size())
-    {
+    if (v.index >= vectorsCoord.size()) {
         vectorsCoord.resize(v.index + 1, 0);
     }
 
-    if (vectorsCoord[v.index] == NULL)
-    {
+    if (!vectorsCoord[v.index]) {
         vectorsCoord[v.index] = new Data< VecCoord >;
-        if (f_reserve.getValue() > 0)
-        {
+        
+        if (f_reserve.getValue() > 0) {
             vectorsCoord[v.index]->beginWriteOnly()->reserve(f_reserve.getValue());
             vectorsCoord[v.index]->endEdit();
         }
-        if (vectorsCoord[v.index]->getValue().size() != (size_t)getSize())
-        {
+        
+        if (vectorsCoord[v.index]->getValue().size() != (size_t)getSize()) {
             vectorsCoord[v.index]->beginWriteOnly()->resize( getSize() );
             vectorsCoord[v.index]->endEdit();
         }
@@ -666,7 +674,7 @@ Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<DataTypes
 #if defined(SOFA_DEBUG) || !defined(NDEBUG)
     const typename MechanicalObject<DataTypes>::VecCoord& val = d->getValue();
     if (!val.empty() && val.size() != (unsigned int)this->getSize()) {
-        msg_error() << "writing to State vector " << v << " with incorrect size : " 
+        msg_error() << "writing to state vector " << v << " with incorrect size : " 
                     << val.size() << " != " << this->getSize();
     }
 #endif
@@ -676,98 +684,84 @@ Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<DataTypes
 
 
 template <class DataTypes>
-const Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<DataTypes>::read(core::ConstVecCoordId v) const
-{
-    if (v.isNull())
-    {
-        msg_error() << "Accessing null VecCoord";
+const Data<typename MechanicalObject<DataTypes>::VecCoord>* MechanicalObject<DataTypes>::read(core::ConstVecCoordId v) const {
+    if (v.isNull()) {
+        msg_error() << "accessing null VecCoord";
     }
-    if (v.index < vectorsCoord.size() && vectorsCoord[v.index] != NULL)
-    {
-        const Data<typename MechanicalObject<DataTypes>::VecCoord>* d = vectorsCoord[v.index];
+    
+    if (v.index < vectorsCoord.size() && vectorsCoord[v.index]) {
+        const Data<VecCoord>* d = vectorsCoord[v.index];
+        
 #if defined(SOFA_DEBUG) || !defined(NDEBUG)
-        const typename MechanicalObject<DataTypes>::VecCoord& val = d->getValue();
-        if (!val.empty() && val.size() != (unsigned int)this->getSize())
-        {
-            msg_error() << "Accessing State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize();
+        const VecCoord& val = d->getValue();
+        if (!val.empty() && val.size() != (unsigned int)this->getSize()) {
+            msg_error() << "Accessing State vector " << v << " with incorrect size : " 
+                        << val.size() << " != " << this->getSize();
         }
 #endif
         return d;
-    }
-    else
-    {
+    } else {
         msg_error() << "Vector " << v << " does not exist";
-        return NULL;
+        return nullptr;
     }
 }
 
 template <class DataTypes>
-Data<typename MechanicalObject<DataTypes>::VecDeriv>* MechanicalObject<DataTypes>::write(core::VecDerivId v)
-{
+Data<typename MechanicalObject<DataTypes>::VecDeriv>* MechanicalObject<DataTypes>::write(core::VecDerivId v) {
 
-    if (v.index >= vectorsDeriv.size())
-    {
+    if (v.index >= vectorsDeriv.size()) {
         vectorsDeriv.resize(v.index + 1, 0);
     }
 
-    if (vectorsDeriv[v.index] == NULL)
-    {
+    if (!vectorsDeriv[v.index]) {
         vectorsDeriv[v.index] = new Data< VecDeriv >;
-        if (f_reserve.getValue() > 0)
-        {
+        if (f_reserve.getValue() > 0){
             vectorsDeriv[v.index]->beginWriteOnly()->reserve(f_reserve.getValue());
             vectorsDeriv[v.index]->endEdit();
         }
-        if (vectorsDeriv[v.index]->getValue().size() != (size_t)getSize())
-        {
+        if (vectorsDeriv[v.index]->getValue().size() != (size_t)getSize()) {
             vectorsDeriv[v.index]->beginWriteOnly()->resize( getSize() );
             vectorsDeriv[v.index]->endEdit();
         }
     }
-    Data<typename MechanicalObject<DataTypes>::VecDeriv>* d = vectorsDeriv[v.index];
+    
+    Data<VecDeriv>* d = vectorsDeriv[v.index];
 #if defined(SOFA_DEBUG) || !defined(NDEBUG)
-    const typename MechanicalObject<DataTypes>::VecDeriv& val = d->getValue();
-    if (!val.empty() && val.size() != (unsigned int)this->getSize())
-    {
-        msg_error() << "Writing to State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize();
+    const VecDeriv& val = d->getValue();
+    if (!val.empty() && val.size() != (unsigned int)this->getSize()) {
+        msg_error() << "writing state vector " << v << " with incorrect size : " 
+                    << val.size() << " != " << this->getSize();
     }
 #endif
     return d;
 }
 
 template <class DataTypes>
-const Data<typename MechanicalObject<DataTypes>::VecDeriv>* MechanicalObject<DataTypes>::read(core::ConstVecDerivId v) const
-{
-    if (v.index < vectorsDeriv.size())
-    {
-        const Data<typename MechanicalObject<DataTypes>::VecDeriv>* d = vectorsDeriv[v.index];
+const Data<typename MechanicalObject<DataTypes>::VecDeriv>* MechanicalObject<DataTypes>::read(core::ConstVecDerivId v) const {
+    if (v.index < vectorsDeriv.size()) {
+        const Data<VecDeriv>* d = vectorsDeriv[v.index];
 #if defined(SOFA_DEBUG) || !defined(NDEBUG)
-        const typename MechanicalObject<DataTypes>::VecDeriv& val = d->getValue();
-        if (!val.empty() && val.size() != (unsigned int)this->getSize())
-        {
-            msg_error() << "Accessing State vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize();
+        const VecDeriv& val = d->getValue();
+        if (!val.empty() && val.size() != (unsigned int)this->getSize()) {
+            msg_error() << "accessing state vector " << v << " with incorrect size : " << val.size() << " != " << this->getSize();
         }
 #endif
         return d;
-    }
-    else
-    {
-        msg_error() << "Vector " << v << "does not exist";
-        return NULL;
+    } else {
+        msg_error() << "state vector " << v << "does not exist";
+        return nullptr;
     }
 }
 
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::setVecCoord(unsigned int index, Data< VecCoord > *v)
-{
+void MechanicalObject<DataTypes>::setVecCoord(unsigned int index, Data< VecCoord > *v) {
     if(index == core::VecCoordId::null().getIndex()) {
         msg_error() << "setting null coord vector lol";
         return;
     }
     
-    if (index >= vectorsCoord.size())
-    {
+    if (index >= vectorsCoord.size()) {
         vectorsCoord.resize(index + 1, 0);
     }
 
@@ -783,8 +777,7 @@ void MechanicalObject<DataTypes>::setVecDeriv(unsigned int index, Data< VecDeriv
     }
 
     
-    if (index >= vectorsDeriv.size())
-    {
+    if (index >= vectorsDeriv.size()) {
         vectorsDeriv.resize(index + 1, 0);
     }
 
@@ -794,30 +787,28 @@ void MechanicalObject<DataTypes>::setVecDeriv(unsigned int index, Data< VecDeriv
 
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::vAvail(const core::ExecParams* /* params */, core::VecCoordId& v)
-{
-    for (unsigned int i = v.index; i < vectorsCoord.size(); ++i)
-    {
+void MechanicalObject<DataTypes>::vAvail(const core::ExecParams* /* params */, core::VecCoordId& v) {
+    // TODO why isSet() ?
+    for (unsigned int i = v.index; i < vectorsCoord.size(); ++i) {
         if (vectorsCoord[i] && vectorsCoord[i]->isSet())
             v.index = i+1;
     }
 }
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::vAvail(const core::ExecParams* /* params */, core::VecDerivId& v)
-{
-    for (unsigned int i = v.index; i < vectorsDeriv.size(); ++i)
-    {
-        if (vectorsDeriv[i] && vectorsDeriv[i]->isSet())
+void MechanicalObject<DataTypes>::vAvail(const core::ExecParams* /* params */, core::VecDerivId& v) {
+    // TODO why isSet() ?    
+    for (unsigned int i = v.index; i < vectorsDeriv.size(); ++i) {
+        if (vectorsDeriv[i] && vectorsDeriv[i]->isSet()) {
             v.index = i+1;
+        }
     }
 }
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::VecCoordId v)
-{
-    if (v.index >= sofa::core::VecCoordId::V_FIRST_DYNAMIC_INDEX)
-    {
+void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::VecCoordId v) {
+    
+    if (v.index >= sofa::core::VecCoordId::V_FIRST_DYNAMIC_INDEX)  {
         Data<VecCoord>* vec_d = this->write(v);
         vec_d->beginWriteOnly(params)->resize(vsize);
         vec_d->endEdit(params);
@@ -827,11 +818,9 @@ void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::V
 }
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::VecDerivId v)
-{
+void MechanicalObject<DataTypes>::vAlloc(const core::ExecParams* params, core::VecDerivId v) {
 
-    if (v.index >= sofa::core::VecDerivId::V_FIRST_DYNAMIC_INDEX)
-    {
+    if (v.index >= sofa::core::VecDerivId::V_FIRST_DYNAMIC_INDEX) {
         Data<VecDeriv>* vec_d = this->write(v);
         vec_d->beginWriteOnly(params)->resize(vsize);
         vec_d->endEdit(params);

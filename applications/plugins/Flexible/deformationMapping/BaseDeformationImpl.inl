@@ -26,6 +26,11 @@
 // so that LinearMapping.h and LinearMultiMapping.h can be included together.
 
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#include <sofa/helper/system/glu.h>
+#endif
+
 #include <sofa/core/visual/VisualParams.h>
 
 namespace sofa

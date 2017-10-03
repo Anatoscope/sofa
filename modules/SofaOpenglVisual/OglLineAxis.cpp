@@ -20,6 +20,10 @@
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
 #include "OglLineAxis.h"
 #include <sofa/core/ObjectFactory.h>
 #include <sofa/core/visual/VisualParams.h>

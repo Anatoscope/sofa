@@ -21,6 +21,7 @@
 ******************************************************************************/
 
 #include <sofa/core/ObjectFactory.h>
+#include <sofa/helper/system/gl.h>
 #include <SofaOpenglVisual/OglCylinderModel.h>
 #include <sofa/core/visual/VisualParams.h>
 

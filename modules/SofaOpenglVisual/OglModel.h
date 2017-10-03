@@ -25,18 +25,34 @@
 
 #include <vector>
 #include <string>
-#include <sofa/helper/gl/template.h>
-#include <sofa/helper/gl/Texture.h>
 #include <sofa/helper/OptionsGroup.h>
 #include <sofa/core/visual/VisualModel.h>
 #include <sofa/defaulttype/Vec.h>
 #include <sofa/defaulttype/Vec3Types.h>
 #include <SofaBaseVisual/VisualModelImpl.h>
 
-#define   NB_MAX_TEXTURES 16
+
+// awful hack not to include glew (that is included by helper/system/gl.h)
+#ifdef SOFA_HAVE_GLEW
+    #undef SOFA_HAVE_GLEW
+    #include <sofa/helper/system/gl.h>
+    #define SOFA_HAVE_GLEW
+#else
+    #include <sofa/helper/system/gl.h>
+#endif
+
+
 
 namespace sofa
 {
+
+namespace helper
+{
+namespace gl
+{
+    class Texture; // forward declaration
+}
+}
 
 namespace component
 {

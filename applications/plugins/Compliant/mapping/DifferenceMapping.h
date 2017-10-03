@@ -1,6 +1,10 @@
 #ifndef DIFFERENCEMAPPING_H
 #define DIFFERENCEMAPPING_H
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
 #include "ConstantAssembledMapping.h"
 #include "ConstantAssembledMultiMapping.h"
 

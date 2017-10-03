@@ -22,6 +22,10 @@
 #ifndef SOFA_COMPONENT_MAPPING_DistanceMapping_INL
 #define SOFA_COMPONENT_MAPPING_DistanceMapping_INL
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
 #include "DistanceMapping.h"
 #include <sofa/core/visual/VisualParams.h>
 #include <iostream>

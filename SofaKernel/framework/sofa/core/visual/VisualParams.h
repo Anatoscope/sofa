@@ -32,12 +32,13 @@
 #include <sofa/helper/fixed_array.h>
 #include <sofa/defaulttype/Vec.h>
 
-#include <sofa/helper/system/gl.h>
 
 
 namespace sofa
 {
 
+
+#ifndef SOFA_NO_OPENGL
 namespace helper
 {
 namespace gl
@@ -45,6 +46,8 @@ namespace gl
 class FrameBufferObject;
 } // namespace gl
 } // namespace helper
+#endif
+
 
 namespace core
 {
@@ -143,8 +146,11 @@ public:
     DrawTool*& drawTool() { return m_drawTool; }
     DrawTool*& drawTool() const { return m_drawTool; }
 
+
+#ifndef SOFA_NO_OPENGL
     helper::gl::FrameBufferObject*& frameBufferObject() { return m_boundFrameBuffer; }
     helper::gl::FrameBufferObject*& frameBufferObject() const { return m_boundFrameBuffer; }
+#endif
 
     DisplayFlags& displayFlags() { return m_displayFlags; }
     const DisplayFlags& displayFlags() const { return m_displayFlags; }
@@ -192,7 +198,11 @@ protected:
     Pass                                m_pass;
     DisplayFlags                        m_displayFlags;
     mutable DrawTool*                   m_drawTool;
+
+#ifndef SOFA_NO_OPENGL
     mutable helper::gl::FrameBufferObject*	m_boundFrameBuffer;
+#endif
+
     /// Ids of position vector
     ConstMultiVecCoordId m_x;
     /// Ids of velocity vector

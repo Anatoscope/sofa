@@ -7,10 +7,9 @@
 		<EulerImplicitSolver name="default12" rayleighStiffness="0.01" />
         <MechanicalObject name="dofs" rest_position="@[-5].output_position"/>
 		<MeshMatrixMass name="mass" lumping="1" printMass="0" massDensity="1" />	
-		<BoxROI box="-0.01 -0.01 -0.01 0.01 0.01 0.01" drawBoxes="1" name="fixedPoint"  />
+		<BoxROI box="-0.01 -0.01 -0.01   0.01 0.01 0.01" drawBoxes="1" name="fixedPoint"  />
 		<FixedConstraint indices="@fixedPoint.indices" />
-		<FixedPlaneConstraint direction="0 0 1" dmin="-0.01" dmax="0.01"  />
-		<BoxROI box="-0.2 -0.2 0.99 0.2 0.2 1.01" trianglesInROI="1" drawBoxes="1" name="pressurePlane"  />
+		<BoxROI box="-0.2 -0.2  0.99    0.2 0.2 1.01" computeTriangles="1" drawBoxes="1" name="pressurePlane"  />
 		<ProjectToLineConstraint direction="1 0 0" origin="0 0 0" indices="15"  />
 		<TrianglePressureForceField  showForces="1"  triangleList="@pressurePlane.triangleIndices" pressure="0.01 0 -0.04" />
 	    <FastTetrahedralCorotationalForceField poissonRatio="0.45" youngModulus="1" method="polar" /> 

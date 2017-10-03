@@ -22,6 +22,7 @@
 #ifndef _OGL_ATTRIBUTE_INL_
 #define _OGL_ATTRIBUTE_INL_
 
+#include <sofa/helper/system/gl.h>
 #include <SofaOpenglVisual/OglAttribute.h>
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/core/topology/TopologyChange.h>

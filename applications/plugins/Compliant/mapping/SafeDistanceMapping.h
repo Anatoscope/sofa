@@ -3,6 +3,11 @@
 
 #include <Compliant/config.h>
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
+
+
 #include "AssembledMapping.h"
 #include "AssembledMultiMapping.h"
 #include <sofa/defaulttype/RGBAColor.h>
