@@ -66,13 +66,19 @@ DrawToolGL::DrawToolGL()
     mWireFrameEnabled = false;
     mPolygonMode = 1;
     mUpdateCapabilities = true;
+
+    m_sphereUtil = new BasicShapesGL_Sphere< sofa::defaulttype::Vector3 >;
+    m_fakeSphereUtil = new BasicShapesGL_FakeSphere< sofa::defaulttype::Vector3 >;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 DrawToolGL::~DrawToolGL()
 {
+    delete m_sphereUtil;
+    delete m_fakeSphereUtil;
 }
+
 
 void DrawToolGL::init()
 {
@@ -351,7 +357,7 @@ void DrawToolGL::drawSpheres(const std::vector<Vector3> &points, float radius, c
 {
     setMaterial(colour);
 
-    m_sphereUtil.draw(points, radius);
+    m_sphereUtil->draw(points, radius);
 
     resetMaterial(colour);
 }
@@ -362,7 +368,7 @@ void DrawToolGL::drawSpheres(const std::vector<Vector3> &points, const std::vect
 {
     setMaterial(colour);
 
-    m_sphereUtil.draw(points, radius);
+    m_sphereUtil->draw(points, radius);
 
     resetMaterial(colour);
 }
@@ -372,7 +378,7 @@ void DrawToolGL::drawFakeSpheres(const std::vector<Vector3> &points, float radiu
 {
     setMaterial(colour);
 
-    m_fakeSphereUtil.draw(points, radius);
+    m_fakeSphereUtil->draw(points, radius);
 
     resetMaterial(colour);
 }
@@ -383,7 +389,7 @@ void DrawToolGL::drawFakeSpheres(const std::vector<Vector3> &points, const std::
 {
     setMaterial(colour);
 
-    m_fakeSphereUtil.draw(points, radius);
+    m_fakeSphereUtil->draw(points, radius);
 
     resetMaterial(colour);
 }

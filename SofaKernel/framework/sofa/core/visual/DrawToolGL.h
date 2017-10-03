@@ -27,10 +27,21 @@
 #include <sofa/core/visual/DrawTool.h>
 #include <sofa/defaulttype/Vec.h>
 #include <sofa/defaulttype/RGBAColor.h>
-#include <sofa/helper/gl/BasicShapesGL.h>
 
 namespace sofa
 {
+namespace helper
+{
+namespace gl
+{
+    template<class T> class BasicShapesGL_Sphere;
+    template<class T> class BasicShapesGL_FakeSphere;
+
+}//namespace gl
+
+} // namespace helper
+
+
 
 namespace core
 {
@@ -186,8 +197,8 @@ protected:
     bool mWireFrameEnabled;
     bool mUpdateCapabilities;
 
-    helper::gl::BasicShapesGL_Sphere<Vector3> m_sphereUtil;
-    helper::gl::BasicShapesGL_FakeSphere<Vector3> m_fakeSphereUtil;
+    helper::gl::BasicShapesGL_Sphere<Vector3>* m_sphereUtil;
+    helper::gl::BasicShapesGL_FakeSphere<Vector3>* m_fakeSphereUtil;
 
 
 public:
