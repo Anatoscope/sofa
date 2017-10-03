@@ -475,12 +475,10 @@ void MechanicalObject<DataTypes>::init()
     // 
     reinit();
 
-    // TODO there are no longer transformations lol
-    // storing X0 must be done after reinit() that possibly applies transformations
+    // storing rest state from initial state if not specified
     if( read(core::ConstVecCoordId::restPosition())->getValue().size() != pos_data->getValue().size() ) {
-        msg_error() << "this should really not happen";
+        msg_warning() << "implicit storing rest state from initial state";
         
-        // storing X0 from X
         vOp(core::ExecParams::defaultInstance(), core::VecId::restPosition(), core::VecId::position());
     }
 
