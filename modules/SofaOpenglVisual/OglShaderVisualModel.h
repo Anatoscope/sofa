@@ -30,8 +30,8 @@
 #define OGLSHADERVISUALMODEL_H_
 #include "config.h"
 
-#include <SofaOpenglVisual/OglModel.h>
 #include <SofaOpenglVisual/OglShader.h>
+#include <SofaOpenglVisual/OglModel.h>
 #include <SofaOpenglVisual/OglAttribute.h>
 #include <SofaOpenglVisual/OglVariable.h>
 
