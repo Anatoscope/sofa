@@ -26,6 +26,7 @@
  *      Author: froy
  */
 
+#include <sofa/helper/system/gl.h>
 #include <SofaOpenglVisual/OglShaderVisualModel.h>
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/core/ObjectFactory.h>
