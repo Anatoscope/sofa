@@ -400,7 +400,7 @@ void MechanicalObject<DataTypes>::init()
     core::topology::BaseMeshTopology* m_topology = nullptr;
 
     // Look at a topology associated to this instance of MechanicalObject by a tag
-    this->getContext()->get(m_topology, this->getTags());
+    // this->getContext()->get(m_topology, this->getTags());
      
     // // If no topology found, no association, then look to the nearest one
     if(!m_topology) {
@@ -438,10 +438,11 @@ void MechanicalObject<DataTypes>::init()
             }
             
             this->resize(nbp);
+
+            msg_warning() << "silly inefficient implicit position init from topology";
             
             for (unsigned i = 0; i < nbp; ++i) {
                 VecCoord* pos = pos_data->beginWriteOnly();
-                msg_warning() << "silly & inefficient implicit position init from topology";
                 DataTypes::set((*pos)[i], m_topology->getPX(i), m_topology->getPY(i), m_topology->getPZ(i));
             }
         } else if( pos_size == 0 ) {
