@@ -478,8 +478,7 @@ void MechanicalObject<DataTypes>::init()
 
     // storing rest state from initial state if not specified
     if( read(core::ConstVecCoordId::restPosition())->getValue().size() != pos_data->getValue().size() ) {
-        msg_warning() << "implicit storing rest state from initial state";
-        
+        // msg_warning() << "implicit storing rest state from initial state";
         vOp(core::ExecParams::defaultInstance(), core::VecId::restPosition(), core::VecId::position());
     }
 
