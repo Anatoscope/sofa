@@ -26,6 +26,7 @@
     #include <SofaPython/PythonFactory.h>
     #include "python/Binding_ImageData.h"
     #include "python/Binding_ImageTransformData.h"
+    #include "python/Binding_ImageViewer.h"
 #endif
 
 
@@ -72,6 +73,9 @@ void initExternalModule()
             SP_ADD_CLASS_IN_FACTORY(ImageBData,sofa::core::objectmodel::Data<sofa::defaulttype::ImageB>)
 
             SP_ADD_CLASS_IN_FACTORY(ImageTransformData,sofa::core::objectmodel::Data<sofa::defaulttype::ImageLPTransform<SReal>>)
+
+           // adding new bindings for Components
+            SP_ADD_CLASS_IN_FACTORY(ImageViewer,sofa::component::misc::BaseImageViewer)
         }
 #endif
     }
