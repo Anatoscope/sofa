@@ -52,6 +52,19 @@ namespace component
 namespace misc
 {
 
+/// non-templated ImageViewer to ease bindings
+class BaseImageViewer : public sofa::core::objectmodel::BaseObject
+{
+public:
+    SOFA_ABSTRACT_CLASS(BaseImageViewer, sofa::core::objectmodel::BaseObject);
+
+    typedef defaulttype::Vec<4,defaulttype::Vector3> PlaneQuad;
+    typedef helper::vector<PlaneQuad> PlaneQuads;
+    /// get plane corner positions where texcoord are ordered as ((0,0),(1,0),(1,1),(0,1))
+    virtual void getPlaneQuads( PlaneQuads& ) = 0;
+
+};
+
 /**
    * \brief This component is responsible for displaying images in SOFA
    *
@@ -81,11 +94,10 @@ namespace misc
    *	The default vectorvis configuration is "5 5 10 true false LowerTriRowMajor"
    */
 template<class _ImageTypes>
-class SOFA_IMAGE_API ImageViewer : public sofa::core::objectmodel::BaseObject
+class SOFA_IMAGE_API ImageViewer : public BaseImageViewer
 {
 public:
-    typedef sofa::core::objectmodel::BaseObject Inherited;
-    SOFA_CLASS(SOFA_TEMPLATE(ImageViewer, _ImageTypes), Inherited);
+    SOFA_CLASS(SOFA_TEMPLATE(ImageViewer, _ImageTypes), BaseImageViewer);
     
     // image data
     typedef _ImageTypes ImageTypes;
@@ -143,7 +155,7 @@ public:
     std::string getTemplateName() const  {	return templateName(this);	}
     static std::string templateName(const ImageViewer<ImageTypes>* = NULL)	{ return ImageTypes::Name(); }
     
-    ImageViewer() : Inherited()
+    ImageViewer() : Inherit1()
       , image(initData(&image,ImageTypes(),"image","input image"))
       , showSlicedModels(initData(&showSlicedModels, false, "slicedModels", "display visual models on cutPlanes"))
       , histo(initData(&histo, HistogramType(256,256,false),"histo",""))
@@ -423,7 +435,7 @@ public:
         for(unsigned int i=0;i<p.size();i++) c[i]=rtransform->fromImage(p[i]);
     }
 
-    virtual void computeBBox(const core::ExecParams*  params, bool /*onlyVisible=false*/ )
+    virtual void computeBBox(const core::ExecParams* params, bool /*onlyVisible=false*/ )
     {
         //        if( onlyVisible) return;
         defaulttype::Vec<8,defaulttype::Vector3> c;
@@ -619,6 +631,35 @@ protected:
         return tensor;
     }
 
+    // get plane corner positions
+    virtual void getPlaneQuads( PlaneQuads& planeQuads )
+    {
+        planeQuads.clear();
+        raPlane rplane(this->plane);
+        if (!rplane->getDimensions()[0])
+        {
+            msg_warning() << "plane dimensions are null, is the component initialized?";
+            return;
+        }
+
+        for (unsigned int i=0;i<3;i++)
+        {
+            if(rplane->getPlane()[i]<rplane->getDimensions()[i])
+            {
+                if(i==0 || rplane->getDimensions()[0]>1)
+                {
+                    if(i==1 || rplane->getDimensions()[1]>1)
+                    {
+                        if(i==2 || rplane->getDimensions()[2]>1)
+                        {
+                            planeQuads.push_back( rplane->get_sliceCoord(rplane->getPlane()[i],i) );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     //Draw the boxes around the slices
     void drawCutplanes()
     {
@@ -642,7 +683,7 @@ protected:
                     if(i==1 || rplane->getDimensions()[1]>1)
                         if(i==2 || rplane->getDimensions()[2]>1)
                         {
-                            defaulttype::Vec<4,defaulttype::Vector3> pts = rplane->get_sliceCoord(rplane->getPlane()[i],i);
+                            PlaneQuad pts = rplane->get_sliceCoord(rplane->getPlane()[i],i);
                             defaulttype::Vector3 n=cross(pts[1]-pts[0],pts[2]-pts[0]); n.normalize();
 
                             glEnable( GL_TEXTURE_2D );
