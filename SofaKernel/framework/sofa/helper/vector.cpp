@@ -121,6 +121,7 @@ SOFA_HELPER_API std::istream& vector<std::string>::readDelimiter( std::istream& 
     {
         // a '[' must be present
         msg_error("SVector") << "read : a '[' is expected as beginning marker.";
+        in.setstate(std::ios::badbit);
         return in;
     }
     else
@@ -130,6 +131,7 @@ SOFA_HELPER_API std::istream& vector<std::string>::readDelimiter( std::istream& 
         {
             // the '[' must be the first character
             msg_error("SVector") << "read : Bad begin character, expected [";
+            in.setstate(std::ios::badbit);
             return in;
         }
     }
@@ -139,6 +141,7 @@ SOFA_HELPER_API std::istream& vector<std::string>::readDelimiter( std::istream& 
     {
         // a ']' must be present
         msg_error("SVector") << "read : a ']' is expected as ending marker.";
+        in.setstate(std::ios::badbit);
         return in;
     }
     else
@@ -148,6 +151,7 @@ SOFA_HELPER_API std::istream& vector<std::string>::readDelimiter( std::istream& 
         if( e2!=std::string::npos && e2 > e )
         {
             msg_error("SVector") << "read : Bad end character, expected ]";
+            in.setstate(std::ios::badbit);
             return in;
         }
     }
@@ -166,6 +170,7 @@ SOFA_HELPER_API std::istream& vector<std::string>::readDelimiter( std::istream& 
         if( f2==std::string::npos )
         {
             msg_error("SVector") << "read : Bad begin string character, expected \" or '";
+            in.setstate(std::ios::badbit);
             this->clear();
             return in;
         }
@@ -174,6 +179,7 @@ SOFA_HELPER_API std::istream& vector<std::string>::readDelimiter( std::istream& 
         if( i2==std::string::npos )
         {
             msg_error("SVector") << "read : Bad end string character, expected "<<s[f2];
+            in.setstate(std::ios::badbit);
             this->clear();
             return in;
         }

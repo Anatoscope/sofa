@@ -223,7 +223,10 @@ void Color_Test::checkColorDataField()
 {
     Data<RGBAColor> color ;
 
+    {
+    EXPECT_MSG_EMIT(Error) ;
     EXPECT_FALSE(color.read("invalidcolor"));
+    }
 
     EXPECT_TRUE(color.read("white"));
     EXPECT_EQ(color.getValue(), RGBAColor(1.0,1.0,1.0,1.0));

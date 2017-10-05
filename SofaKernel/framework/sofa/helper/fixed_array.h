@@ -353,10 +353,10 @@ public:
             if (!( in >> (*this)[i] ))
                 break;
         if (in.fail())
-            msg_error("fixed_array") << "Error reading space separated values";
+            msg_error("fixed_array") << "reading space separated values";
         if (i != N) {
-            msg_error("fixed_array") << "Error reading space separated values, number of values: " << i << " expected: " << N;
-            in.setstate(std::ios::failbit);
+            msg_error("fixed_array") << "reading space separated values, number of values: " << i << " expected: " << N;
+            in.setstate(std::ios::badbit);
         }
         return in;
     }
@@ -371,13 +371,13 @@ public:
         if ( c != '[' )
         {
             msg_error("fixed_array") << "read: Bad begin character : " << c << ", expected  [";
-            in.setstate(std::ios::failbit);
+            in.setstate(std::ios::badbit);
             return in;
         }
         std::streampos pos = in.tellg();
         if (!(in >> c)) {
-            msg_error("fixed_array") << "Error reading [,] separated values, expecting data after [";
-            in.setstate(std::ios::failbit);
+            msg_error("fixed_array") << "reading [,] separated values, expecting data after [";
+            in.setstate(std::ios::badbit);
             return in;
         }
 
@@ -395,15 +395,16 @@ public:
                 if ( !( in>>c ) || c!=',')
                     break;
             }
-            if (in.fail())
-                msg_error("fixed_array") << "Error reading [,] separated values";
             if (i != N) {
-                msg_error("fixed_array") << "Error reading [,] separated values, number of values: " << i << " expected: " << N;
-                in.setstate(std::ios::failbit);
+                msg_error("fixed_array") << "reading [,] separated values, number of values: " << i << " expected: " << N;
+                in.setstate(std::ios::badbit);
             }
-            if ( c != ']' ) {
+            else if ( c != ']' ) {
                 msg_error("fixed_array") << "read : Bad end character : " << c << ", expected  ]";
-                in.setstate(std::ios::failbit);
+                in.setstate(std::ios::badbit);
+            }
+            else if (in.fail()) {
+                msg_error("fixed_array") << "reading [,] separated values";
             }
 
             return in;

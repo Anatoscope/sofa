@@ -211,6 +211,7 @@ SOFA_HELPER_API std::istream& operator>>(std::istream& in, RGBAColor& t)
         extractValidatedHexaString(in, str) ;
 
         if(in.fail()){
+            in.setstate(std::ios::badbit);
             return in;
         }
 
@@ -229,8 +230,8 @@ SOFA_HELPER_API std::istream& operator>>(std::istream& in, RGBAColor& t)
             if (str.length()>4)
                 a = (hexval(str[4])*17)/255.0f;
         }else{
-            /// If we cannot parse the field we returns that with the fail bit.
-            in.setstate(std::ios_base::failbit) ;
+            /// If we cannot parse the field we returns that with the bad bit.
+            in.setstate(std::ios_base::badbit) ;
             return in;
         }
     } else {
@@ -253,8 +254,8 @@ SOFA_HELPER_API std::istream& operator>>(std::istream& in, RGBAColor& t)
         else if (str == "yellow")   { r = 1.0f; g = 1.0f; b = 0.0f; }
         else if (str == "gray")     { r = 0.5f; g = 0.5f; b = 0.5f; }
         else {
-            /// If we cannot parse the field we returns that with the fail bit.
-            in.setstate(std::ios_base::failbit) ;
+            /// If we cannot parse the field we returns that with the bad bit.
+            in.setstate(std::ios_base::badbit) ;
             return in;
         }
     }

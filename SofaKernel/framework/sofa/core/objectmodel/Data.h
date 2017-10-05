@@ -125,8 +125,9 @@ public:
         std::istringstream istr( s.c_str() );
         istr >> *virtualBeginEdit();
         virtualEndEdit();
-        if( istr.fail() )
+        if( istr.bad() || (!istr.eof() && istr.fail()) )
         {
+            msg_error("Data")<<"reading \""<<this->getPathName()<<"\"";
             return false;
         }
         else

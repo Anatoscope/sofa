@@ -35,32 +35,32 @@ std::istream& readDelimiter ( std::istream& in, std::pair<T1,T2>& p )
         in.seekg( pos ); // coming-back to previous character
         if (!(in >> p.first)) {
             msg_error("pair") << "Error reading [,] separated values";
-            in.setstate(std::ios::failbit);
+            in.setstate(std::ios::badbit);
             return in;
         }
         if (!(in >> c)) {
             msg_error("pair") << "Error reading [,] separated values";
-            in.setstate(std::ios::failbit);
+            in.setstate(std::ios::badbit);
             return in;
         }
         if (c!=',') {
             msg_error("pair") << "read: bad separating character: " << c << ", expected  ,";
-            in.setstate(std::ios::failbit);
+            in.setstate(std::ios::badbit);
             return in;
         }
         if (!(in >> p.second)) {
             msg_error("pair") << "Error reading [,] separated values";
-            in.setstate(std::ios::failbit);
+            in.setstate(std::ios::badbit);
             return in;
         }
         if (!(in >> c)) {
             msg_error("pair") << "Error reading [,] separated values";
-            in.setstate(std::ios::failbit);
+            in.setstate(std::ios::badbit);
             return in;
         }
         if (c!=']') {
             msg_error("pair") << "read: bad end character: " << c << ", expected ]";
-            in.setstate(std::ios::failbit);
+            in.setstate(std::ios::badbit);
             return in;
         }
         return in;
@@ -71,9 +71,7 @@ template<class T1, class T2>
 std::istream& read( std::istream& in, std::pair<T1,T2>& p )
 {
     in >> p.first >> p.second;
-    if (in.eof())
-        in.clear(std::ios::eofbit);
-    if (in.fail())
+    if (in.bad())
         msg_error("Pair") << "Error reading space separated values";
     return in;
 }
