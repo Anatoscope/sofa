@@ -668,19 +668,7 @@ static PyObject * Data_setParent(PyObject *self, PyObject * args)
 static PyObject * Data_getLinkPath(PyObject * self, PyObject * /*args*/)
 {
     BaseData* data = get_basedata( self );
-    Base* owner = data->getOwner();
-
-    if( owner )
-    {
-        if( BaseObject* obj = owner->toBaseObject() )
-            return PyString_FromString(("@"+obj->getPathName()+"."+data->getName()).c_str());
-        else if( BaseNode* node = owner->toBaseNode() )
-            return PyString_FromString(("@"+node->getPathName()+"."+data->getName()).c_str());
-    }
-
-    /// default: no owner or owner of unknown type
-    SP_MESSAGE_WARNING( "Data_getLinkName the Data has no known owner. Returning its own name." )
-    return PyString_FromString(data->getName().c_str());
+    return PyString_FromString(("@"+data->getPathName()).c_str());
 }
 
 

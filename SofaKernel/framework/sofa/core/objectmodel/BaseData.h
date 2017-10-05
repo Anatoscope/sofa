@@ -378,6 +378,10 @@ public:
         else
             return decodeTypeName(typeid(T));
     }
+
+    /// Returns the full path name
+    virtual std::string getPathName() const;
+
 };
 
 template<class Type>

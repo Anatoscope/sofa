@@ -343,6 +343,23 @@ std::string BaseData::decodeTypeName(const std::type_info& t)
     return BaseClass::decodeTypeName(t);
 }
 
+/// Returns the full path name
+std::string BaseData::getPathName() const
+{
+    Base* owner = this->getOwner();
+    if( owner )
+    {
+        return owner->getPathName()+"."+this->getName();
+    }
+    else
+    {
+//       msg_warning( "BaseData" )<<"getPathName: the Data has no known owner. Returning its own name.";
+       return this->getName();
+    }
+}
+
+
+
 } // namespace objectmodel
 
 } // namespace core
