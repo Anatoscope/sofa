@@ -1,6 +1,7 @@
 
 from types import *
-from SofaPython.SofaNumpy import as_numpy
+
+from SofaPython.SofaNumpy import as_numpy, edit_data
 
 def numpify(obj, name):
     return as_numpy( obj.findData(name), False )
