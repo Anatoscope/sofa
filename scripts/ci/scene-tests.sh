@@ -117,13 +117,6 @@ list-scenes() {
     popd &> /dev/null
 }
 
-
-get-lib() {
-    pushd "$build_dir/lib/" > /dev/null
-    ls {lib,}"$1".{dylib,so,lib}* 2> /dev/null | xargs echo
-    popd > /dev/null
-}
-
 list-plugins() {
     #Grep tous les noms des plugins actifs, puis leurs paths
     grep ^PLUGIN_ ${build_dir}/CMakeCache.txt | grep BOOL=ON$ | cut -d '_' -f2 | cut -d ':' -f1 |
@@ -308,37 +301,56 @@ initialize-scene-testing() {
     parse-options-files
 }
 
+parallel-execution() {
+
+	run="$1"
+	options="$2"
+	path="$3"
+	bin="$4"
+	src_dir="$5"
+
+	echo "- $path"
+	local runSofa_cmd="$run $options $path >> $bin/output.txt 2>&1"
+	local timeout=$(cat "$bin/timeout.txt")
+	echo "$runSofa_cmd" > "$bin/command.txt"
+	"/$src_dir/scripts/ci/timeout.sh" runSofa "$runSofa_cmd" $timeout #Mettre le src_path à la place de /home/remi/sofa
+    local status=-1
+    if [[ -e runSofa.timeout ]]; then
+    	echo 'Timeout!'
+        echo timeout > "$bin/status.txt"
+        echo -e "\n\nINFO: Abort caused by timeout.\n" >> "$bin/output.txt"
+        rm -f runSofa.timeout
+    else
+        cat runSofa.exit_code > "$bin/status.txt"
+    fi
+    #rm -f runSofa.exit_code // Probleme de cat résolu grâce à ça...
+}
+
 test-all-scenes() {
     echo "Scene testing in progress..."
-    while read scene; do
 
+    rm -rf params.txt
+    local p_path=""
+    local p_bin=""
+    #initialisation des variables pour parallel
+    while read scene; do
         scene_src_path=`echo $scene | cut -d ':' -f1`
         scene_bin_path=`echo $scene | cut -d ':' -f2`
-
-        echo "- $scene_src_path"
         local iterations=$(cat "$scene_bin_path/iterations.txt")
         local options="-g batch -s dag -n $iterations" # -z test
-        local runSofa_cmd="$runSofa $options $scene_src_path >> $scene_bin_path/output.txt 2>&1"
-        local timeout=$(cat "$scene_bin_path/timeout.txt")
-        echo "$runSofa_cmd" > "$scene_bin_path/command.txt"
-
+       	local timeout=$(cat "$scene_bin_path/timeout.txt")
+        echo "$options" >> params.txt
+        local p_path="$p_path $scene_src_path"
+        local p_bin="$p_bin $scene_bin_path"
 #        echo $runSofa_cmd | log
-
-
-        "$src_dir/scripts/ci/timeout.sh" runSofa "$runSofa_cmd" $timeout
-        local status=-1
-        if [[ -e runSofa.timeout ]]; then
-            echo 'Timeout!'
-            echo timeout > "$scene_bin_path/status.txt"
-            echo -e "\n\nINFO: Abort caused by timeout.\n" >> "$scene_bin_path/output.txt"
-            rm -f runSofa.timeout
-        else
-            cat runSofa.exit_code > "$scene_bin_path/status.txt"
-        fi
-        rm -f runSofa.exit_code
-
     done < "$output_dir/all-tested-scenes.txt"
+    #Export parrallel-execution pour pouvoir l'exécuter avec parallel
+    export -f  parallel-execution
+    #Exécution en parallel de tous les scenes
+    parallel --no-notice --xapply parallel-execution ::: $runSofa :::: params.txt ::: $p_path ::: $p_bin ::: $src_dir
+    rm -rf params.txt
     echo "Done."
+
 }
 
 extract-warnings() {
