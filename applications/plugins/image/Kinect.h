@@ -47,6 +47,9 @@
 //#include <libfreenect_sync.h>
 //#include <libfreenect-registration.h>
 
+#ifndef SOFA_NO_OPENGL
+#include <sofa/helper/system/gl.h>
+#endif
 
 namespace sofa
 {
