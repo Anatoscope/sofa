@@ -381,11 +381,7 @@ void MechanicalObject<DataTypes>::addToBaseVector(defaulttype::BaseVector* dest,
 
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::init()
-{
-
-    //helper::WriteAccessor< Data<VecCoord> > x_wA = *this->write(VecCoordId::position());
-    //helper::WriteAccessor< Data<VecDeriv> > v_wA = *this->write(VecDerivId::velocity());
+void MechanicalObject<DataTypes>::init() {
     Data<VecCoord>* pos_data = this->write(core::VecCoordId::position());
     Data<VecDeriv>* vel_data = this->write(core::VecDerivId::velocity());
 
@@ -421,22 +417,6 @@ void MechanicalObject<DataTypes>::init()
         // if a topology is present, implicitly copy position from it
         if (m_topology && m_topology->getNbPoints() ) {
             const unsigned nbp = m_topology->getNbPoints();
-
-            // copy the last specified velocity to all points
-            if (vel_size >= 1 && vel_size < nbp) {
-                msg_warning() << "silly velocity init";
-                
-                const Deriv value = vel_data->getValue()[ vel_size - 1]; // cannot use .back() here :-/
-                
-                VecDeriv* vel = vel_data->beginWriteOnly();
-
-                // TODO this should not even be possible
-                vel->resize(nbp);
-                
-                std::fill(vel->begin() + vel_size, vel->end(), value);
-                vel_data->endEdit();
-            }
-            
             this->resize(nbp);
 
             msg_warning() << "silly inefficient implicit position init from topology";
@@ -445,6 +425,7 @@ void MechanicalObject<DataTypes>::init()
                 VecCoord* pos = pos_data->beginWriteOnly();
                 DataTypes::set((*pos)[i], m_topology->getPX(i), m_topology->getPY(i), m_topology->getPZ(i));
             }
+            
         } else if( pos_size == 0 ) {
             // special case when the user manually explicitly defined an empty position vector
             // (e.g. linked to an empty vector)
@@ -452,28 +433,9 @@ void MechanicalObject<DataTypes>::init()
             resize(0);
         }
         
-    } else if (pos_size != vsize || vel_size != vsize) {
-        // X and/or V were user-specified
-        // copy the last specified velocity to all points
-
-        msg_warning() << "silly filling of velocities from the last one";
-        
-        if (vel_size >= 1 && vel_size < pos_size) {
-            const Deriv value = vel_data->getValue()[vel_size - 1]; // cannot use .back() here :-/
-
-            VecDeriv* vel = vel_data->beginWriteOnly();
-
-            // TODO this should not even be possible
-            vel->resize(pos_size);
-            
-            std::fill(vel->begin() + vel_size, vel->end(), value);
-            vel_data->endEdit();            
-        }
-        
-        resize( std::max(pos_size, vel_size) );
     }
 
-    // 
+    // hell why not
     reinit();
 
     // storing rest state from initial state if not specified
@@ -493,8 +455,7 @@ template <class DataTypes>
 void MechanicalObject<DataTypes>::reinit() { }
 
 template <class DataTypes>
-void MechanicalObject<DataTypes>::storeResetState()
-{
+void MechanicalObject<DataTypes>::storeResetState() {
     const bool is_mapped = !static_cast<const simulation::Node*>(this->getContext())->mechanicalMapping.empty();
     if( is_mapped ) return;
     
