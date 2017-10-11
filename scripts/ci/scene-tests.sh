@@ -311,25 +311,25 @@ parallel-execution() {
 
 	echo "- $path"
 	local runSofa_cmd="$run $options $path >> $bin/output.txt 2>&1"
-	local timeout=$(cat "$bin/timeout.txt")
+	local timeout=10000 #$(cat "$bin/timeout.txt")
 	echo "$runSofa_cmd" > "$bin/command.txt"
-	"/$src_dir/scripts/ci/timeout.sh" runSofa "$runSofa_cmd" $timeout #Mettre le src_path à la place de /home/remi/sofa
+	"/$src_dir/scripts/ci/timeout.sh" $run "$runSofa_cmd" $timeout
     local status=-1
-    if [[ -e runSofa.timeout ]]; then
+    if [[ -e $run.timeout ]]; then
     	echo 'Timeout!'
         echo timeout > "$bin/status.txt"
         echo -e "\n\nINFO: Abort caused by timeout.\n" >> "$bin/output.txt"
-        rm -f runSofa.timeout
+        rm -f $run.timeout
     else
-        cat runSofa.exit_code > "$bin/status.txt"
+        cat $run.exit_code > "$bin/status.txt"
     fi
-    #rm -f runSofa.exit_code // Probleme de cat résolu grâce à ça...
+    #rm -f $run.exit_code // Probleme de cat résolu grâce à ça...
 }
 
 test-all-scenes() {
     echo "Scene testing in progress..."
 
-    rm -rf params.txt
+    rm -f params.txt
     local p_path=""
     local p_bin=""
     #initialisation des variables pour parallel
@@ -338,17 +338,17 @@ test-all-scenes() {
         scene_bin_path=`echo $scene | cut -d ':' -f2`
         local iterations=$(cat "$scene_bin_path/iterations.txt")
         local options="-g batch -s dag -n $iterations" # -z test
-       	local timeout=$(cat "$scene_bin_path/timeout.txt")
         echo "$options" >> params.txt
         local p_path="$p_path $scene_src_path"
         local p_bin="$p_bin $scene_bin_path"
 #        echo $runSofa_cmd | log
     done < "$output_dir/all-tested-scenes.txt"
+    
     #Export parrallel-execution pour pouvoir l'exécuter avec parallel
     export -f  parallel-execution
     #Exécution en parallel de tous les scenes
     parallel --no-notice --xapply parallel-execution ::: $runSofa :::: params.txt ::: $p_path ::: $p_bin ::: $src_dir
-    rm -rf params.txt
+    rm -f params.txt
     echo "Done."
 
 }
