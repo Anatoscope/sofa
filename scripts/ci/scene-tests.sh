@@ -302,55 +302,51 @@ initialize-scene-testing() {
 }
 
 parallel-execution() {
+        #parallel options config
+        p_src="$1"
+        p_bin="$2"
+        src_dir="$3"
+        runSofa="$4"
 
-	run="$1"
-	options="$2"
-	path="$3"
-	bin="$4"
-	src_dir="$5"
+        #Config runSofa and execute
+        echo "- $p_src"
+        local iterations=$(cat "$p_bin/iterations.txt")
+        local options="-g batch -s dag -n $iterations" # -z test
+        local runSofa_cmd="$runSofa $options $p_src >> $p_bin/output.txt 2>&1"
+        local timeout=$(cat "$p_bin/timeout.txt")
+        echo "$runSofa_cmd" > "$p_bin/command.txt"
 
-	echo "- $path"
-	local runSofa_cmd="$run $options $path >> $bin/output.txt 2>&1"
-	local timeout=10000 #$(cat "$bin/timeout.txt")
-	echo "$runSofa_cmd" > "$bin/command.txt"
-	"/$src_dir/scripts/ci/timeout.sh" $run "$runSofa_cmd" $timeout
-    local status=-1
-    if [[ -e $run.timeout ]]; then
-    	echo 'Timeout!'
-        echo timeout > "$bin/status.txt"
-        echo -e "\n\nINFO: Abort caused by timeout.\n" >> "$bin/output.txt"
-        rm -f $run.timeout
-    else
-        cat $run.exit_code > "$bin/status.txt"
-    fi
-    #rm -f $run.exit_code // Probleme de cat résolu grâce à ça...
+#        echo $runSofa_cmd | log
+
+        #See Timeout and crashes
+        "$src_dir/scripts/ci/timeout.sh" $runSofa "$runSofa_cmd" $timeout "$p_bin/runSofa"
+        local status=-1
+        if [[ -e $p_bin/runSofa.timeout ]]; then
+            echo 'Timeout!'
+            echo timeout > "$p_bin/status.txt"
+            echo -e "\n\nINFO: Abort caused by timeout.\n" >> "$p_bin/output.txt"
+            rm -f $p_bin/runSofa.timeout
+        else
+            cat $p_bin/runSofa.exit_code > "$p_bin/status.txt"
+        fi
+        rm -f $p_bin/runSofa.exit_code
 }
 
 test-all-scenes() {
-    echo "Scene testing in progress..."
-
-    rm -f params.txt
-    local p_path=""
-    local p_bin=""
-    #initialisation des variables pour parallel
+    
+    p_src=""
+    p_bin=""
+    echo "Initialize parallel options"
     while read scene; do
         scene_src_path=`echo $scene | cut -d ':' -f1`
         scene_bin_path=`echo $scene | cut -d ':' -f2`
-        local iterations=$(cat "$scene_bin_path/iterations.txt")
-        local options="-g batch -s dag -n $iterations" # -z test
-        echo "$options" >> params.txt
-        local p_path="$p_path $scene_src_path"
-        local p_bin="$p_bin $scene_bin_path"
-#        echo $runSofa_cmd | log
+        p_src="$p_src $scene_src_path"
+        p_bin="$p_bin $scene_bin_path"
     done < "$output_dir/all-tested-scenes.txt"
-    
-    #Export parrallel-execution pour pouvoir l'exécuter avec parallel
-    export -f  parallel-execution
-    #Exécution en parallel de tous les scenes
-    parallel --no-notice --xapply parallel-execution ::: $runSofa :::: params.txt ::: $p_path ::: $p_bin ::: $src_dir
-    rm -f params.txt
+    export -f parallel-execution
+    echo "Scene testing in progress..."
+    parallel --no-notice --xapply parallel-execution ::: $p_src ::: $p_bin ::: $src_dir ::: $runSofa
     echo "Done."
-
 }
 
 extract-warnings() {
