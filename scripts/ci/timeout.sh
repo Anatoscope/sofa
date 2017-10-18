@@ -13,14 +13,20 @@ usage() {
     # Runs <command> with a timeout of <number-of-seconds>.  If
     # <command> terminates before the timeout, save the exit code in
     # <id>.exit_code, otherwise create <id>.timeout
-    echo "Usage: timeout.sh <id> <command> <number-of-seconds>"
+    #(Optional <path>) is used for scene-tests.sh in parallel. Move the .exitcode in the path wanted
+    echo "Usage: timeout.sh <id> <command> <number-of-seconds> (Optional <path>)"
 }
 
-if [[ "$#" != 3 ]]; then
+if [[ "$#" != 3 && "$#" != 4 ]]; then
     usage
     exit 1
 fi
 
+if [[ '$#' == 3 ]]; then
+    path_write="$1"
+else
+    path_write="$4"
+fi
 # usage: run-command <id> <cmd>
 # Runs <cmd>, saves the pid of the spawned shell in <id>.pid and saves the exit
 # code in <id>.exit_code.
@@ -52,6 +58,6 @@ run-command-with-timeout() {
 timeout "$3" bash -c "$2"
 exit_code=$?
 if [[ ($(uname) = Darwin && $exit_code = 137 ) || ( $exit_code = 124 ) ]]; then
-    touch "$1".timeout
+    touch "$path_write".timeout
 fi
-echo $exit_code > "$1".exit_code
+echo $exit_code > "$path_write".exit_code
